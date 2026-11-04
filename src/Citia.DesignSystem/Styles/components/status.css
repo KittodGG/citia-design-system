@@ -1,0 +1,338 @@
+/* Status family: pill, status, tag, badge (count/dot), live dot, mode badge, daisyUI badge fixes. Owner: batch A5.
+   Origin: TPS .pt-pill/.pt-tag, .master-status, .portal-badge, .sb-mode.
+   Rule: the word carries the meaning. Colour, dot and tint only support it (WCAG 1.4.1). */
+
+@layer utilities {
+  /* Soft badges keep 4.5:1 text on their tint. */
+  .badge-soft.badge-error { color: var(--ds-error-text); }
+  .badge-soft.badge-warning,
+  .alert-soft.alert-warning { color: var(--ds-warning-text); }
+  .badge-soft.badge-info,
+  .alert-soft.alert-info { color: var(--ds-link); }
+  .badge.badge-sm { font-size: 0.75rem; min-height: 1.5rem; }
+}
+
+@layer components {
+  /* Tone carrier shared by pill, status, tag, badge, KPI, note, feed, progress: set --ds-tone with .is-<tone>.
+     --ds-tone-text is the AA-safe text colour of the same tone. */
+  .is-success { --ds-tone: var(--color-success); --ds-tone-text: var(--color-success); --ds-tone-content: var(--color-success-content); }
+  .is-warning { --ds-tone: var(--color-warning); --ds-tone-text: var(--ds-warning-text); --ds-tone-content: var(--color-warning-content); }
+  .is-error { --ds-tone: var(--color-error); --ds-tone-text: var(--ds-error-text); --ds-tone-content: var(--color-error-content); }
+  .is-info { --ds-tone: var(--ds-link); --ds-tone-text: var(--ds-link); --ds-tone-content: var(--color-info-content); }
+  .is-primary { --ds-tone: var(--ds-quiet); --ds-tone-text: var(--ds-quiet); --ds-tone-content: var(--color-primary-content); }
+  .is-neutral { --ds-tone: color-mix(in oklab, var(--color-base-content) 70%, transparent); --ds-tone-text: var(--ds-subtle); --ds-tone-content: var(--color-base-100); }
+
+  /* ------------------------------------------------------------------ pill (workflow status, dot + word) */
+  .ds-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.1875rem 0.625rem;
+    border: 1px solid color-mix(in oklab, var(--ds-tone, var(--color-base-content)) 25%, transparent);
+    border-radius: var(--ds-radius-full);
+    background: color-mix(in oklab, var(--ds-tone, var(--color-base-content)) 10%, transparent);
+    color: var(--ds-tone-text, var(--color-base-content));
+    font-size: 0.75rem;
+    font-weight: 650;
+    line-height: 1.125rem;
+    white-space: nowrap;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), border-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-pill::before {
+    content: "";
+    flex: none;
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: var(--ds-radius-full);
+    background: currentColor;
+  }
+
+  .ds-pill.is-plain::before { display: none; }
+  .ds-pill.is-outline { background: transparent; }
+  .ds-pill.is-sm { padding: 0.0625rem 0.5rem; font-size: 0.6875rem; line-height: 1rem; }
+  .ds-pill.is-lg { padding: 0.3125rem 0.875rem; font-size: 0.8125rem; line-height: 1.25rem; }
+  .ds-pill.is-live::before { animation: ds-blink 1.2s ease-in-out infinite; }
+
+  /* Overflowing text inside a bounded cell. */
+  .ds-pill.is-truncate { max-inline-size: 100%; }
+  .ds-pill.is-truncate > .ds-pill__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Pill as link or button (filter by status): hover state layer and focus ring. */
+  :is(a, button).ds-pill { cursor: pointer; text-decoration: none; }
+  :is(a, button).ds-pill:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+  :is(a, button).ds-pill:active { background: color-mix(in oklab, var(--ds-tone, var(--color-base-content)) 18%, transparent); }
+  :is(button).ds-pill:disabled,
+  .ds-pill[aria-disabled="true"] { opacity: var(--ds-opacity-disabled); cursor: not-allowed; }
+
+  @media (hover: hover) {
+    :is(a, button).ds-pill:hover { background: color-mix(in oklab, var(--ds-tone, var(--color-base-content)) 16%, transparent); }
+  }
+
+  /* ------------------------------------------------------------------ status (record status: squared, optional dot) */
+  .ds-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--ds-radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .ds-status.has-dot::before {
+    content: "";
+    flex: none;
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: var(--ds-radius-full);
+    background: currentColor;
+  }
+
+  .ds-status:is(.is-success, .is-warning, .is-error, .is-info, .is-primary, .is-neutral) {
+    background: color-mix(in oklab, var(--ds-tone) 10%, transparent);
+    color: var(--ds-tone-text);
+  }
+
+  .ds-status.is-outline {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ds-tone, var(--color-base-content)) 40%, transparent);
+  }
+
+  .ds-status.is-sm { padding: 0.0625rem 0.375rem; font-size: 0.75rem; }
+  .ds-status.is-lg { padding: 0.3125rem 0.75rem; font-size: 0.875rem; }
+  .ds-status.is-live.has-dot::before { animation: ds-blink 1.2s ease-in-out infinite; }
+
+  /* Version 1 record statuses stay. */
+  .ds-status.is-active { color: var(--color-success); background: color-mix(in oklab, var(--color-success) 8%, var(--color-base-100)); }
+  .ds-status.is-inactive { color: var(--color-base-content); background: var(--color-base-200); }
+  .ds-status.is-locked { color: var(--ds-warning-text); background: color-mix(in oklab, var(--color-warning) 8%, var(--color-base-100)); white-space: normal; }
+  .ds-status.is-provisioning { color: var(--color-base-content); background: var(--color-base-100); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-base-content) 45%, var(--color-base-100)); }
+
+  /* Usage line under a status ("used by 12 documents"). */
+  .ds-usage {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    color: var(--ds-subtle);
+  }
+
+  /* ------------------------------------------------------------------ tag (small uppercase label) */
+  .ds-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    max-inline-size: 100%;
+    padding: 0.0625rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--ds-radius-md);
+    background: color-mix(in oklab, var(--ds-tone, var(--color-base-content)) 8%, transparent);
+    color: var(--ds-tone-text, var(--color-base-content));
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1.125rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), border-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-tag.is-neutral { color: var(--color-base-content); background: color-mix(in oklab, var(--color-base-content) 8%, transparent); }
+  .ds-tag:is(.is-success, .is-warning, .is-error, .is-info, .is-primary) { background: color-mix(in oklab, var(--ds-tone) 11%, transparent); }
+  .ds-tag.is-outline { border-color: color-mix(in oklab, var(--ds-tone, var(--color-base-content)) 38%, transparent); background: transparent; }
+  .ds-tag.is-sm { padding: 0 0.375rem; font-size: 0.625rem; line-height: 1rem; }
+  .ds-tag.is-lg { padding: 0.125rem 0.625rem; font-size: 0.75rem; line-height: 1.25rem; }
+  .ds-tag.is-sentence { letter-spacing: 0.01em; text-transform: none; font-weight: 650; }
+  .ds-tag > .ds-icon { flex: none; width: 0.75rem; height: 0.75rem; }
+  .ds-tag > .ds-tag__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+  /* "You" marker next to the signed-in user in a list. */
+  .ds-tag.is-self {
+    border-color: var(--color-base-300);
+    background: var(--color-base-200);
+    color: var(--color-base-content);
+  }
+
+  :is(a, button).ds-tag { cursor: pointer; text-decoration: none; }
+  :is(a, button).ds-tag:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+  :is(button).ds-tag:disabled,
+  .ds-tag[aria-disabled="true"] { opacity: var(--ds-opacity-disabled); cursor: not-allowed; }
+
+  @media (hover: hover) {
+    :is(a, button).ds-tag:hover { background: color-mix(in oklab, var(--ds-tone, var(--color-base-content)) 16%, transparent); }
+  }
+
+  /* Removable tag: a real button inside; 24px hit area, 44px on touch. Input chips are the keyboard-friendly sibling. */
+  .ds-tag__remove {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-inline-end: -0.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--ds-radius-full);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-tag__remove::after { content: ""; position: absolute; inset: -0.25rem; }
+  .ds-tag__remove > .ds-icon { width: 0.625rem; height: 0.625rem; }
+  .ds-tag__remove:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 1px; }
+  .ds-tag__remove:active { background: color-mix(in oklab, currentColor 22%, transparent); }
+  .ds-tag__remove:disabled { cursor: not-allowed; }
+
+  @media (hover: hover) {
+    .ds-tag__remove:hover { background: color-mix(in oklab, currentColor 14%, transparent); }
+  }
+
+  @media (pointer: coarse) {
+    .ds-tag__remove::after { inset: -0.625rem; }
+  }
+
+  /* ------------------------------------------------------------------ badge (count and dot) */
+  .ds-badge {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-inline-size: 1.125rem;
+    height: 1.125rem;
+    padding: 0 0.3125rem;
+    border: 1px solid transparent;
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-tone, var(--color-primary));
+    color: var(--ds-tone-content, var(--color-primary-content));
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    transition: transform var(--ds-duration-quick) var(--ds-ease-emphasized), opacity var(--ds-duration-fast) var(--ds-ease-standard), background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  /* Solid tones need white-on-tone AA; --ds-tone for info/primary uses the text variants, which are dark enough. */
+  .ds-badge.is-success, .ds-badge.is-warning, .ds-badge.is-error { background: var(--ds-tone); }
+  .ds-badge.is-info { background: var(--color-info); }
+  .ds-badge.is-primary { background: var(--color-primary); }
+  .ds-badge.is-neutral { background: var(--color-base-content); color: var(--color-base-100); }
+
+  .ds-badge.is-soft { border-color: transparent; background: color-mix(in oklab, var(--ds-tone, var(--color-primary)) 14%, transparent); color: var(--ds-tone-text, var(--ds-quiet)); }
+  .ds-badge.is-outline { border-color: color-mix(in oklab, var(--ds-tone, var(--color-primary)) 45%, transparent); background: var(--color-base-100); color: var(--ds-tone-text, var(--ds-quiet)); }
+  .ds-badge.is-neutral.is-soft, .ds-badge.is-neutral.is-outline { color: var(--color-base-content); }
+  .ds-badge.is-sm { min-inline-size: 0.875rem; height: 0.875rem; padding: 0 0.25rem; font-size: 0.5625rem; }
+  .ds-badge.is-lg { min-inline-size: 1.5rem; height: 1.5rem; padding: 0 0.5rem; font-size: 0.8125rem; }
+
+  /* Dot: no text; carry the meaning in the host's accessible name. */
+  .ds-badge.is-dot { min-inline-size: 0; width: 0.5rem; height: 0.5rem; padding: 0; }
+  .ds-badge.is-dot.is-sm { width: 0.375rem; height: 0.375rem; }
+  .ds-badge.is-dot.is-lg { width: 0.75rem; height: 0.75rem; }
+
+  /* A new value pops once (JS adds .is-updated, then removes it). */
+  .ds-badge.is-updated { animation: ds-badge-pop var(--ds-duration-enter) var(--ds-ease-emphasized); }
+
+  @keyframes ds-badge-pop {
+    from { transform: scale(0.8); }
+    to { transform: scale(1); }
+  }
+
+  .ds-badge[hidden] { display: none; }
+
+  /* ------------------------------------------------------------------ live dot, live badge, mode badge */
+  .ds-live-badge {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3125rem 0.75rem 0.3125rem 0.625rem;
+    border: 1px solid color-mix(in oklab, var(--color-primary) 40%, transparent);
+    border-radius: var(--ds-radius-full);
+    background: color-mix(in oklab, var(--color-primary) 10%, var(--color-base-100));
+    color: var(--ds-quiet);
+    font-size: var(--ds-type-eyebrow-size);
+    font-weight: 800;
+    line-height: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    animation: ds-glow 2.4s ease-in-out infinite;
+  }
+
+  .ds-live-dot {
+    position: relative;
+    display: block;
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-tone, var(--color-success));
+    animation: ds-blink 1.2s ease-in-out infinite;
+  }
+
+  .ds-live-dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--ds-tone, var(--color-success));
+    animation: ds-ping 1.6s var(--ds-ease-ping) infinite;
+  }
+
+  .ds-live-dot.is-sm { width: 0.375rem; height: 0.375rem; }
+  .ds-live-dot.is-lg { width: 0.75rem; height: 0.75rem; }
+
+  .ds-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 1.75rem;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid color-mix(in srgb, currentColor 60%, transparent);
+    border-radius: var(--ds-radius-full);
+    font-size: 0.75rem;
+    font-weight: 650;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .ds-mode-badge::before {
+    content: "";
+    flex-shrink: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 1.5px solid currentColor;
+    border-radius: var(--ds-radius-full);
+  }
+
+  .ds-mode-badge[data-mode="live"] {
+    border-color: var(--color-secondary-content);
+    background: var(--color-secondary-content);
+    color: var(--color-secondary);
+  }
+
+  .ds-mode-badge[data-mode="live"]::before { background: currentColor; }
+
+  /* Reduced motion: the dot stays, the loop stops, the word "Live" keeps the meaning. */
+  @media (prefers-reduced-motion: reduce) {
+    .ds-pill.is-live::before,
+    .ds-status.is-live.has-dot::before,
+    .ds-live-dot,
+    .ds-live-dot::after,
+    .ds-live-badge,
+    .ds-badge.is-updated { animation: none; }
+
+    .ds-live-dot::after { display: none; }
+  }
+
+  @media (forced-colors: active) {
+    .ds-badge, .ds-pill, .ds-status, .ds-tag { border: 1px solid CanvasText; forced-color-adjust: none; background: Canvas; color: CanvasText; }
+    .ds-badge.is-dot, .ds-live-dot { background: CanvasText; }
+  }
+}

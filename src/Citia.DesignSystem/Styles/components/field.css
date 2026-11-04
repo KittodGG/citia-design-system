@@ -1,0 +1,750 @@
+/* Form fields: field anatomy (label, hint, error, counter, help, horizontal), fieldset, and the shared states of bare daisyUI controls.
+   Origin: TPS .master-field / .master-fieldset / .auth-* / .entry-form / .user-role (app.css L1696–1975, L2144–2347).
+   Rules: label above the field, 8 px label→control→help, 24 px between fields, 16 px input text (no iOS zoom),
+   1 px control border ≥ 3:1, error text with icon under the field and in a summary at the top.
+   Wrapper-based controls (.ds-input, input group, number, password, search) live in inputs.css. Owner: batch A2. */
+
+@layer utilities {
+  /* Bare daisyUI controls (.input, .select, .textarea) share one set of states with the .ds-input wrapper.
+     Heights: sm 36 px, md 44 px, lg 52 px. Coarse pointers get 44 px at every size. */
+  :is(.input, .select, .textarea) {
+    --input-color: var(--ds-control-border);
+    border-color: var(--ds-control-border);
+    box-shadow: none;
+    color: var(--color-base-content);
+    transition: border-color var(--ds-duration-fast) var(--ds-ease-standard), background-color var(--ds-duration-fast) var(--ds-ease-standard), opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  :is(.input, .select):not(.input-xs, .input-sm, .input-lg, .input-xl, .select-xs, .select-sm, .select-lg, .select-xl) {
+    height: auto;
+    min-height: var(--ds-size-target);
+  }
+
+  :is(.input.input-sm, .select.select-sm, .input.input-xs, .select.select-xs) {
+    height: auto;
+    min-height: var(--ds-size-target-compact);
+    font-size: 0.875rem;
+  }
+
+  :is(.input.input-lg, .select.select-lg, .input.input-xl, .select.select-xl) {
+    height: auto;
+    min-height: 3.25rem;
+    font-size: 1.0625rem;
+  }
+
+  @media (pointer: coarse) {
+    :is(.input, .select) {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  :is(.input, .select, .textarea)::placeholder {
+    color: var(--ds-subtle);
+    opacity: 1;
+  }
+
+  @media (hover: hover) {
+    :is(.input, .select, .textarea):hover:not(:focus, :focus-within, :disabled, [readonly], [aria-invalid="true"], .input-validation-error) {
+      border-color: color-mix(in oklab, var(--ds-control-border) 60%, var(--color-base-content));
+    }
+  }
+
+  :is(.input, .select, .textarea):is(:focus, :focus-within, :focus-visible) {
+    --input-color: var(--ds-focus);
+    border-color: var(--ds-focus);
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+
+  :is(.input, .select, .textarea):is(.input-validation-error, .is-invalid, [aria-invalid="true"]),
+  :is(.input, .select, .textarea):user-invalid,
+  .input:has(> input:is([aria-invalid="true"], .input-validation-error)) {
+    --input-color: var(--color-error);
+    border-color: var(--color-error);
+  }
+
+  :is(.input, .select, .textarea)[data-state="success"]:not([aria-invalid="true"], .input-validation-error) {
+    border-color: var(--color-success);
+  }
+
+  :is(.input, .select, .textarea):disabled {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+    background-color: var(--color-base-200);
+    color: var(--color-base-content);
+    border-color: var(--ds-control-border);
+  }
+
+  /* Read-only: full-contrast text, quiet edge, still selectable. */
+  :is(.input, .textarea)[readonly] {
+    border-color: var(--color-base-300);
+    background-color: var(--color-base-200);
+    cursor: default;
+  }
+
+  :is(.input, .textarea)[readonly]:focus {
+    border-color: var(--color-base-300);
+  }
+
+  /* Autofill keeps the theme surface (browsers paint their own yellow or blue otherwise). */
+  :is(.input, .textarea, .select):-webkit-autofill {
+    -webkit-text-fill-color: var(--color-base-content);
+    box-shadow: 0 0 0 100rem var(--color-base-100) inset;
+    caret-color: var(--color-base-content);
+  }
+
+  :is(.input, .textarea, .select):autofill {
+    box-shadow: 0 0 0 100rem var(--color-base-100) inset;
+    color: var(--color-base-content);
+  }
+
+  label:has(> input:is([type="checkbox"], [type="radio"])) {
+    min-height: var(--ds-size-target);
+  }
+
+  @media (max-width: 640px) {
+    :is(input:not([type="checkbox"], [type="radio"], [type="range"]), select, textarea),
+    :is(.input.input-sm, .select.select-sm) {
+      font-size: 1rem;
+    }
+  }
+
+  /* daisyUI .label is nowrap; helper text under fields must wrap on phones. */
+  .fieldset .label {
+    white-space: normal;
+  }
+}
+
+@layer components {
+  .ds-form {
+    display: grid;
+    gap: var(--ds-space-field-group);
+    min-width: 0;
+  }
+
+  .ds-fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .ds-fieldset > legend {
+    padding: 0;
+    font-size: var(--ds-type-section-size);
+    font-weight: var(--ds-type-section-weight);
+    line-height: var(--ds-type-section-leading);
+  }
+
+  .ds-fieldset-help {
+    margin: 0.375rem 0 0;
+    font-size: 0.875rem;
+    color: var(--ds-subtle);
+  }
+
+  .ds-fieldset > .ds-field-grid {
+    margin-top: 1rem;
+  }
+
+  /* Group error: under the legend, linked by aria-describedby on the fieldset. */
+  .ds-fieldset > .ds-field-error {
+    margin-top: 0.5rem;
+  }
+
+  .ds-fieldset.is-boxed {
+    padding: 1.25rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-lg);
+  }
+
+  .ds-fieldset.is-boxed > legend {
+    padding-inline: 0.5rem;
+    margin-inline-start: -0.5rem;
+  }
+
+  .ds-fieldset[aria-invalid="true"] > legend {
+    color: var(--ds-error-text);
+  }
+
+  /* A disabled fieldset disables every control inside (native); text dims to match. */
+  .ds-fieldset:disabled {
+    cursor: not-allowed;
+  }
+
+  .ds-fieldset:disabled > :not(legend) {
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  .ds-fieldset:disabled :is(label, .ds-choice, .ds-check-row) {
+    cursor: not-allowed;
+  }
+
+  .ds-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ds-space-field-group);
+  }
+
+  .ds-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-field-stack);
+    min-width: 0;
+  }
+
+  .ds-field.is-wide {
+    grid-column: 1 / -1;
+  }
+
+  .ds-field > label,
+  .ds-label {
+    display: block;
+    font-size: var(--ds-type-label-size);
+    font-weight: var(--ds-type-label-weight);
+    line-height: var(--ds-type-label-leading);
+  }
+
+  /* "optional" / "locked" after the label text. */
+  .ds-label-note {
+    margin-inline-start: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--ds-subtle);
+  }
+
+  /* Required marker: an asterisk, only when most fields are optional. The control itself carries required. */
+  .ds-required {
+    margin-inline-start: 0.125rem;
+    color: var(--ds-error-text);
+    font-weight: 600;
+  }
+
+  /* Label row: label on the start, optional help button next to it. */
+  .ds-field__label-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .ds-field__label-row > label {
+    font-size: var(--ds-type-label-size);
+    font-weight: var(--ds-type-label-weight);
+    line-height: var(--ds-type-label-leading);
+  }
+
+  .ds-field__help {
+    position: relative;
+    display: inline-grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--ds-radius-full);
+    background: transparent;
+    color: var(--ds-subtle);
+    cursor: pointer;
+    transition: color var(--ds-duration-fast) var(--ds-ease-standard), background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  /* 24 px visible, 44 px hit area. */
+  .ds-field__help::after {
+    content: "";
+    position: absolute;
+    inset: -0.625rem;
+  }
+
+  @media (hover: hover) {
+    .ds-field__help:hover {
+      color: var(--color-base-content);
+      background: color-mix(in oklab, var(--color-base-content) 6%, transparent);
+    }
+  }
+
+  .ds-field__help:active {
+    background: color-mix(in oklab, var(--color-base-content) 10%, transparent);
+  }
+
+  .ds-field__help[aria-expanded="true"] {
+    color: var(--ds-quiet);
+    background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  }
+
+  /* Inline help: grows from 0 to its height with a grid row; hidden from AT and tab order when closed. */
+  .ds-field__help-text {
+    display: grid;
+    grid-template-rows: 1fr;
+    margin: 0;
+    transition: grid-template-rows var(--ds-duration-quick) var(--ds-ease-emphasized), opacity var(--ds-duration-quick) var(--ds-ease-emphasized), visibility 0s linear 0s;
+  }
+
+  .ds-field__help-text > * {
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+    color: var(--ds-subtle);
+  }
+
+  .ds-field__help-text[data-state="closed"] {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition: grid-template-rows var(--ds-duration-exit) var(--ds-ease-exit), opacity var(--ds-duration-exit) var(--ds-ease-exit), visibility 0s linear var(--ds-duration-exit);
+  }
+
+  .ds-hint {
+    margin: 0;
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+    color: var(--ds-subtle);
+  }
+
+  /* Error: icon + sentence in --ds-error-text. The icon is drawn by the stylesheet, so a bare span from asp-validation-for gets it too. */
+  .ds-field-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.375rem;
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--ds-error-text);
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-fast) var(--ds-ease-emphasized);
+  }
+
+  @starting-style {
+    .ds-field-error {
+      opacity: 0;
+      transform: translateY(calc(var(--ds-enter-offset) * -1));
+    }
+  }
+
+  .ds-field-error:not(:empty)::before {
+    content: "";
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1.2rem;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4M12 16h.01'/%3E%3C/svg%3E") center / 1rem 1rem no-repeat;
+  }
+
+  .ds-field-error:has(> .ds-icon)::before {
+    display: none;
+  }
+
+  .ds-field-error > .ds-icon {
+    margin-top: 0.125rem;
+  }
+
+  .ds-field-success {
+    display: flex;
+    gap: 0.375rem;
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--color-success);
+  }
+
+  :is(.ds-hint, .ds-field-error, .ds-field-success):empty {
+    display: none;
+  }
+
+  /* Hint or error on the start, counter on the end. */
+  .ds-field__meta {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .ds-field__meta > :first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .ds-counter {
+    flex-shrink: 0;
+    margin-inline-start: auto;
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+    font-variant-numeric: tabular-nums;
+    color: var(--ds-subtle);
+    transition: color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-counter[data-state="warn"] {
+    color: var(--ds-warning-text);
+  }
+
+  .ds-counter:is([data-state="limit"], [data-state="over"]) {
+    color: var(--ds-error-text);
+    font-weight: 600;
+  }
+
+  /* Horizontal layout: label column + control column; hint, error and counter align with the control. */
+  .ds-field.is-horizontal {
+    display: grid;
+    grid-template-columns: minmax(8rem, 14rem) minmax(0, 1fr);
+    column-gap: 1.5rem;
+    align-items: start;
+  }
+
+  .ds-field.is-horizontal > :not(label, .ds-field__label-row) {
+    grid-column: 2;
+  }
+
+  .ds-field.is-horizontal > :is(label, .ds-field__label-row) {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    padding-block-start: 0.6875rem;
+  }
+
+  .ds-field.is-horizontal > .ds-field__label-row > label {
+    padding: 0;
+  }
+
+  @media (max-width: 640px) {
+    .ds-field.is-horizontal {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ds-field.is-horizontal > :is(label, .ds-field__label-row) {
+      padding-block-start: 0;
+    }
+  }
+
+  .ds-field [id] {
+    scroll-margin-top: 6rem;
+  }
+
+  /* Readonly value shown as text in a field-shaped box (no fake input). */
+  .ds-readonly-value {
+    display: flex;
+    align-items: center;
+    min-height: var(--ds-size-target);
+    padding-inline: 0.75rem;
+    border-radius: var(--ds-radius-md);
+    background: var(--color-base-200);
+    overflow-wrap: anywhere;
+  }
+
+  /* Optional information collapsed below the required fields. */
+  .ds-optional-group {
+    margin-top: var(--ds-space-section);
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-base-300);
+  }
+
+  .ds-optional-group > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: var(--ds-size-target);
+    font-weight: 600;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .ds-optional-group > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ds-optional-group > summary > small {
+    margin-inline-start: auto;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--ds-subtle);
+  }
+
+  .ds-optional-group[open] > .ds-field-grid {
+    padding-top: 1.25rem;
+    animation: ds-enter var(--ds-duration-quick) var(--ds-ease-out);
+  }
+
+  /* A checkbox with a title and an explanation (Active setting, "remember me"). */
+  .ds-check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-height: var(--ds-size-target);
+    cursor: pointer;
+  }
+
+
+  .ds-check-row :is(strong, small) {
+    display: block;
+  }
+
+  .ds-check-row small {
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--ds-subtle);
+  }
+
+  /* Selectable card: role choice, plan choice. The whole card is the label. */
+  .ds-choice-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .ds-choice-grid.is-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ds-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-height: var(--ds-size-target);
+    padding: 1rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-lg);
+    background: var(--color-base-100);
+    cursor: pointer;
+    transition: border-color var(--ds-duration-fast) var(--ds-ease-standard), background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-choice:hover {
+    border-color: color-mix(in oklab, var(--color-primary) 45%, var(--color-base-300));
+  }
+
+  .ds-choice:has(:checked) {
+    border-color: var(--color-primary);
+    background: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100));
+  }
+
+  .ds-choice:has(:focus-visible) {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+
+  .ds-choice :is(strong, small) {
+    display: block;
+  }
+
+  .ds-choice small {
+    margin-top: 0.25rem;
+    font-size: 0.8125rem;
+    color: var(--ds-subtle);
+  }
+
+  /* Search field with a leading icon (version 1 markup; new pages use .ds-input.ds-search, see inputs.css). */
+  .ds-search {
+    position: relative;
+    flex: 1 1 16rem;
+    min-width: min(100%, 14rem);
+  }
+
+  .ds-search > svg {
+    position: absolute;
+    inset-inline-start: 0.85rem;
+    top: 50%;
+    z-index: 1;
+    transform: translateY(-50%);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+
+  /* Password with a show/hide toggle inside the field. */
+  .ds-password {
+    position: relative;
+  }
+
+
+  .ds-password-toggle {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+    display: grid;
+    place-items: center;
+    width: var(--ds-size-target);
+    border-radius: var(--radius-field);
+    color: var(--ds-subtle);
+    cursor: pointer;
+    transition: color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-password-toggle:is(:hover, [aria-pressed="true"]) {
+    color: var(--color-base-content);
+  }
+
+  .ds-password-toggle:focus-visible {
+    outline-offset: -2px;
+  }
+
+  /* Error summary at the top of a form: heading, sentence, links to each field. Focus it after a failed submit. */
+  .ds-error-summary {
+    padding: 1.25rem;
+    border: 1px solid var(--color-error);
+    border-radius: var(--ds-radius-md);
+    background: color-mix(in oklab, var(--color-error) 5%, var(--color-base-100));
+  }
+
+  .ds-error-summary h2 {
+    font-weight: 650;
+  }
+
+  .ds-error-summary p {
+    margin-top: 0.375rem;
+  }
+
+  .ds-error-summary ul {
+    margin-top: 0.75rem;
+    padding-inline-start: 1.25rem;
+    list-style: disc;
+  }
+
+  .ds-error-summary a {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  /* Form footer: Cancel on the left, actions on the right; stacked (primary first) on phones. */
+  .ds-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem var(--ds-space-panel);
+    border-top: 1px solid var(--color-base-300);
+    background: var(--color-base-100);
+    border-radius: 0 0 var(--ds-radius-box) var(--ds-radius-box);
+  }
+
+  .ds-form-actions > div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  /* Sticky variant for long forms. */
+  .ds-form-actions.is-sticky {
+    position: sticky;
+    bottom: 0;
+    z-index: var(--ds-z-sticky);
+    border-radius: 0;
+  }
+
+  /* One-time secrets: authenticator key, invitation link, recovery codes. */
+  .ds-secret {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-lg);
+    background: var(--color-base-200);
+  }
+
+  .ds-secret-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ds-subtle);
+  }
+
+  .ds-secret-value {
+    margin: 0.25rem 0 0.5rem;
+    font-family: var(--ds-font-mono);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
+
+  .ds-codes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-codes > li {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-md);
+    background: var(--color-base-200);
+    font-family: var(--ds-font-mono);
+    font-size: 0.9375rem;
+    letter-spacing: 0.04em;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 640px) {
+    .ds-field-grid,
+    .ds-choice-grid.is-2 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ds-form-actions {
+      padding: 1rem;
+    }
+
+    .ds-form-actions > div {
+      flex: 1 1 100%;
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-field-error {
+      transform: none;
+    }
+
+    .ds-field__help-text {
+      transition-property: opacity;
+    }
+  }
+}
+
+/* Overrides of daisyUI component styles: daisyUI 5 emits part of its rules in the utilities layer,
+   so these must live there too (same approach as TPS app.css). */
+@layer utilities {
+  .ds-field :is(.input, .select, .textarea) {
+    width: 100%;
+    max-width: 100%;
+    font-size: 1rem;
+    background-color: var(--color-base-100);
+  }
+
+  .ds-field :is(.input, .select):not(.input-sm, .input-lg, .select-sm, .select-lg) {
+    min-height: var(--ds-size-target);
+  }
+
+  .ds-field :is([readonly], select:disabled) {
+    color: var(--color-base-content);
+    background-color: var(--color-base-200);
+  }
+
+  .ds-check-row > :is(.checkbox, .radio, .toggle) {
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+  }
+
+  .ds-choice > :is(.radio, .checkbox) {
+    flex-shrink: 0;
+    margin-top: 0.125rem;
+  }
+
+  .ds-search > :is(input, .input) {
+    width: 100%;
+    padding-inline-start: 2.5rem;
+  }
+
+  .ds-password > :is(input, .input) {
+    width: 100%;
+    padding-inline-end: 3rem;
+  }
+}

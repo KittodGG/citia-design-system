@@ -1,0 +1,425 @@
+/* Popover, hover card, shared floating-layer motion, v1 menu panel and <details> menu. Owner: batch A9.
+   Origin: TPS .tps-popover (L3182), .master-menu-content (L1616–1650).
+   Floating layers use the HTML Popover API ([popover], :popover-open) on the top layer; popover.js / menu.js place them
+   next to their trigger (placeFloating) and set data-side + --ds-origin so they grow out of the trigger.
+   Enter: opacity + scale 0.96 → 1 from the trigger side (--ds-duration-quick, emphasized). Exit: back the same way,
+   --ds-duration-exit with exit easing. Reduced motion: opacity only. */
+
+@layer components {
+  /* ---------------------------------------------------------------- shared floating motion */
+  :is(.ds-popover, .ds-menu, .ds-menu-panel, .ds-hover-card)[popover] {
+    padding: 0;
+    overflow: visible;
+    color: var(--color-base-content);
+    opacity: 0;
+    scale: 0.96;
+    transform-origin: var(--ds-origin, top center);
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      scale var(--ds-duration-exit) var(--ds-ease-exit),
+      overlay var(--ds-duration-exit) allow-discrete,
+      display var(--ds-duration-exit) allow-discrete;
+  }
+
+  :is(.ds-popover, .ds-menu, .ds-menu-panel, .ds-hover-card)[popover]:popover-open {
+    opacity: 1;
+    scale: 1;
+    transition:
+      opacity var(--ds-duration-quick) var(--ds-ease-emphasized),
+      scale var(--ds-duration-quick) var(--ds-ease-emphasized),
+      overlay 0s allow-discrete,
+      display 0s allow-discrete;
+  }
+
+  @starting-style {
+    :is(.ds-popover, .ds-menu, .ds-menu-panel, .ds-hover-card)[popover]:popover-open {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+
+  /* Placed by script: invisible until positioned (one frame), then the enter transition runs from the trigger. */
+  :is(.ds-popover, .ds-menu, .ds-menu-panel, .ds-hover-card)[popover][data-ds-floating]:popover-open:not([data-side]) {
+    opacity: 0;
+  }
+
+  :is(.ds-popover, .ds-menu, .ds-menu-panel, .ds-hover-card)[popover][data-side] {
+    inset: auto;
+    margin: 0;
+  }
+
+  /* ---------------------------------------------------------------- popover */
+  .ds-popover {
+    border: var(--ds-border-hairline) solid var(--ds-popover-border);
+    border-radius: var(--ds-radius-lg);
+    background: var(--ds-popover);
+    color: var(--color-base-content);
+    box-shadow: var(--ds-shadow-popover);
+  }
+
+  .ds-popover[popover] {
+    z-index: var(--ds-z-popover);
+    width: min(20rem, calc(100vw - 1rem));
+    max-height: calc(100dvh - 1rem);
+    padding: var(--ds-space-4);
+    border-color: var(--color-base-300);
+    border-radius: var(--ds-radius-xl);
+    font-size: var(--ds-type-callout-size);
+    line-height: var(--ds-type-callout-leading);
+  }
+
+  .ds-popover[popover].is-sm {
+    width: min(15rem, calc(100vw - 1rem));
+    padding: var(--ds-space-3);
+  }
+
+  .ds-popover[popover].is-lg {
+    width: min(28rem, calc(100vw - 1rem));
+    padding: var(--ds-space-5);
+  }
+
+  .ds-popover[popover].is-auto {
+    width: max-content;
+    max-width: calc(100vw - 1rem);
+  }
+
+  .ds-popover:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-popover[popover]:focus {
+    outline: none;
+  }
+
+  .ds-popover__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ds-space-3);
+    margin-block-end: var(--ds-space-3);
+  }
+
+  .ds-popover__title {
+    margin: 0;
+    font-size: var(--ds-type-card-title-size);
+    font-weight: var(--ds-type-card-title-weight);
+    line-height: var(--ds-type-card-title-leading);
+  }
+
+  .ds-popover__description {
+    margin: var(--ds-space-1) 0 0;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+  }
+
+  .ds-popover__body {
+    display: grid;
+    gap: var(--ds-space-3);
+  }
+
+  .ds-popover__body.is-scroll {
+    max-height: min(24rem, 60dvh);
+    margin-inline: calc(var(--ds-space-4) * -1);
+    padding-inline: var(--ds-space-4);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .ds-popover__footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--ds-space-2);
+    margin: var(--ds-space-4) calc(var(--ds-space-4) * -1) calc(var(--ds-space-4) * -1);
+    padding: var(--ds-space-3) var(--ds-space-4);
+    border-block-start: var(--ds-border-hairline) solid var(--color-base-300);
+  }
+
+  .ds-popover__close {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: var(--ds-size-target-compact);
+    height: var(--ds-size-target-compact);
+    margin: calc(var(--ds-space-2) * -1) calc(var(--ds-space-2) * -1) 0 0;
+    border-radius: var(--ds-radius-box);
+    color: var(--ds-subtle);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (hover: hover) {
+    .ds-popover__close:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      color: var(--color-base-content);
+    }
+  }
+
+  .ds-popover__close:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-popover__close:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  /* Arrow: a hairline-edged square half tucked under the panel, pointing at the trigger (popover.js sets the offset). */
+  .ds-popover.is-arrow,
+  .ds-hover-card.is-arrow {
+    --ds-arrow-size: 0.75rem;
+  }
+
+  :is(.ds-popover, .ds-hover-card).is-arrow[data-side]::before {
+    content: "";
+    position: absolute;
+    width: var(--ds-arrow-size);
+    height: var(--ds-arrow-size);
+    border: inherit;
+    background: inherit;
+    rotate: 45deg;
+    pointer-events: none;
+  }
+
+  :is(.ds-popover, .ds-hover-card).is-arrow[data-side="bottom"]::before {
+    top: calc(var(--ds-arrow-size) / -2);
+    left: var(--ds-arrow-x, 50%);
+    margin-left: calc(var(--ds-arrow-size) / -2);
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  :is(.ds-popover, .ds-hover-card).is-arrow[data-side="top"]::before {
+    bottom: calc(var(--ds-arrow-size) / -2);
+    left: var(--ds-arrow-x, 50%);
+    margin-left: calc(var(--ds-arrow-size) / -2);
+    border-top: 0;
+    border-left: 0;
+  }
+
+  :is(.ds-popover, .ds-hover-card).is-arrow[data-side="right"]::before {
+    left: calc(var(--ds-arrow-size) / -2);
+    top: var(--ds-arrow-y, 50%);
+    margin-top: calc(var(--ds-arrow-size) / -2);
+    border-top: 0;
+    border-right: 0;
+  }
+
+  :is(.ds-popover, .ds-hover-card).is-arrow[data-side="left"]::before {
+    right: calc(var(--ds-arrow-size) / -2);
+    top: var(--ds-arrow-y, 50%);
+    margin-top: calc(var(--ds-arrow-size) / -2);
+    border-bottom: 0;
+    border-left: 0;
+  }
+
+  /* ---------------------------------------------------------------- hover card */
+  .ds-hover-card {
+    width: min(20rem, calc(100vw - 1rem));
+    padding: var(--ds-space-4);
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-popover);
+    box-shadow: var(--ds-shadow-popover);
+    font-size: var(--ds-type-callout-size);
+    line-height: var(--ds-type-callout-leading);
+  }
+
+  .ds-hover-card[popover] {
+    z-index: var(--ds-z-popover);
+    padding: var(--ds-space-4);
+  }
+
+  .ds-hover-card__head {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-3);
+  }
+
+  .ds-hover-card__title {
+    margin: 0;
+    font-size: var(--ds-type-card-title-size);
+    font-weight: var(--ds-type-card-title-weight);
+    line-height: var(--ds-type-card-title-leading);
+  }
+
+  .ds-hover-card__meta {
+    margin: 0;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+  }
+
+  .ds-hover-card__body {
+    margin-block-start: var(--ds-space-3);
+  }
+
+  .ds-hover-card__footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-space-1) var(--ds-space-4);
+    margin-block-start: var(--ds-space-3);
+    padding-block-start: var(--ds-space-3);
+    border-block-start: var(--ds-border-hairline) solid var(--color-base-300);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The trigger shows that more is available without shouting: dotted underline on text links. */
+  [data-ds-hover-card]:is(a, button):not(.btn) {
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  [data-ds-hover-card][data-state="open"]:not(.btn) {
+    text-decoration-style: solid;
+  }
+
+  /* ---------------------------------------------------------------- v1 menu panel (row actions, overflow) */
+  .ds-menu-panel {
+    position: absolute;
+    inset-inline-end: 0;
+    z-index: var(--ds-z-menu);
+    width: var(--ds-size-menu);
+    margin: 0;
+    padding: var(--ds-space-1-5);
+    list-style: none;
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-lg);
+    background: var(--color-base-100);
+    box-shadow: var(--ds-shadow-menu);
+  }
+
+  .ds-menu-panel[popover] {
+    position: fixed;
+    max-width: calc(100vw - 1rem);
+    padding: var(--ds-space-1-5);
+    overflow-y: auto;
+    background: var(--ds-popover);
+    border-color: var(--color-base-300);
+    box-shadow: var(--ds-shadow-popover);
+  }
+
+  .ds-menu-panel :is(a, button) {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-2);
+    width: 100%;
+    min-height: var(--ds-size-target-compact);
+    padding: var(--ds-space-2) var(--ds-space-2-5);
+    border-radius: var(--ds-radius-md);
+    color: inherit;
+    font-size: var(--ds-type-callout-size);
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (hover: hover) {
+    .ds-menu-panel :is(a, button):hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-menu-panel :is(a, button):active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-menu-panel :is(a, button):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: -2px;
+  }
+
+  .ds-menu-panel :is(a, button):is(:disabled, [aria-disabled="true"]) {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+    background: transparent;
+  }
+
+  .ds-menu-panel :is(a, button).is-danger {
+    color: var(--ds-error-text);
+  }
+
+  .ds-menu-panel :is(p, .ds-menu-note) {
+    margin: var(--ds-space-1-5) var(--ds-space-2) var(--ds-space-1);
+    padding-top: var(--ds-space-2);
+    border-top: var(--ds-border-hairline) solid var(--color-base-300);
+    font-size: var(--ds-type-footnote-size);
+    color: var(--ds-subtle);
+  }
+
+  @media (pointer: coarse) {
+    .ds-menu-panel :is(a, button) {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  /* <details> used as a menu: no marker, positioned panel, grows from the summary. */
+  .ds-disclosure-menu {
+    position: relative;
+  }
+
+  .ds-disclosure-menu > summary {
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .ds-disclosure-menu > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ds-disclosure-menu[open] > .ds-menu-panel {
+    transform-origin: top right;
+    animation: ds-floating-in var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  [dir="rtl"] .ds-disclosure-menu[open] > .ds-menu-panel {
+    transform-origin: top left;
+  }
+
+  .ds-disclosure-menu > summary .ds-disclosure-menu__chevron {
+    transition: rotate var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-disclosure-menu[open] > summary .ds-disclosure-menu__chevron {
+    rotate: 180deg;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :is(.ds-popover, .ds-menu, .ds-menu-panel, .ds-hover-card)[popover],
+    :is(.ds-popover, .ds-menu, .ds-menu-panel, .ds-hover-card)[popover]:popover-open {
+      scale: 1;
+    }
+
+    @starting-style {
+      :is(.ds-popover, .ds-menu, .ds-menu-panel, .ds-hover-card)[popover]:popover-open {
+        scale: 1;
+      }
+    }
+
+    .ds-disclosure-menu[open] > .ds-menu-panel {
+      animation-name: ds-fade-in;
+      animation-duration: var(--ds-duration-fast);
+    }
+  }
+
+  @media (forced-colors: active) {
+    :is(.ds-popover, .ds-menu, .ds-menu-panel, .ds-hover-card) {
+      border-color: CanvasText;
+    }
+  }
+}
+
+@keyframes ds-floating-in {
+  from { opacity: 0; scale: 0.96; }
+  to { opacity: 1; scale: 1; }
+}
+
+@keyframes ds-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

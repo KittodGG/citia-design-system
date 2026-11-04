@@ -1,0 +1,926 @@
+/* Calendar (Cally web component, daisyUI .cally), date picker, date range picker, time picker.
+   Origin: TPS app.css L315–323, L1244–1273 and site.js pickers. Owner: batch A4.
+   Day states come from Cally's shadow parts: day, selected, today, outside, disallowed, range-start, range-end, range-inner. */
+
+@layer components {
+
+  /* ------------------------------------------------------------ calendar shell (inline or inside a picker popover) */
+  .ds-calendar {
+    position: relative;
+    display: grid;
+    gap: var(--ds-space-3);
+    width: max-content;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .ds-calendar.is-card {
+    padding: var(--ds-space-4);
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    background: var(--color-base-100);
+    box-shadow: var(--ds-shadow-xs);
+  }
+
+  .ds-calendar__months {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-space-3) var(--ds-space-6);
+  }
+
+  /* Month and year title in Cally's heading slot: a button that opens the month/year jump view. */
+  .ds-calendar__title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-space-1);
+    min-height: var(--ds-calendar-day, 2.5rem);
+    padding-inline: var(--ds-space-3);
+    border: 0;
+    border-radius: var(--ds-radius-full);
+    background: transparent;
+    color: var(--color-base-content);
+    font: inherit;
+    font-size: var(--ds-type-callout-size);
+    font-weight: var(--ds-weight-semibold);
+    letter-spacing: var(--ds-type-callout-tracking);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-calendar__title > svg {
+    width: var(--ds-size-icon-sm);
+    height: var(--ds-size-icon-sm);
+    color: var(--ds-subtle);
+    transition: transform var(--ds-duration-spring) var(--ds-ease-spring);
+  }
+
+  .ds-calendar__title[aria-expanded="true"] > svg {
+    transform: rotate(180deg);
+  }
+
+  @media (hover: hover) {
+    .ds-calendar__title:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-calendar__title:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-calendar__title:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  /* Jump view: year select and a 3 × 4 month grid laid over the day grid. */
+  .ds-calendar__jump {
+    position: absolute;
+    inset: calc(var(--ds-calendar-day, 2.5rem) + var(--ds-space-2)) 0 0;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: var(--ds-space-3);
+    padding-block-start: var(--ds-space-2);
+    background: inherit;
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--ds-duration-enter) var(--ds-ease-emphasized),
+      transform var(--ds-duration-enter) var(--ds-ease-emphasized),
+      display var(--ds-duration-enter) allow-discrete;
+  }
+
+  .ds-calendar.is-card .ds-calendar__jump {
+    inset-inline: var(--ds-space-4);
+    inset-block-end: var(--ds-space-4);
+    inset-block-start: calc(var(--ds-space-4) + var(--ds-calendar-day, 2.5rem) + var(--ds-space-2));
+  }
+
+  .ds-calendar__jump[hidden] {
+    display: none;
+    opacity: 0;
+    transform: translateY(calc(var(--ds-enter-offset) * -1));
+    transition-duration: var(--ds-duration-exit);
+    transition-timing-function: var(--ds-ease-exit);
+  }
+
+  @starting-style {
+    .ds-calendar__jump:not([hidden]) {
+      opacity: 0;
+      transform: translateY(calc(var(--ds-enter-offset) * -1));
+    }
+  }
+
+  .ds-calendar[data-view="jump"] :is(calendar-month, .ds-calendar__months) {
+    visibility: hidden;
+  }
+
+  .ds-calendar__year {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-2);
+    font-size: var(--ds-type-footnote-size);
+    font-weight: var(--ds-weight-semibold);
+    color: var(--ds-muted);
+  }
+
+  .ds-calendar__year > select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ds-calendar__month-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-content: start;
+    gap: var(--ds-space-1);
+  }
+
+  .ds-calendar__month-grid > button {
+    min-height: var(--ds-calendar-day, 2.5rem);
+    padding-inline: var(--ds-space-2);
+    border: 0;
+    border-radius: var(--ds-radius-full);
+    background: transparent;
+    color: var(--color-base-content);
+    font: inherit;
+    font-size: var(--ds-type-footnote-size);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (hover: hover) {
+    .ds-calendar__month-grid > button:hover:not(:disabled) {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-calendar__month-grid > button:active:not(:disabled) {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-calendar__month-grid > button:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-calendar__month-grid > button[aria-current="true"] {
+    color: var(--ds-primary-text);
+    font-weight: var(--ds-weight-semibold);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-primary) 55%, transparent);
+  }
+
+  .ds-calendar__month-grid > button[aria-pressed="true"] {
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+    font-weight: var(--ds-weight-semibold);
+    box-shadow: none;
+  }
+
+  .ds-calendar__month-grid > button:disabled {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  /* ------------------------------------------------------------ picker popover (date, range) */
+  .ds-picker-popover {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    width: max-content;
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100dvh - 1rem);
+    overflow: auto;
+    padding: var(--ds-space-3);
+    border: 1px solid var(--ds-popover-border);
+    border-radius: var(--ds-radius-box);
+    background: var(--ds-popover);
+    color: var(--color-base-content);
+    box-shadow: var(--ds-shadow-popover);
+    overscroll-behavior: contain;
+    transform-origin: top left;
+    opacity: 0;
+    transform: translateY(calc(var(--ds-enter-offset) * -1)) scale(0.98);
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      transform var(--ds-duration-exit) var(--ds-ease-exit),
+      display var(--ds-duration-exit) allow-discrete,
+      overlay var(--ds-duration-exit) allow-discrete;
+  }
+
+  .ds-picker-popover[data-side="top"] {
+    transform-origin: bottom left;
+    transform: translateY(var(--ds-enter-offset)) scale(0.98);
+  }
+
+  .ds-picker-popover[popover]:popover-open {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    transition-duration: var(--ds-duration-enter);
+    transition-timing-function: var(--ds-ease-emphasized);
+  }
+
+  @starting-style {
+    .ds-picker-popover[popover]:popover-open {
+      opacity: 0;
+      transform: translateY(calc(var(--ds-enter-offset) * -1)) scale(0.98);
+    }
+
+    .ds-picker-popover[popover][data-side="top"]:popover-open {
+      transform: translateY(var(--ds-enter-offset)) scale(0.98);
+    }
+  }
+
+  .ds-picker-popover__body {
+    display: flex;
+    gap: var(--ds-space-4);
+  }
+
+  .ds-picker-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--ds-space-2);
+    margin-block-start: var(--ds-space-3);
+    padding-block-start: var(--ds-space-3);
+    border-top: 1px solid var(--color-base-300);
+  }
+
+  .ds-picker-footer__note {
+    flex: 1 1 10rem;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+    color: var(--ds-subtle);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Presets beside a range calendar: quiet list, the active one carries the selection tint and a check. */
+  .ds-picker-presets {
+    display: grid;
+    align-content: start;
+    gap: var(--ds-space-0-5);
+    min-width: 9.5rem;
+    margin: 0;
+    padding: 0 var(--ds-space-3) 0 0;
+    border-inline-end: 1px solid var(--color-base-300);
+    list-style: none;
+  }
+
+  .ds-picker-presets button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-2);
+    width: 100%;
+    min-height: 2.25rem;
+    padding: var(--ds-space-1-5) var(--ds-space-2-5);
+    border: 0;
+    border-radius: var(--ds-radius-md);
+    background: transparent;
+    color: var(--color-base-content);
+    font: inherit;
+    font-size: var(--ds-type-footnote-size);
+    text-align: start;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-picker-presets button > svg {
+    width: var(--ds-size-icon-sm);
+    height: var(--ds-size-icon-sm);
+    visibility: hidden;
+  }
+
+  @media (hover: hover) {
+    .ds-picker-presets button:hover:not(:disabled) {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-picker-presets button:active:not(:disabled) {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-picker-presets button:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-picker-presets button[aria-pressed="true"] {
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    color: var(--color-base-content);
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  .ds-picker-presets button[aria-pressed="true"] > svg {
+    visibility: visible;
+    color: var(--color-primary);
+  }
+
+  .ds-picker-presets button:disabled {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  /* ------------------------------------------------------------ date and range fields (enhanced) */
+  .ds-date-picker,
+  .ds-date-range,
+  .ds-time-picker {
+    min-width: 0;
+  }
+
+  .ds-date-range__fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ds-space-field-group);
+  }
+
+  /* The field box (daisyUI .input used as a wrapper): typed text, then the trigger. */
+  .ds-date-picker__control,
+  .ds-date-range__control,
+  .ds-time-picker__control {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-1);
+    width: 100%;
+    padding-inline-end: var(--ds-space-1);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds-date-picker__input,
+  .ds-date-range__input {
+    flex: 1 1 0;
+    min-width: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds-date-range__input {
+    flex: 0 1 11ch;
+  }
+
+  .ds-date-range__dash {
+    flex: none;
+    color: var(--ds-subtle);
+  }
+
+  .ds-date-picker__input::placeholder,
+  .ds-date-range__input::placeholder {
+    color: var(--ds-subtle);
+    opacity: 1;
+  }
+
+  /* Calendar / clock trigger inside the field: quiet icon button, 44 px hit area on touch. */
+  .ds-picker-trigger {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    margin-inline-start: auto;
+    border: 0;
+    border-radius: var(--ds-radius-md);
+    background: transparent;
+    color: var(--ds-muted);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-picker-trigger::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, var(--ds-size-target));
+    height: max(100%, var(--ds-size-target));
+    translate: -50% -50%;
+  }
+
+  .ds-picker-trigger > svg {
+    width: var(--ds-size-icon-md);
+    height: var(--ds-size-icon-md);
+  }
+
+  @media (hover: hover) {
+    .ds-picker-trigger:hover:not(:disabled) {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      color: var(--color-base-content);
+    }
+  }
+
+  .ds-picker-trigger:active:not(:disabled) {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-picker-trigger[aria-expanded="true"] {
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    color: var(--color-primary);
+  }
+
+  .ds-picker-trigger:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 0;
+  }
+
+  .ds-picker-trigger:disabled {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  /* Clear button: appears only when there is a value. */
+  .ds-picker-clear {
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-inline-start: 0;
+    color: var(--ds-subtle);
+  }
+
+  .ds-picker-clear[hidden] {
+    display: none;
+  }
+
+  .ds-picker-trigger + .ds-picker-trigger,
+  .ds-picker-clear + .ds-picker-trigger {
+    margin-inline-start: 0;
+  }
+
+  /* Inner inputs inherit the box; the box shows focus, invalid, disabled and read-only. */
+  :is(.ds-date-picker__control, .ds-date-range__control, .ds-time-picker__control) input {
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+  }
+
+  :is(.ds-date-picker__control, .ds-date-range__control, .ds-time-picker__control):has(input[aria-invalid="true"], input.input-validation-error) {
+    border-color: var(--color-error);
+  }
+
+  :is(.ds-date-picker__control, .ds-date-range__control, .ds-time-picker__control):has(input:read-only:not(.ds-time-picker__segment)),
+  :is(.ds-date-picker__control, .ds-date-range__control, .ds-time-picker__control)[data-readonly] {
+    background-color: var(--color-base-200);
+  }
+
+  :is(.ds-date-picker__control, .ds-date-range__control, .ds-time-picker__control):has(input:disabled) {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  /* ------------------------------------------------------------ time picker: hour, minute, (second), period segments */
+  .ds-time-picker__segments {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .ds-time-picker__segment {
+    box-sizing: content-box;
+    width: 2ch;
+    padding: var(--ds-space-0-5) var(--ds-space-1);
+    border-radius: var(--ds-radius-sm);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    caret-color: transparent;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-time-picker__segment.is-period {
+    width: auto;
+    min-width: 2.5ch;
+    field-sizing: content;
+  }
+
+  .ds-time-picker__segment::placeholder {
+    color: var(--ds-subtle);
+    opacity: 1;
+  }
+
+  .ds-time-picker__segment::selection {
+    background: transparent;
+  }
+
+  .ds-time-picker__segment:focus {
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100% + 6%), transparent);
+    color: var(--color-base-content);
+  }
+
+  .ds-time-picker__sep {
+    color: var(--ds-subtle);
+    user-select: none;
+  }
+
+  .ds-time-picker__control > .ds-picker-trigger {
+    pointer-events: none;
+    background: transparent;
+  }
+
+  /* ------------------------------------------------------------ phones: picker popovers become a bottom sheet */
+  @media (max-width: 639.98px) {
+    .ds-picker-popover {
+      inset: auto 0 0;
+      width: 100%;
+      max-width: none;
+      max-height: calc(100dvh - 2rem);
+      padding: var(--ds-space-4) var(--ds-space-4) calc(var(--ds-space-4) + env(safe-area-inset-bottom));
+      border-width: 1px 0 0;
+      border-radius: var(--ds-radius-card) var(--ds-radius-card) 0 0;
+      transform-origin: bottom center;
+      transform: translateY(100%);
+      transition-duration: var(--ds-duration-exit);
+    }
+
+    .ds-picker-popover[popover]:popover-open {
+      transform: none;
+      transition-duration: var(--ds-duration-spring);
+      transition-timing-function: var(--ds-ease-spring);
+    }
+
+    @starting-style {
+      .ds-picker-popover[popover]:popover-open,
+      .ds-picker-popover[popover][data-side="top"]:popover-open {
+        transform: translateY(100%);
+      }
+    }
+
+    .ds-picker-popover::backdrop {
+      background: var(--ds-scrim);
+    }
+
+    .ds-picker-popover .ds-calendar {
+      width: 100%;
+      justify-items: center;
+    }
+
+    .ds-picker-popover__body {
+      flex-direction: column;
+    }
+
+    .ds-picker-presets {
+      display: flex;
+      gap: var(--ds-space-1);
+      padding: 0 0 var(--ds-space-3);
+      overflow-x: auto;
+      border-inline-end: 0;
+      border-bottom: 1px solid var(--color-base-300);
+      scrollbar-width: none;
+    }
+
+    .ds-picker-presets button {
+      min-height: var(--ds-size-target-compact);
+      border: 1px solid var(--color-base-300);
+      border-radius: var(--ds-radius-full);
+    }
+
+    .ds-date-range__fields {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-picker-popover,
+    .ds-picker-popover[data-side="top"],
+    .ds-picker-popover[popover]:popover-open,
+    .ds-calendar__jump,
+    .ds-calendar__jump[hidden] {
+      transform: none;
+      transition-property: opacity, display, overlay;
+      transition-duration: var(--ds-duration-fast);
+    }
+
+    @starting-style {
+      .ds-picker-popover[popover]:popover-open,
+      .ds-picker-popover[popover][data-side="top"]:popover-open,
+      .ds-calendar__jump:not([hidden]) {
+        transform: none;
+      }
+    }
+
+    .ds-calendar__title > svg {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-picker-trigger[aria-expanded="true"],
+    .ds-picker-presets button[aria-pressed="true"],
+    .ds-calendar__month-grid > button[aria-pressed="true"] {
+      outline: 2px solid Highlight;
+    }
+  }
+}
+
+/* Cally parts. daisyUI 5 styles .cally in a layer that utilities beat, so the refinements live here. */
+@layer utilities {
+
+  /* Inputs inside the picker boxes: daisyUI sizes ".input input" in this layer too. */
+  .ds-time-picker__control .ds-time-picker__segment {
+    flex: none;
+    width: 2ch;
+    min-width: 0;
+    padding: var(--ds-space-0-5) var(--ds-space-1);
+  }
+
+  .ds-time-picker__control .ds-time-picker__segment.is-period {
+    width: auto;
+    min-width: 2.5ch;
+  }
+
+  .ds-date-range__control .ds-date-range__input {
+    flex: 0 1 11ch;
+    width: 11ch;
+  }
+
+  .ds-date-picker__control .ds-date-picker__input {
+    flex: 1 1 0;
+    width: 100%;
+  }
+
+  .cally {
+    --ds-calendar-day: 2.5rem;
+    width: max-content;
+    max-width: 100%;
+    padding: 0;
+    font-size: var(--ds-type-body-size);
+    color: var(--color-base-content);
+  }
+
+  @media (pointer: coarse) {
+    .cally,
+    .ds-calendar {
+      --ds-calendar-day: var(--ds-size-target);
+    }
+  }
+
+  .cally calendar-month {
+    --color-accent: var(--color-primary);
+    --color-text-on-accent: var(--color-primary-content);
+    width: auto;
+  }
+
+  .cally::part(container) {
+    gap: var(--ds-space-2);
+    padding: 0;
+  }
+
+  .cally::part(header) {
+    gap: var(--ds-space-1);
+    min-height: var(--ds-calendar-day);
+  }
+
+  .cally::part(heading) {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    font-size: var(--ds-type-callout-size);
+    font-weight: var(--ds-weight-semibold);
+    text-align: center;
+  }
+
+  /* Previous / next month. */
+  .cally::part(button) {
+    display: grid;
+    place-items: center;
+    width: var(--ds-calendar-day);
+    height: var(--ds-calendar-day);
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border-radius: var(--ds-radius-full);
+    background: transparent;
+    color: var(--ds-muted);
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (hover: hover) {
+    .cally::part(button):hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      color: var(--color-base-content);
+    }
+  }
+
+  .cally::part(button):active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .cally::part(button):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .cally::part(button disabled) {
+    opacity: var(--ds-opacity-disabled);
+    background: transparent;
+    cursor: not-allowed;
+  }
+
+  .cally > svg[slot] {
+    width: var(--ds-size-icon-md);
+    height: var(--ds-size-icon-md);
+  }
+
+  /* Month name above each grid: only when several months show side by side (one month: the title says it). */
+  .cally ::part(heading) {
+    font-size: var(--ds-type-footnote-size);
+    font-weight: var(--ds-weight-semibold);
+    color: var(--color-base-content);
+    text-align: center;
+  }
+
+  .cally[data-ds-ready]:has(> calendar-month:only-of-type) calendar-month::part(heading) {
+    display: none;
+  }
+
+  .cally ::part(head) {
+    opacity: 1;
+  }
+
+  .cally ::part(th) {
+    block-size: 2rem;
+    font-size: var(--ds-type-caption-size);
+    font-weight: var(--ds-weight-medium);
+    letter-spacing: var(--ds-type-caption-tracking);
+    color: var(--ds-subtle);
+  }
+
+  .cally ::part(td) {
+    padding-block: 1px;
+  }
+
+  /* Day: rest, hover, pressed, focus-visible. */
+  .cally ::part(day) {
+    inline-size: var(--ds-calendar-day);
+    block-size: var(--ds-calendar-day);
+    min-width: 0;
+    min-height: 0;
+    border-radius: var(--ds-radius-full);
+    background: transparent;
+    color: var(--color-base-content);
+    font-size: var(--ds-type-footnote-size);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard), box-shadow var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (hover: hover) {
+    .cally ::part(day):hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .cally ::part(day):active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .cally ::part(day):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    color: var(--color-base-content);
+  }
+
+  /* Today: ring and weight, not a fill (the fill means "selected"). */
+  .cally ::part(today) {
+    background: transparent;
+    color: var(--ds-primary-text);
+    font-weight: var(--ds-weight-bold);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-primary) 55%, transparent);
+  }
+
+  @media (hover: hover) {
+    .cally ::part(today):hover {
+      background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  /* Selected (single date, range ends). */
+  .cally ::part(selected),
+  .cally ::part(selected):focus-visible {
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+    font-weight: var(--ds-weight-semibold);
+    box-shadow: none;
+  }
+
+  @media (hover: hover) {
+    .cally ::part(selected):hover {
+      background: color-mix(in oklab, var(--color-primary) 88%, var(--color-base-content));
+    }
+  }
+
+  /* Range: one continuous tonal band between two solid ends. */
+  .cally ::part(range-inner),
+  .cally ::part(range-inner):focus-visible {
+    border-radius: 0;
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    color: var(--color-base-content);
+    font-weight: var(--ds-weight-medium);
+  }
+
+  @media (hover: hover) {
+    .cally ::part(range-inner):hover {
+      background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100% + 8%), transparent);
+    }
+  }
+
+  .cally ::part(range-start) {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  .cally ::part(range-end) {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+
+  .cally ::part(range-start range-end) {
+    border-radius: var(--ds-radius-full);
+  }
+
+  /* While the end date is still being chosen, the band is a lighter preview. */
+  .cally[data-state="tentative"] ::part(range-inner) {
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+  }
+
+  .cally[data-state="tentative"] ::part(range-end) {
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100% + 10%), transparent);
+    color: var(--color-base-content);
+    box-shadow: inset 0 0 0 1.5px var(--color-primary);
+  }
+
+  .cally[data-state="tentative"] ::part(range-start range-end) {
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+    box-shadow: none;
+  }
+
+  /* Outside the shown month, unavailable, outside min/max. */
+  .cally ::part(outside) {
+    opacity: 1;
+    color: var(--ds-quiet);
+  }
+
+  .cally ::part(disallowed) {
+    opacity: 1;
+    color: var(--ds-quiet);
+    text-decoration: line-through;
+    text-decoration-color: color-mix(in oklab, var(--ds-quiet) 70%, transparent);
+    cursor: not-allowed;
+  }
+
+  .cally ::part(day):disabled {
+    opacity: var(--ds-opacity-disabled);
+    background: transparent;
+    cursor: not-allowed;
+  }
+
+  .cally ::part(day disallowed):hover,
+  .cally ::part(day):disabled:hover {
+    background: transparent;
+  }
+
+  .ds-calendar[aria-disabled="true"] .cally {
+    opacity: var(--ds-opacity-disabled);
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cally ::part(day),
+    .cally::part(button) {
+      transition-duration: var(--ds-duration-fast);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .cally ::part(selected) {
+      background: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+
+    .cally ::part(range-inner) {
+      background: Canvas;
+      color: CanvasText;
+      outline: 1px solid Highlight;
+      outline-offset: -2px;
+    }
+
+    .cally ::part(today) {
+      outline: 1px solid CanvasText;
+      outline-offset: -2px;
+    }
+
+    .cally ::part(day):focus-visible {
+      outline: 2px solid Highlight;
+    }
+  }
+}

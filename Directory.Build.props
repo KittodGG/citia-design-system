@@ -1,0 +1,13 @@
+<Project>
+  <!-- Shared by every project in this repository (and by tools/tokens.cs as a file-based app). Same target as TPS Integration. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Authors>Citia Engineering Indonesia</Authors>
+    <Company>Citia Engineering Indonesia</Company>
+    <Product>Citia Design System</Product>
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+  </PropertyGroup>
+</Project>

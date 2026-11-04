@@ -1,0 +1,51 @@
+/*
+ * Citia Design System — source entry for apps that build their own CSS with Tailwind CSS v4 + daisyUI 5
+ * (Tailwind standalone CLI, no Node). Import AFTER tailwindcss and the daisyUI plugin in the app's input CSS:
+ *
+ *   @import "tailwindcss" source(none);
+ *   @plugin "../.tools/daisyui.mjs" { themes: false; logs: false; }
+ *   @import "../../citia-design-system/src/Citia.DesignSystem/Styles/ds.css";
+ *   @source "../Views";
+ *   @source "../Pages";
+ *
+ * Themes: generated/tokens.css defines every daisyUI variable per [data-theme] (light, dark; aliases tps, tps-dark), so daisyUI's own themes stay off.
+ * Order: tokens (unlayered, final authority) → fonts → base → components → user-preference overrides.
+ */
+@import "./generated/tailwind-theme.css";
+@import "./generated/tokens.css";
+@import "./fonts.css";
+@import "./base.css";
+@import "./native.css";
+@import "./daisyui-overrides.css";
+@import "./components/prose.css";
+@import "./components/button.css";
+@import "./components/actions.css";
+@import "./components/field.css";
+@import "./components/inputs.css";
+@import "./components/choices.css";
+@import "./components/combobox.css";
+@import "./components/calendar.css";
+@import "./components/upload.css";
+@import "./components/form-layout.css";
+@import "./components/status.css";
+@import "./components/display.css";
+@import "./components/surface.css";
+@import "./components/table.css";
+@import "./components/lists.css";
+@import "./components/code.css";
+@import "./components/dataviz.css";
+@import "./components/media.css";
+@import "./components/feedback.css";
+@import "./components/notification.css";
+@import "./components/disclosure.css";
+@import "./components/tooltip.css";
+@import "./components/overlay.css";
+@import "./components/popover.css";
+@import "./components/sheet.css";
+@import "./components/menu.css";
+@import "./components/command.css";
+@import "./components/navigation.css";
+@import "./components/nav-bars.css";
+@import "./components/shell.css";
+@import "./components/layout.css";
+@import "./accessibility.css";

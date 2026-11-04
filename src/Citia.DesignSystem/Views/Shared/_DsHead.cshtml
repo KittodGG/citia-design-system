@@ -1,0 +1,33 @@
+@model object?
+@*
+  Head block for every layout: colour scheme, font preload, theme bootstrap BEFORE the stylesheet (no light flash in dark mode),
+  stylesheet. Usage: <partial name="_DsHead" model='new HeadOptions(Stylesheet: "~/css/app.css")' />
+  The <html> element should carry the server default: <html lang="en" data-theme="light">.
+  The model is typed object: <partial name="_DsHead" /> without a model receives the page's own model, which must not throw.
+*@
+@{
+    var o = Model as HeadOptions ?? new HeadOptions();
+    var href = o.Stylesheet ?? "~/_content/Citia.DesignSystem/css/ds.css";
+    var cfg = System.Text.Json.JsonSerializer.Serialize(new { l = o.Light, d = o.Dark, s = o.Storage });
+}
+<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" content="#f9f9f6" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0e141b" media="(prefers-color-scheme: dark)" />
+@if (o.PreloadFont)
+{
+    @* Same absolute URL as the @font-face rule (no ~/): a fingerprinted URL from MapStaticAssets would be a second download. *@
+    <link rel="preload" href="/_content/Citia.DesignSystem/fonts/manrope/manrope-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+}
+<script>
+    (function (c) {
+        try {
+            var h = document.documentElement, m = localStorage.getItem(c.s + "-theme");
+            if (m !== "light" && m !== "dark") m = "system";
+            var dark = m === "dark" || (m === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+            h.setAttribute("data-theme", dark ? c.d : c.l); h.dataset.dsScheme = dark ? "dark" : "light";
+            h.dataset.dsMode = m; h.dataset.dsLight = c.l; h.dataset.dsDark = c.d; h.dataset.dsStorage = c.s;
+            if (localStorage.getItem(c.s + "-sidebar-collapsed") === "true") h.setAttribute("data-ds-sidebar-collapsed", "true");
+        } catch (e) { }
+    })(@Html.Raw(cfg));
+</script>
+<link rel="stylesheet" href="@href" asp-append-version="true" />

@@ -1,0 +1,473 @@
+/* daisyUI 5 alignment. Owner: batch A12. Contract: docs/_contributing.md. Audit table: docs/en/daisyui.md.
+
+   Global variables (--radius-selector/field/box, --size-selector/field, --border, --depth, --noise) are defined per theme
+   in generated/tokens.css, so every daisyUI component already reads DS radii, sizes, a 1px border, no depth gradient and
+   no noise. This file restyles only the daisyUI components that have no DS owner batch; owned components (button, input,
+   card, modal, menu, table, …) are refined in their owner's file.
+
+   daisyUI 5 emits all component rules inside the utilities layer (sub-layers daisyui.l1…l3). Rules here sit directly in
+   @layer utilities, so they beat daisyUI whatever its specificity; every selector is wrapped in :where() so Tailwind
+   utilities (bg-*, p-*, rounded-*) and owner-batch refinements still win. */
+
+@layer utilities {
+  /* ------------------------------------------------------------------ chat */
+  :where(.chat) {
+    column-gap: var(--ds-space-3);
+    padding-block: var(--ds-space-1);
+  }
+
+  :where(.chat-bubble) {
+    min-block-size: 2.25rem;
+    padding: var(--ds-space-2) var(--ds-space-3-5);
+    border-radius: var(--ds-radius-xl);
+    background-color: var(--ds-neutral-soft);
+    color: var(--color-base-content);
+    font-size: var(--ds-type-callout-size);
+    line-height: var(--ds-type-callout-leading);
+    overflow-wrap: anywhere;
+  }
+
+  /* Own messages: the one teal surface in a thread. Status tones are tonal, text stays readable. */
+  :where(.chat-bubble-primary) {
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
+  }
+
+  :where(.chat-bubble-secondary, .chat-bubble-accent) {
+    background-color: var(--ds-primary-soft);
+    color: var(--color-base-content);
+  }
+
+  :where(.chat-bubble-neutral) {
+    background-color: var(--color-neutral);
+    color: var(--color-neutral-content);
+  }
+
+  :where(.chat-bubble-info) {
+    background-color: var(--ds-info-soft);
+    color: var(--color-base-content);
+  }
+
+  :where(.chat-bubble-success) {
+    background-color: var(--ds-success-soft);
+    color: var(--color-base-content);
+  }
+
+  :where(.chat-bubble-warning) {
+    background-color: var(--ds-warning-soft);
+    color: var(--color-base-content);
+  }
+
+  :where(.chat-bubble-error) {
+    background-color: var(--ds-error-soft);
+    color: var(--color-base-content);
+  }
+
+  :where(.chat-header, .chat-footer) {
+    align-items: baseline;
+    gap: var(--ds-space-1-5);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-caption-size);
+    line-height: var(--ds-type-caption-leading);
+  }
+
+  :where(.chat-header) {
+    margin-block-end: var(--ds-space-1);
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  :where(.chat-footer) {
+    margin-block-start: var(--ds-space-1);
+  }
+
+  :where(.chat-header, .chat-footer) :where(time) {
+    color: var(--ds-muted);
+    font-weight: var(--ds-weight-regular);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ------------------------------------------------------------------ countdown */
+  :where(.countdown) {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :where(.countdown) > * {
+    transition: width var(--ds-duration-base) var(--ds-ease-standard);
+  }
+
+  :where(.countdown) > *::before,
+  :where(.countdown) > *::after {
+    transition:
+      top var(--ds-duration-settle) var(--ds-ease-emphasized),
+      width var(--ds-duration-base) var(--ds-ease-standard),
+      opacity var(--ds-duration-base) var(--ds-ease-standard);
+  }
+
+  /* ------------------------------------------------------------------ diff */
+  :where(.diff) {
+    border-radius: var(--ds-radius-box);
+    outline-offset: 2px;
+  }
+
+  :where(.diff):focus-visible,
+  :where(.diff):has(.diff-item-1:focus-visible) {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  :where(.diff-item-2)::after {
+    border-color: var(--color-base-100);
+    background-color: var(--color-base-100);
+    box-shadow: var(--ds-shadow-xs), 0 0 0 var(--ds-border-hairline) var(--ds-control-border);
+  }
+
+  /* ------------------------------------------------------------------ dock (bottom navigation; A10 may refine) */
+  :where(.dock) {
+    z-index: var(--ds-z-sticky);
+    gap: var(--ds-space-1);
+    border-block-start: var(--ds-border-hairline) solid var(--color-base-300);
+    background-color: color-mix(in oklab, var(--color-base-100) 92%, transparent);
+    backdrop-filter: saturate(1.4) blur(12px);
+    color: var(--ds-subtle);
+  }
+
+  :where(.dock) > :not(script, style, template) {
+    min-block-size: var(--ds-size-target);
+    gap: var(--ds-space-0-5);
+    border-radius: var(--ds-radius-lg);
+    transition:
+      color var(--ds-duration-fast) var(--ds-ease-standard),
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      transform var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  @media (hover: hover) {
+    :where(.dock) > :not(script, style, template, [aria-disabled="true"], [disabled]):hover {
+      color: var(--color-base-content);
+      opacity: 1;
+    }
+  }
+
+  :where(.dock) > :not(script, style, template):active {
+    transform: scale(var(--ds-press-scale));
+  }
+
+  :where(.dock) > :not(script, style, template):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: -2px;
+  }
+
+  :where(.dock) > :is(.dock-active, [aria-current]:not([aria-current="false"], [aria-current=""])) {
+    color: var(--ds-quiet);
+  }
+
+  :where(.dock) > :not(script, style, template)::after {
+    transition:
+      width var(--ds-duration-spring) var(--ds-ease-spring),
+      background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  :where(.dock) > :is([aria-disabled="true"], [disabled]) {
+    color: var(--ds-muted);
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  :where(.dock) :where(.dock-label) {
+    font-size: var(--ds-type-caption-size);
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  /* ------------------------------------------------------------------ filter */
+  :where(.filter) {
+    gap: var(--ds-space-1-5);
+  }
+
+  :where(.filter) input {
+    transition:
+      visibility var(--ds-duration-fast) allow-discrete,
+      margin var(--ds-duration-fast) var(--ds-ease-standard),
+      opacity var(--ds-duration-base) var(--ds-ease-standard),
+      padding var(--ds-duration-base) var(--ds-ease-standard),
+      border-width var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  :where(.filter) > input:not(:last-child),
+  :where(.filter) > :not(:last-child) input {
+    margin-inline-end: 0;
+  }
+
+  /* ------------------------------------------------------------------ hero */
+  :where(.hero) {
+    border-radius: var(--ds-radius-card);
+    overflow: clip;
+  }
+
+  :where(.hero-overlay) {
+    background-color: var(--ds-scrim);
+  }
+
+  :where(.hero-content) {
+    gap: var(--ds-space-6);
+    padding: var(--ds-space-8) var(--ds-space-6);
+  }
+
+  :where(.hero-content) :where(h1) {
+    font-size: var(--ds-type-display-size);
+    font-weight: var(--ds-type-display-weight);
+    line-height: var(--ds-type-display-leading);
+    letter-spacing: var(--ds-type-display-tracking);
+  }
+
+  /* ------------------------------------------------------------------ hover-3d and hover-gallery (decorative) */
+  /* No overshoot (the DS has no bounce on things that did not move by gesture) and a quieter shadow. */
+  :where(.hover-3d),
+  :where(.hover-3d):hover {
+    --ease: var(--ds-ease-spring);
+  }
+
+  :where(.hover-3d) > :first-child {
+    border-radius: var(--ds-radius-card);
+  }
+
+  :where(.hover-gallery) {
+    border-radius: var(--ds-radius-card);
+  }
+
+  /* ------------------------------------------------------------------ join (button groups, input groups, pagination) */
+  :where(.join) > :where(:focus-visible, :has(:focus-visible)) {
+    z-index: 3;
+  }
+
+  :where(.join-vertical) > :where(.btn) {
+    justify-content: flex-start;
+  }
+
+  /* ------------------------------------------------------------------ label and floating-label */
+  :where(.label) {
+    gap: var(--ds-space-1-5);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+  }
+
+  :where(.input, .select) > :where(.label) {
+    color: var(--ds-subtle);
+    font-size: inherit;
+  }
+
+  :where(.input, .select) > :where(.label):first-child {
+    border-inline-end-color: var(--color-base-300);
+  }
+
+  :where(.input, .select) > :where(.label):last-child {
+    border-inline-start-color: var(--color-base-300);
+  }
+
+  :where(.floating-label) > span {
+    border-radius: var(--ds-radius-xs);
+    color: var(--ds-subtle);
+    font-weight: var(--ds-weight-semibold);
+    transition:
+      top var(--ds-duration-base) var(--ds-ease-emphasized),
+      translate var(--ds-duration-base) var(--ds-ease-emphasized),
+      scale var(--ds-duration-base) var(--ds-ease-emphasized),
+      opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  :where(.floating-label):focus-within > span {
+    color: var(--ds-quiet);
+  }
+
+  :where(.floating-label) ::placeholder {
+    transition:
+      top var(--ds-duration-base) var(--ds-ease-emphasized),
+      translate var(--ds-duration-base) var(--ds-ease-emphasized),
+      scale var(--ds-duration-base) var(--ds-ease-emphasized),
+      opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  /* ------------------------------------------------------------------ list (A6 may refine) */
+  :where(.list) {
+    font-size: var(--ds-type-callout-size);
+  }
+
+  :where(.list) :where(.list-row) {
+    gap: var(--ds-space-3);
+    padding: var(--ds-space-3) var(--ds-space-4);
+    border-radius: var(--ds-radius-lg);
+  }
+
+  :where(.list) :is(.list-row)::after {
+    border-color: var(--color-base-300);
+    inset-inline: var(--ds-space-4);
+  }
+
+  /* ------------------------------------------------------------------ mask: shapes only; avatars and images inside it keep alt text */
+
+  /* ------------------------------------------------------------------ mockups */
+  :where(.mockup-code) {
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    background-color: var(--color-base-200);
+    color: var(--color-base-content);
+    font-family: var(--ds-font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.7;
+  }
+
+  :where(.mockup-code, .mockup-window, .mockup-browser .mockup-browser-toolbar)::before {
+    opacity: 0.22;
+  }
+
+  :where(.mockup-code) pre[data-prefix]::before {
+    color: var(--ds-muted);
+    opacity: 1;
+  }
+
+  :where(.mockup-window, .mockup-browser) {
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    background-color: var(--color-base-200);
+  }
+
+  :where(.mockup-browser) :where(.mockup-browser-toolbar) :where(.input) {
+    min-block-size: 0;
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-full);
+    background-color: var(--color-base-100);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-caption-size);
+  }
+
+  /* ------------------------------------------------------------------ radial-progress */
+  :where(.radial-progress) {
+    --size: 4.5rem;
+    --thickness: 0.375rem;
+    color: var(--color-primary);
+    font-size: var(--ds-type-callout-size);
+    font-weight: var(--ds-weight-strong);
+    font-variant-numeric: tabular-nums;
+    /* Track: a pale full ring under the value arc. */
+    box-shadow: inset 0 0 0 var(--thickness) color-mix(in oklab, currentColor 14%, transparent);
+    transition: --radialprogress var(--ds-duration-spring) var(--ds-ease-spring);
+  }
+
+  :where(.radial-progress) > * {
+    color: var(--color-base-content);
+  }
+
+  :where(.radial-progress)::after {
+    transition: transform var(--ds-duration-spring) var(--ds-ease-spring);
+  }
+
+  /* ------------------------------------------------------------------ stack */
+  :where(.stack) > * {
+    border-radius: inherit;
+  }
+
+  /* ------------------------------------------------------------------ swap */
+  :where(.swap) {
+    border-radius: var(--ds-radius-md);
+  }
+
+  :where(.swap) > * {
+    transition-duration: var(--ds-duration-base);
+    transition-timing-function: var(--ds-ease-emphasized);
+  }
+
+  :where(.swap):has(input:focus-visible) {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  :where(.swap):active {
+    scale: var(--ds-press-scale);
+  }
+
+  :where(.swap):has(input:disabled) {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  /* ------------------------------------------------------------------ text-rotate (decorative loop) */
+  :where(.text-rotate) {
+    --duration: 12s;
+  }
+
+  /* ------------------------------------------------------------------ validator */
+  :where(.validator-hint) {
+    margin-block-start: var(--ds-space-1-5);
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+  }
+
+  :is(.validator:user-invalid, .validator:has(:user-invalid), .validator[aria-invalid]:not([aria-invalid="false"]), .validator:has([aria-invalid]:not([aria-invalid="false"]))) ~ :where(.validator-hint) {
+    color: var(--ds-error-text);
+  }
+
+  /* ------------------------------------------------------------------ aura (animated gradient glow) */
+  /* The DS has no glow and no decorative loops: aura renders as a plain wrapper with a calm 2px ring in currentColor. */
+  :where(.aura) {
+    animation: none;
+    background-image: none;
+    background-color: transparent;
+    box-shadow: inset 0 0 0 var(--aura-padding) color-mix(in oklab, currentColor 35%, transparent);
+  }
+
+  :where(.aura)::before,
+  :where(.aura)::after {
+    display: none;
+  }
+
+  /* ------------------------------------------------------------------ glass utility → the DS translucent material */
+  :where(.glass) {
+    border: var(--ds-border-hairline) solid color-mix(in oklab, var(--color-base-300) 70%, transparent);
+    background-color: color-mix(in oklab, var(--color-base-100) 82%, transparent);
+    background-image: none;
+    box-shadow: var(--ds-shadow-menu);
+    text-shadow: none;
+    backdrop-filter: saturate(1.4) blur(12px);
+  }
+
+  /* ------------------------------------------------------------------ reduced motion for the components above */
+  @media (prefers-reduced-motion: reduce) {
+    :where(.hover-3d) > :first-child,
+    :where(.hover-3d):hover > :first-child {
+      transform: none;
+      scale: 1;
+    }
+
+    :where(.hover-3d) {
+      filter: none;
+    }
+
+    /* Rotate and flip become a cross-fade between the two faces. */
+    :where(.swap-rotate, .swap-flip) > * {
+      rotate: 0deg;
+      transform: none;
+      backface-visibility: visible;
+    }
+
+    :where(.swap-flip) :where(.swap-on, .swap-indeterminate),
+    :where(.swap-flip) input:is(:checked, :indeterminate) ~ :where(.swap-off) {
+      opacity: 0;
+    }
+
+    :where(.swap-flip) input:checked ~ :where(.swap-on),
+    :where(.swap-flip) input:indeterminate ~ :where(.swap-indeterminate),
+    :where(.swap-flip.swap-active) :where(.swap-on) {
+      opacity: 1;
+    }
+
+    :where(.swap):active {
+      scale: 1;
+    }
+
+    /* Show the first phrase, still. */
+    :where(.text-rotate) > * {
+      animation: none;
+      translate: 0 0;
+    }
+  }
+}

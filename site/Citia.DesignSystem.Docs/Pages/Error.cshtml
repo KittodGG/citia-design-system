@@ -1,0 +1,16 @@
+@page "/Error"
+@{
+    var lang = HttpContext.Items["docs.lang"] as string ?? "en";
+    string T(string key) => SiteText.T(lang, key);
+    ViewData["Title"] = T("error.title");
+}
+<article class="docs-article">
+    <header class="doc-hero">
+        <p class="doc-hero__group">500</p>
+        <h1>@T("error.title")</h1>
+        <p class="doc-hero__lede">@T("error.lede")</p>
+    </header>
+    <ds-empty icon="refresh" title="@T("error.action")" action-label="@T("notFound.action")" action-href="/@lang/" action-icon="arrow-left" boxed>
+        @T("error.lede")
+    </ds-empty>
+</article>

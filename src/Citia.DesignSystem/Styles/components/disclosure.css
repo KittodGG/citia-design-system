@@ -1,0 +1,749 @@
+/* Disclosure: accordion, collapsible, legacy .ds-disclosure, stepper (.ds-steps).
+   Owner: batch A8 feedback. Contract: docs/_contributing.md.
+   Origin: TPS .payload-details (L3502–3504), .bc-verification (L52–57), .bc-guide-entry.
+   Accordion and collapsible build on <details>, so they work without JavaScript. The reveal animates through
+   ::details-content and interpolate-size; browsers without them open and close instantly. */
+
+@layer components {
+  .ds-accordion,
+  .ds-disclosure,
+  .ds-disclosure-list,
+  .ds-collapsible {
+    --ds-glyph-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+
+  /* ------------------------------------------------------------------ Shared <details> mechanics */
+  :is(.ds-accordion__item, .ds-disclosure, details.ds-collapsible) {
+    interpolate-size: allow-keywords;
+  }
+
+  :is(.ds-accordion__item, .ds-disclosure, details.ds-collapsible)::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size var(--ds-duration-exit) var(--ds-ease-exit),
+      content-visibility var(--ds-duration-exit) allow-discrete;
+  }
+
+  :is(.ds-accordion__item, .ds-disclosure, details.ds-collapsible)[open]::details-content {
+    block-size: auto;
+    transition:
+      block-size var(--ds-duration-layout) var(--ds-ease-emphasized),
+      content-visibility var(--ds-duration-layout) allow-discrete;
+  }
+
+  :is(.ds-accordion__panel, .ds-collapsible__content) {
+    opacity: 0;
+    transition: opacity var(--ds-duration-exit) var(--ds-ease-exit);
+  }
+
+  :is(.ds-accordion__item, details.ds-collapsible)[open] > :is(.ds-accordion__panel, .ds-collapsible__content) {
+    opacity: 1;
+    transition: opacity var(--ds-duration-enter) var(--ds-ease-standard) 40ms;
+  }
+
+  /* Trigger: the <summary>. 44px target, chevron rotates 180deg. */
+  :is(.ds-accordion__trigger, .ds-disclosure > summary, details.ds-collapsible > summary) {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: var(--ds-size-target);
+    padding: 0.75rem 0;
+    font-weight: var(--ds-weight-semibold);
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  :is(.ds-accordion__trigger, .ds-disclosure > summary, details.ds-collapsible > summary)::-webkit-details-marker {
+    display: none;
+  }
+
+  :is(.ds-accordion__trigger, .ds-disclosure > summary, details.ds-collapsible > summary)::after {
+    content: "";
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-inline-start: auto;
+    background: currentColor;
+    color: var(--ds-subtle);
+    mask: var(--ds-glyph-chevron) center / contain no-repeat;
+    transition: transform var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  :is(.ds-accordion__item, .ds-disclosure, details.ds-collapsible)[open] > :is(summary)::after {
+    transform: rotate(180deg);
+  }
+
+  :is(.ds-accordion__trigger, .ds-disclosure > summary, details.ds-collapsible > summary):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: -2px;
+    border-radius: var(--ds-radius-lg);
+  }
+
+  /* Optional parts inside the trigger. */
+  .ds-accordion__icon {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--ds-subtle);
+  }
+
+  .ds-accordion__label {
+    display: grid;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-accordion__hint {
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+    font-weight: var(--ds-weight-regular);
+  }
+
+  .ds-accordion__meta {
+    flex: none;
+    margin-inline-start: auto;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+    font-weight: var(--ds-weight-regular);
+  }
+
+  .ds-accordion__trigger:has(> .ds-accordion__meta)::after {
+    margin-inline-start: 0;
+  }
+
+  .ds-accordion__panel {
+    padding: 0 0 1rem;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-callout-size);
+    line-height: var(--ds-type-callout-leading);
+  }
+
+  .ds-accordion__panel > :where(:first-child) { margin-top: 0; }
+  .ds-accordion__panel > :where(:last-child) { margin-bottom: 0; }
+
+  /* ------------------------------------------------------------------ Accordion */
+  .ds-accordion {
+    display: block;
+  }
+
+  .ds-accordion__item + .ds-accordion__item {
+    border-top: 1px solid var(--color-base-300);
+  }
+
+  .ds-accordion:not(.is-card):not(.is-separated) {
+    border-block: 1px solid var(--color-base-300);
+  }
+
+  /* Hover and pressed: a state layer that reaches slightly past the text column. */
+  @media (hover: hover) {
+    .ds-accordion__item:not([aria-disabled="true"]) > .ds-accordion__trigger:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-accordion__item:not([aria-disabled="true"]) > .ds-accordion__trigger:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-accordion:not(.is-card):not(.is-separated) .ds-accordion__trigger {
+    padding-inline: 0.5rem;
+    margin-inline: -0.5rem;
+    border-radius: var(--ds-radius-lg);
+  }
+
+  .ds-accordion:not(.is-card):not(.is-separated) .ds-accordion__panel {
+    padding-inline: 0;
+  }
+
+  .ds-accordion__item[open] > .ds-accordion__trigger {
+    color: var(--color-base-content);
+  }
+
+  .ds-accordion__item[open] > .ds-accordion__trigger::after {
+    color: var(--ds-quiet);
+  }
+
+  /* Card: one bordered group. */
+  .ds-accordion.is-card {
+    overflow: clip;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-100);
+  }
+
+  .ds-accordion.is-card .ds-accordion__trigger {
+    padding-inline: 1rem;
+    border-radius: 0;
+  }
+
+  .ds-accordion.is-card .ds-accordion__panel {
+    padding: 0 1rem 1rem;
+  }
+
+  /* Separated: each item is its own card with a gap. */
+  .ds-accordion.is-separated {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .ds-accordion.is-separated .ds-accordion__item {
+    overflow: clip;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-100);
+  }
+
+  .ds-accordion.is-separated .ds-accordion__item + .ds-accordion__item {
+    border-top-width: 1px;
+  }
+
+  .ds-accordion.is-separated .ds-accordion__trigger {
+    padding-inline: 1rem;
+  }
+
+  .ds-accordion.is-separated .ds-accordion__panel {
+    padding: 0 1rem 1rem;
+  }
+
+  /* Disabled: stays focusable (aria-disabled), cannot open. */
+  .ds-accordion__item[aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  .ds-accordion__item[aria-disabled="true"] > .ds-accordion__trigger {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  /* ------------------------------------------------------------------ Legacy disclosure (kept; now shares the accordion look) */
+  .ds-disclosure {
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-100);
+  }
+
+  .ds-disclosure > summary {
+    padding: 0.75rem 1rem;
+    border-radius: var(--ds-radius-box);
+  }
+
+  @media (hover: hover) {
+    .ds-disclosure > summary:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-disclosure > summary:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-disclosure[open] > summary {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    border-bottom: 1px solid var(--color-base-300);
+  }
+
+  .ds-disclosure > :not(summary) {
+    padding: 1rem;
+  }
+
+  .ds-disclosure-list {
+    overflow: clip;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+  }
+
+  .ds-disclosure-list > .ds-disclosure {
+    border: 0;
+    border-radius: 0;
+  }
+
+  .ds-disclosure-list > .ds-disclosure + .ds-disclosure {
+    border-top: 1px solid var(--color-base-300);
+  }
+
+  /* ------------------------------------------------------------------ Collapsible */
+  .ds-collapsible__trigger,
+  details.ds-collapsible > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: var(--ds-size-target-compact);
+    padding: 0.25rem 0.5rem;
+    margin-inline-start: -0.5rem;
+    border-radius: var(--ds-radius-lg);
+    color: var(--ds-link);
+    font-size: var(--ds-type-callout-size);
+    font-weight: var(--ds-weight-strong);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  @media (pointer: coarse) {
+    .ds-collapsible__trigger,
+    details.ds-collapsible > summary {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  details.ds-collapsible > summary {
+    display: flex;
+    width: fit-content;
+  }
+
+  .ds-collapsible__trigger[hidden] {
+    display: none;
+  }
+
+  .ds-collapsible__trigger::after {
+    content: "";
+    width: 1rem;
+    height: 1rem;
+    background: currentColor;
+    mask: var(--ds-glyph-chevron) center / contain no-repeat;
+    transition: transform var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  details.ds-collapsible > summary::after {
+    margin-inline-start: 0;
+    color: currentColor;
+  }
+
+  .ds-collapsible__trigger[aria-expanded="true"]::after {
+    transform: rotate(180deg);
+  }
+
+  @media (hover: hover) {
+    :is(.ds-collapsible__trigger, details.ds-collapsible > summary):hover {
+      background: color-mix(in oklab, var(--ds-link) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  :is(.ds-collapsible__trigger, details.ds-collapsible > summary):active {
+    background: color-mix(in oklab, var(--ds-link) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  :is(.ds-collapsible__trigger, details.ds-collapsible > summary):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-collapsible__trigger:disabled,
+  .ds-collapsible__trigger[aria-disabled="true"] {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-collapsible__trigger[aria-busy="true"] {
+    cursor: progress;
+  }
+
+  .ds-collapsible__content {
+    padding-block: 0.25rem 0.5rem;
+  }
+
+  /* Button form: the region is a one-row grid that grows from 0fr to 1fr. The script keeps [hidden] while closed. */
+  .ds-collapsible[data-ds-collapsible] > .ds-collapsible__content {
+    display: grid;
+    grid-template-rows: 1fr;
+    padding: 0;
+    transition: grid-template-rows var(--ds-duration-layout) var(--ds-ease-emphasized), opacity var(--ds-duration-enter) var(--ds-ease-standard);
+    opacity: 1;
+  }
+
+  .ds-collapsible[data-ds-collapsible] > .ds-collapsible__content > * {
+    min-height: 0;
+    overflow: clip;
+  }
+
+  .ds-collapsible[data-ds-collapsible] > .ds-collapsible__trigger[aria-expanded="false"] + .ds-collapsible__content {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows var(--ds-duration-exit) var(--ds-ease-exit), opacity var(--ds-duration-exit) var(--ds-ease-exit);
+  }
+
+  .ds-collapsible[data-ds-collapsible] > .ds-collapsible__content[hidden] {
+    display: none;
+  }
+
+  .ds-collapsible__inner {
+    padding-block: 0.25rem 0.5rem;
+  }
+
+  /* Show more / less: the text is clamped to --ds-clamp-lines (default 3) once the script is ready, with a fade instead of an ellipsis. */
+  .ds-collapsible.is-clamp[data-ds-ready] {
+    interpolate-size: allow-keywords;
+  }
+
+  .ds-collapsible.is-clamp[data-ds-ready] > .ds-collapsible__clamp {
+    position: relative;
+    overflow: clip;
+    block-size: calc(var(--ds-clamp-lines, 3) * 1lh);
+    transition: block-size var(--ds-duration-layout) var(--ds-ease-emphasized);
+  }
+
+  .ds-collapsible.is-clamp[data-ds-ready] > .ds-collapsible__clamp[data-overflowing]:not([data-expanded]) {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5lh), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5lh), transparent);
+  }
+
+  .ds-collapsible.is-clamp[data-ds-ready] > .ds-collapsible__clamp[data-expanded] {
+    block-size: auto;
+  }
+
+  /* ------------------------------------------------------------------ Stepper (.ds-steps) */
+  .ds-stepper {
+    container: ds-stepper / inline-size;
+  }
+
+  .ds-stepper__compact {
+    display: none;
+    margin: 0 0 0.75rem;
+    font-size: var(--ds-type-callout-size);
+    font-weight: var(--ds-weight-strong);
+  }
+
+  .ds-stepper__compact > span {
+    color: var(--ds-subtle);
+    font-weight: var(--ds-weight-regular);
+  }
+
+  .ds-steps {
+    --ds-step-size: 1.75rem;
+    --ds-step-glyph-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5L20 7'/%3E%3C/svg%3E");
+    --ds-step-glyph-alert: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 6v8'/%3E%3Cpath d='M12 18h.01'/%3E%3C/svg%3E");
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: ds-step;
+  }
+
+  /* Version 1 steps: a number circle filled by the outcome tone. */
+  .ds-steps > li:not(.ds-step) {
+    position: relative;
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.125rem 0 1.125rem 2rem;
+    counter-increment: ds-step;
+  }
+
+  .ds-steps > li:not(.ds-step)::before {
+    content: counter(ds-step);
+    position: absolute;
+    top: 0.125rem;
+    inset-inline-start: 0;
+    display: grid;
+    place-items: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: 50%;
+    background: var(--color-base-200);
+    font-size: 0.6875rem;
+    font-weight: 700;
+  }
+
+  .ds-steps > li:not(.ds-step):not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 1.5rem;
+    bottom: 0.125rem;
+    inset-inline-start: 0.625rem;
+    width: 1px;
+    background: var(--color-base-300);
+  }
+
+  .ds-steps > li:not(.ds-step):is(.is-success, .is-error, .is-warning, .is-info)::before {
+    border-color: var(--ds-tone);
+    background: var(--ds-tone);
+    color: var(--color-base-100);
+  }
+
+  /* Step: marker + label + description. Vertical by default; the connector runs down from the marker. */
+  .ds-step {
+    position: relative;
+    counter-increment: ds-step;
+    display: grid;
+    min-width: 0;
+  }
+
+  .ds-step__link {
+    display: grid;
+    grid-template-columns: var(--ds-step-size) minmax(0, 1fr);
+    column-gap: 0.75rem;
+    align-items: start;
+    padding-bottom: 1.25rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .ds-step:last-child > .ds-step__link {
+    padding-bottom: 0;
+  }
+
+  .ds-step__marker {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-row: 1 / span 2;
+    place-items: center;
+    width: var(--ds-step-size);
+    height: var(--ds-step-size);
+    border: var(--ds-border-emphasis) solid var(--ds-control-border);
+    border-radius: var(--ds-radius-full);
+    background: var(--color-base-100);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+    font-weight: var(--ds-weight-bold);
+    font-variant-numeric: tabular-nums;
+    transition: background-color var(--ds-duration-quick) var(--ds-ease-standard), border-color var(--ds-duration-quick) var(--ds-ease-standard), color var(--ds-duration-quick) var(--ds-ease-standard), box-shadow var(--ds-duration-quick) var(--ds-ease-standard);
+  }
+
+  .ds-step__marker::before {
+    content: counter(ds-step);
+  }
+
+  .ds-step__label {
+    align-self: center;
+    min-height: var(--ds-step-size);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+    font-size: var(--ds-type-callout-size);
+    font-weight: var(--ds-weight-semibold);
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-step__desc {
+    grid-column: 2;
+    margin-top: 0.125rem;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-step__tag {
+    padding: 0.0625rem 0.5rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-full);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-caption-size);
+    font-weight: var(--ds-weight-medium);
+  }
+
+  /* Connector. */
+  .ds-step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    inset-inline-start: calc(var(--ds-step-size) / 2 - 1px);
+    top: calc(var(--ds-step-size) + 0.25rem);
+    bottom: 0.25rem;
+    width: 2px;
+    border-radius: 1px;
+    background: var(--color-base-300);
+    transition: background-color var(--ds-duration-quick) var(--ds-ease-standard);
+  }
+
+  /* Complete: filled primary marker with a check glyph; the connector after it is primary. */
+  .ds-step.is-complete > .ds-step__link > .ds-step__marker {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+  }
+
+  .ds-step.is-complete > .ds-step__link > .ds-step__marker::before {
+    content: "";
+    width: 0.875rem;
+    height: 0.875rem;
+    background: currentColor;
+    mask: var(--ds-step-glyph-check) center / contain no-repeat;
+  }
+
+  .ds-step.is-complete:not(:last-child)::after {
+    background: var(--color-primary);
+  }
+
+  /* Current: ring + weight, announced through aria-current="step". */
+  .ds-step[aria-current="step"] > .ds-step__link > .ds-step__marker {
+    border-color: var(--color-primary);
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), var(--color-base-100));
+    color: var(--ds-quiet);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 22%, transparent);
+  }
+
+  .ds-step[aria-current="step"] > .ds-step__link > .ds-step__label {
+    font-weight: var(--ds-weight-bold);
+  }
+
+  /* Error: alert glyph and error colour; the words say what to fix. */
+  .ds-step.is-error > .ds-step__link > .ds-step__marker {
+    border-color: var(--ds-error-text);
+    background: color-mix(in oklab, var(--color-error) 12%, var(--color-base-100));
+    color: var(--ds-error-text);
+  }
+
+  .ds-step.is-error > .ds-step__link > .ds-step__marker::before {
+    content: "";
+    width: 0.875rem;
+    height: 0.875rem;
+    background: currentColor;
+    mask: var(--ds-step-glyph-alert) center / contain no-repeat;
+  }
+
+  .ds-step.is-error .ds-step__desc {
+    color: var(--ds-error-text);
+  }
+
+  /* Optional: dashed marker. Disabled: dimmed and not focusable. */
+  .ds-step.is-optional > .ds-step__link > .ds-step__marker {
+    border-style: dashed;
+  }
+
+  .ds-step.is-disabled,
+  .ds-step[aria-disabled="true"] {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  /* Clickable steps are links; status-only steps are plain blocks. */
+  a.ds-step__link {
+    border-radius: var(--ds-radius-lg);
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    a.ds-step__link:hover > .ds-step__label {
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+
+    .ds-step:not(.is-complete) > a.ds-step__link:hover > .ds-step__marker {
+      border-color: var(--color-primary);
+    }
+  }
+
+  a.ds-step__link:active > .ds-step__marker {
+    transform: scale(var(--ds-press-scale));
+  }
+
+  a.ds-step__link:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 4px;
+  }
+
+  @media (pointer: coarse) {
+    a.ds-step__link {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  /* Horizontal: markers in a row, connectors between them, labels below. */
+  .ds-steps.is-horizontal {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    column-gap: 0.5rem;
+  }
+
+  .ds-steps.is-horizontal > .ds-step > .ds-step__link {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    row-gap: 0.5rem;
+    padding-bottom: 0;
+  }
+
+  .ds-steps.is-horizontal .ds-step__marker {
+    grid-row: auto;
+  }
+
+  .ds-steps.is-horizontal .ds-step__label {
+    min-height: 0;
+  }
+
+  .ds-steps.is-horizontal .ds-step__desc {
+    grid-column: 1;
+    margin: 0;
+  }
+
+  .ds-steps.is-horizontal > .ds-step:not(:last-child)::after {
+    inset-inline: calc(var(--ds-step-size) + 0.5rem) -0.5rem;
+    top: calc(var(--ds-step-size) / 2 - 1px);
+    bottom: auto;
+    width: auto;
+    height: 2px;
+  }
+
+  .ds-steps.is-horizontal.is-centered > .ds-step > .ds-step__link {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .ds-steps.is-horizontal.is-centered > .ds-step:not(:last-child)::after {
+    inset-inline: calc(50% + var(--ds-step-size) / 2 + 0.5rem) calc(-50% + var(--ds-step-size) / 2 + 0.5rem);
+  }
+
+  .ds-steps.is-horizontal.is-centered .ds-step__label {
+    justify-content: center;
+  }
+
+  /* Narrow container: a compact "Step 2 of 5" line, markers as a progress strip, only the current label stays visible. */
+  @container ds-stepper (max-width: 26rem) {
+    .ds-stepper > .ds-stepper__compact {
+      display: block;
+    }
+
+    .ds-stepper > .ds-steps.is-horizontal {
+      --ds-step-size: 1.5rem;
+      column-gap: 0.25rem;
+    }
+
+    .ds-stepper > .ds-steps.is-horizontal .ds-step__label,
+    .ds-stepper > .ds-steps.is-horizontal .ds-step__desc {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .ds-stepper > .ds-steps.is-horizontal > .ds-step:not(:last-child)::after {
+      inset-inline: calc(var(--ds-step-size) + 0.25rem) -0.25rem;
+      top: calc(var(--ds-step-size) / 2 - 1px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :is(.ds-accordion__item, .ds-disclosure, details.ds-collapsible)::details-content,
+    :is(.ds-accordion__item, .ds-disclosure, details.ds-collapsible)[open]::details-content,
+    .ds-collapsible.is-clamp[data-ds-ready] > .ds-collapsible__clamp,
+    .ds-collapsible[data-ds-collapsible] > .ds-collapsible__content {
+      transition-duration: 0.01ms;
+    }
+
+    :is(.ds-accordion__trigger, .ds-disclosure > summary, details.ds-collapsible > summary)::after,
+    .ds-collapsible__trigger::after {
+      transition-duration: 0.01ms;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-step__marker {
+      border-color: CanvasText;
+    }
+
+    .ds-step.is-complete > .ds-step__link > .ds-step__marker,
+    .ds-step[aria-current="step"] > .ds-step__link > .ds-step__marker {
+      forced-color-adjust: none;
+      border-color: Highlight;
+      background: Highlight;
+      color: HighlightText;
+    }
+  }
+}

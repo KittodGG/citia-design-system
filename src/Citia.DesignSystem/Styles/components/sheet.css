@@ -1,0 +1,421 @@
+/* Sheet (side and bottom panels on a native modal <dialog>). Owner: batch A9.
+   <dialog class="ds-sheet is-end|is-start|is-top|is-bottom" data-ds-sheet> with __handle, __header, __body, __footer.
+   Motion: slides in from its edge with the critically damped spring (--ds-duration-spring, --ds-ease-spring) and leaves
+   the same way, faster (--ds-duration-layout, exit easing). sheet.js drives drag-to-dismiss on touch through two
+   variables, --ds-sheet-dx / --ds-sheet-dy (current offset in px), and settles with the bounce spring only after a flick.
+   Reduced motion: no slide, opacity only. */
+
+@layer components {
+  .ds-sheet {
+    --ds-sheet-size: var(--ds-size-panel);
+    position: fixed;
+    z-index: var(--ds-z-modal);
+    display: flex;
+    flex-direction: column;
+    width: min(var(--ds-sheet-size), calc(100vw - 3rem));
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-inline-start: var(--ds-border-hairline) solid var(--color-base-300);
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+    box-shadow: var(--ds-shadow-overlay);
+    overflow: hidden;
+    inset-block: 0;
+    inset-inline: auto 0;
+    translate: 100% 0;
+    transition:
+      translate var(--ds-duration-layout) var(--ds-ease-exit),
+      opacity var(--ds-duration-layout) var(--ds-ease-exit),
+      overlay var(--ds-duration-layout) allow-discrete,
+      display var(--ds-duration-layout) allow-discrete;
+  }
+
+  .ds-sheet:not([open]) {
+    display: none;
+  }
+
+  .ds-sheet[open] {
+    translate: var(--ds-sheet-dx, 0px) var(--ds-sheet-dy, 0px);
+    transition:
+      translate var(--ds-duration-spring) var(--ds-ease-spring),
+      opacity var(--ds-duration-base) var(--ds-ease-emphasized),
+      overlay 0s allow-discrete,
+      display 0s allow-discrete;
+  }
+
+  /* While a finger holds the sheet, it follows 1:1. After a flick it settles with the bounce spring. */
+  .ds-sheet[open][data-ds-dragging] {
+    transition: none;
+  }
+
+  .ds-sheet[open][data-ds-settle="bounce"] {
+    transition:
+      translate var(--ds-duration-spring-bounce) var(--ds-ease-spring-bounce),
+      overlay 0s allow-discrete,
+      display 0s allow-discrete;
+  }
+
+  .ds-sheet[data-ds-settle="flick"]:not([open]) {
+    transition:
+      translate var(--ds-duration-exit) var(--ds-ease-out),
+      overlay var(--ds-duration-exit) allow-discrete,
+      display var(--ds-duration-exit) allow-discrete;
+  }
+
+  @starting-style {
+    .ds-sheet.is-end[open],
+    .ds-sheet:not(.is-start, .is-top, .is-bottom)[open] {
+      translate: 100% 0;
+    }
+
+    .ds-sheet.is-start[open] {
+      translate: -100% 0;
+    }
+
+    .ds-sheet.is-top[open] {
+      translate: 0 -100%;
+    }
+
+    .ds-sheet.is-bottom[open] {
+      translate: 0 100%;
+    }
+
+    .ds-sheet:dir(rtl):not(.is-start, .is-top, .is-bottom)[open] {
+      translate: -100% 0;
+    }
+
+    .ds-sheet.is-start:dir(rtl)[open] {
+      translate: 100% 0;
+    }
+  }
+
+  /* Sides. */
+  .ds-sheet.is-start {
+    inset-inline: 0 auto;
+    border-inline-start: 0;
+    border-inline-end: var(--ds-border-hairline) solid var(--color-base-300);
+  }
+
+  .ds-sheet.is-start:not([open]) {
+    translate: -100% 0;
+  }
+
+  .ds-sheet.is-top:not([open]) {
+    translate: 0 -100%;
+  }
+
+  .ds-sheet.is-bottom:not([open]) {
+    translate: 0 100%;
+  }
+
+  .ds-sheet.is-top,
+  .ds-sheet.is-bottom {
+    --ds-sheet-size: 40rem;
+    width: min(var(--ds-sheet-size), 100vw);
+    height: auto;
+    max-height: calc(100dvh - var(--ds-space-12));
+    margin-inline: auto;
+    border-inline-start: 0;
+    inset-inline: 0;
+  }
+
+  .ds-sheet.is-top {
+    inset-block: 0 auto;
+    border-block-end: var(--ds-border-hairline) solid var(--color-base-300);
+    border-end-start-radius: var(--ds-radius-2xl);
+    border-end-end-radius: var(--ds-radius-2xl);
+  }
+
+  .ds-sheet.is-bottom {
+    inset-block: auto 0;
+    border-block-start: var(--ds-border-hairline) solid var(--color-base-300);
+    border-start-start-radius: var(--ds-radius-2xl);
+    border-start-end-radius: var(--ds-radius-2xl);
+    padding-block-end: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Snap points: a bottom sheet with snaps has a fixed height; sheet.js moves it down to show less. */
+  .ds-sheet.is-bottom[data-ds-sheet-snap] {
+    height: calc(100dvh - var(--ds-space-12));
+  }
+
+  /* RTL: start and end swap, so do their directions. */
+  .ds-sheet:dir(rtl):not(.is-start, .is-top, .is-bottom, [open]) {
+    translate: -100% 0;
+  }
+
+  .ds-sheet.is-start:dir(rtl):not([open]) {
+    translate: 100% 0;
+  }
+
+  /* Sizes (side sheets: width; top/bottom: max width). */
+  .ds-sheet.is-sm { --ds-sheet-size: 20rem; }
+  .ds-sheet.is-lg { --ds-sheet-size: 32rem; }
+  .ds-sheet.is-xl { --ds-sheet-size: 42rem; }
+
+  .ds-sheet.is-full {
+    --ds-sheet-size: 100vw;
+    width: 100vw;
+  }
+
+  .ds-sheet:is(.is-top, .is-bottom).is-sm { --ds-sheet-size: 30rem; }
+  .ds-sheet:is(.is-top, .is-bottom).is-lg { --ds-sheet-size: 52rem; }
+  .ds-sheet:is(.is-top, .is-bottom).is-full { --ds-sheet-size: 100vw; border-radius: 0; }
+
+  /* Scrim: fades with the sheet; follows the drag (sheet.js sets --ds-sheet-scrim from 1 to 0). */
+  .ds-sheet::backdrop {
+    background: var(--ds-scrim);
+    opacity: 0;
+    transition:
+      opacity var(--ds-duration-layout) var(--ds-ease-exit),
+      overlay var(--ds-duration-layout) allow-discrete,
+      display var(--ds-duration-layout) allow-discrete;
+  }
+
+  .ds-sheet[open]::backdrop {
+    opacity: var(--ds-sheet-scrim, 1);
+    transition: opacity var(--ds-duration-enter) var(--ds-ease-emphasized);
+  }
+
+  .ds-sheet[open][data-ds-dragging]::backdrop {
+    transition: none;
+  }
+
+  @starting-style {
+    .ds-sheet[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  /* In-flow sheet (documentation, side panels that are part of the layout): no overlay, no motion. */
+  .ds-sheet.is-static {
+    position: static;
+    display: flex;
+    width: auto;
+    height: auto;
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-xl);
+    box-shadow: none;
+    translate: none;
+  }
+
+  /* Non-modal sheet (opened with DS.sheet.open(el, { modal: false })): no scrim, page stays usable. */
+  .ds-sheet[data-ds-modeless] {
+    box-shadow: var(--ds-shadow-panel);
+  }
+
+  /* ---------------------------------------------------------------- parts */
+  .ds-sheet__handle {
+    position: relative;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 100%;
+    height: var(--ds-space-6);
+    border: 0;
+    background: transparent;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .ds-sheet__handle::before {
+    content: "";
+    width: 2.25rem;
+    height: 0.3125rem;
+    border-radius: var(--ds-radius-full);
+    background: color-mix(in oklab, var(--color-base-content) 22%, transparent);
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), width var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (hover: hover) {
+    .ds-sheet__handle:hover::before {
+      background: color-mix(in oklab, var(--color-base-content) 36%, transparent);
+    }
+  }
+
+  .ds-sheet[data-ds-dragging] .ds-sheet__handle {
+    cursor: grabbing;
+  }
+
+  .ds-sheet[data-ds-dragging] .ds-sheet__handle::before {
+    background: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+  }
+
+  .ds-sheet__handle:focus-visible {
+    outline: none;
+  }
+
+  .ds-sheet__handle:focus-visible::before {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 3px;
+  }
+
+  .ds-sheet__header {
+    display: flex;
+    flex: none;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ds-space-4);
+    padding: var(--ds-space-5) var(--ds-space-5) var(--ds-space-4);
+    border-block-end: var(--ds-border-hairline) solid transparent;
+    transition: border-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-sheet:is(.is-bottom, .is-top) .ds-sheet__header {
+    touch-action: none;
+  }
+
+  .ds-sheet:not(.is-bottom, .is-top) .ds-sheet__header {
+    touch-action: pan-y;
+  }
+
+  .ds-sheet__handle + .ds-sheet__header {
+    padding-block-start: var(--ds-space-1);
+  }
+
+  .ds-sheet__heading {
+    display: grid;
+    gap: var(--ds-space-1);
+    min-width: 0;
+  }
+
+  .ds-sheet__title {
+    margin: 0;
+    font-size: var(--ds-type-section-size);
+    font-weight: var(--ds-type-section-weight);
+    line-height: var(--ds-type-section-leading);
+    letter-spacing: var(--ds-type-section-tracking);
+  }
+
+  .ds-sheet__description {
+    margin: 0;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+  }
+
+  .ds-sheet__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0 var(--ds-space-5) var(--ds-space-5);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .ds-sheet__footer {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--ds-space-2);
+    padding: var(--ds-space-4) var(--ds-space-5);
+    border-block-start: var(--ds-border-hairline) solid var(--color-base-300);
+  }
+
+  .ds-sheet:has(> .ds-sheet__body[data-ds-scrolled]) > .ds-sheet__header {
+    border-color: var(--color-base-300);
+  }
+
+  .ds-sheet__close {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: var(--ds-size-target-compact);
+    height: var(--ds-size-target-compact);
+    margin: calc(var(--ds-space-1-5) * -1) calc(var(--ds-space-2) * -1) 0 0;
+    border: 0;
+    border-radius: var(--ds-radius-box);
+    background: transparent;
+    color: var(--ds-subtle);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard), scale var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  @media (hover: hover) {
+    .ds-sheet__close:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      color: var(--color-base-content);
+    }
+  }
+
+  .ds-sheet__close:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+    scale: var(--ds-press-scale);
+  }
+
+  .ds-sheet__close:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  @media (pointer: coarse) {
+    .ds-sheet__close {
+      width: var(--ds-size-target);
+      height: var(--ds-size-target);
+    }
+
+    .ds-sheet__handle {
+      height: var(--ds-space-8);
+    }
+  }
+
+  /* Busy while a form inside submits. */
+  .ds-sheet[aria-busy="true"] :is(.ds-sheet__body, .ds-sheet__footer) {
+    pointer-events: none;
+  }
+
+  .ds-sheet[aria-busy="true"] .ds-sheet__body {
+    opacity: 0.7;
+  }
+
+  /* Phones: side sheets keep a 3rem strip of the page visible (context and a place to tap away). */
+  @media (max-width: 640px) {
+    .ds-sheet:not(.is-top, .is-bottom) {
+      width: min(var(--ds-sheet-size), calc(100vw - 3rem));
+    }
+
+    .ds-sheet.is-full {
+      width: 100vw;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-sheet.ds-sheet.ds-sheet.ds-sheet:not([open]) {
+      translate: 0 0;
+      opacity: 0;
+      transition:
+        opacity var(--ds-duration-fast) var(--ds-ease-standard),
+        overlay var(--ds-duration-fast) allow-discrete,
+        display var(--ds-duration-fast) allow-discrete;
+    }
+
+    .ds-sheet[open] {
+      opacity: 1;
+      transition:
+        opacity var(--ds-duration-fast) var(--ds-ease-standard),
+        overlay 0s allow-discrete,
+        display 0s allow-discrete;
+    }
+
+    @starting-style {
+      .ds-sheet[open],
+      .ds-sheet.is-start[open],
+      .ds-sheet.is-top[open],
+      .ds-sheet.is-bottom[open],
+      .ds-sheet.is-end[open] {
+        translate: 0 0;
+        opacity: 0;
+      }
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-sheet {
+      border: 1px solid CanvasText;
+    }
+  }
+}

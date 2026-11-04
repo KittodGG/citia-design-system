@@ -1,0 +1,68 @@
+@page "/{lang:docslang}/{slug?}"
+@model DocModel
+@{
+    ViewData["Title"] = Model.Current.Title;
+    ViewData["Summary"] = Model.Current.Summary;
+    ViewData["Slug"] = Model.Current.Slug;
+}
+<article class="docs-article">
+    <header class="doc-hero">
+        <p class="doc-hero__group">@Model.Section(Model.Current)</p>
+        <h1>@Model.Current.Title</h1>
+        @if (!string.IsNullOrWhiteSpace(Model.Current.Summary))
+        {
+            <p class="doc-hero__lede">@Model.Current.Summary</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Doc.IntroHtml))
+        {
+            <div class="doc-prose">@Html.Raw(Model.Doc.IntroHtml)</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Current.Source))
+        {
+            <p class="doc-hero__source"><svg class="ds-icon" aria-hidden="true"><use href="#ds-icon-history"></use></svg><span>@Model.T("source"): @Model.Current.Source</span></p>
+        }
+    </header>
+
+    @foreach (var part in Model.Doc.Sections)
+    {
+        <section class="doc-section doc-prose" aria-labelledby="@part.Id">@Html.Raw(part.Html)</section>
+    }
+
+    <nav class="doc-pagination" aria-label="@Model.T("prevNext")">
+        @if (Model.Previous is not null)
+        {
+            <a href="@Model.Href(Model.Previous)" rel="prev">
+                <svg class="ds-icon" aria-hidden="true"><use href="#ds-icon-chevron-left"></use></svg>
+                <span><small>@Model.T("previous") · @Model.Section(Model.Previous)</small><b>@Model.Previous.Title</b></span>
+            </a>
+        }
+        else
+        {
+            <span></span>
+        }
+        @if (Model.Next is not null)
+        {
+            <a href="@Model.Href(Model.Next)" rel="next" class="is-next">
+                <span><small>@Model.T("next") · @Model.Section(Model.Next)</small><b>@Model.Next.Title</b></span>
+                <svg class="ds-icon" aria-hidden="true"><use href="#ds-icon-chevron-right"></use></svg>
+            </a>
+        }
+    </nav>
+</article>
+
+@section Tracker {
+    @if (Model.Doc.Headings.Count > 0)
+    {
+        <aside class="scroll-tracker" aria-label="@Model.T("pageNav")" data-scroll-tracker>
+            <p class="scroll-tracker__eyebrow"><svg class="ds-icon" aria-hidden="true"><use href="#ds-icon-progress"></use></svg>@Model.T("onThisPage")</p>
+            <nav class="scroll-tracker__nav" aria-label="@Model.T("pageToc")">
+                <div class="scroll-tracker__links">
+                    @foreach (var heading in Model.Doc.Headings)
+                    {
+                        <a class="scroll-tracker__link" href="#@heading.Id" data-level="@heading.Level">@heading.Text</a>
+                    }
+                </div>
+            </nav>
+        </aside>
+    }
+}

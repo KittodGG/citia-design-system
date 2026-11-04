@@ -1,0 +1,7 @@
+# Text is stored with LF; Git converts on checkout as configured locally.
+* text=auto
+*.png binary
+*.jpg binary
+*.woff2 binary
+*.nupkg binary
+*.zip binary

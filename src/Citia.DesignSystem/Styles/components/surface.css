@@ -1,0 +1,446 @@
+/* Surfaces: surface, card, stat (KPI), grids, config items, description lists, preview box. Owner: batch A5.
+   Origin: TPS .master-surface, .pt-card*, .pt-kpi*, .pt-config-*, .pt-dl, .master-detail dl, .qa-preview.
+   Surfaces are solid: no gradient, no glass. Depth comes from base-100 on base-200 plus a 1px base-300 hairline. */
+
+@layer components {
+  .ds-surface {
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-100);
+  }
+
+  /* ------------------------------------------------------------------ card */
+  .ds-card {
+    position: relative;
+    min-width: 0;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+    transition: transform var(--ds-duration-base) var(--ds-ease-standard), border-color var(--ds-duration-fast) var(--ds-ease-standard), box-shadow var(--ds-duration-base) var(--ds-ease-standard), background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-card.is-tonal { border-color: transparent; background: var(--color-base-200); }
+  .ds-card.is-elevated { border-color: transparent; box-shadow: var(--ds-shadow-menu), 0 0 0 1px var(--color-base-300); }
+  .ds-card.is-dashed { border-style: dashed; border-color: var(--ds-control-border); background: transparent; }
+  .ds-card.is-compact { --ds-space-card-x: 0.875rem; --ds-space-card-y: 0.75rem; }
+
+  .ds-card-head,
+  .ds-card__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.875rem var(--ds-space-card-x);
+    border-bottom: 1px solid var(--color-base-300);
+  }
+
+  .ds-card__header.is-plain { border-bottom: 0; padding-block-end: 0; }
+
+  .ds-card-head :is(h2, h3, h4),
+  .ds-card__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: var(--ds-type-card-title-size);
+    font-weight: var(--ds-type-card-title-weight);
+    line-height: var(--ds-type-card-title-leading);
+  }
+
+  .ds-card-head p,
+  .ds-card__description {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--ds-subtle);
+  }
+
+  .ds-card__eyebrow {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: var(--ds-type-eyebrow-size);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ds-subtle);
+  }
+
+  .ds-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; margin-inline-start: auto; }
+
+  .ds-card-body,
+  .ds-card__body {
+    padding: var(--ds-space-card-y) var(--ds-space-card-x);
+  }
+
+  .ds-card-body.is-flush, .ds-card__body.is-flush { padding: 0; }
+  .ds-card-body.is-roomy, .ds-card__body.is-roomy { padding: var(--ds-space-panel); }
+  .ds-card__body > * + * { margin-block-start: 0.5rem; }
+
+  .ds-card-foot,
+  .ds-card__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    padding: 0.75rem var(--ds-space-card-x);
+    border-top: 1px solid var(--color-base-300);
+    font-size: 0.8125rem;
+  }
+
+  .ds-card__footer.is-end { justify-content: flex-end; }
+  .ds-card__footer.is-between { justify-content: space-between; }
+
+  /* Media: full-bleed top (or side) with the card's corner radius. */
+  .ds-card__media { position: relative; display: block; margin: 0; overflow: hidden; background: var(--color-base-200); aspect-ratio: 16 / 9; }
+  .ds-card__media > :is(img, video, picture, svg) { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+  .ds-card__media.is-square { aspect-ratio: 1; }
+  .ds-card__media.is-wide { aspect-ratio: 21 / 9; }
+  .ds-card > .ds-card__media:first-child { border-start-start-radius: calc(var(--ds-radius-card) - 1px); border-start-end-radius: calc(var(--ds-radius-card) - 1px); }
+  .ds-card > .ds-card__media:last-child { border-end-start-radius: calc(var(--ds-radius-card) - 1px); border-end-end-radius: calc(var(--ds-radius-card) - 1px); }
+
+  /* Horizontal: media beside the content; stacks under 36rem. */
+  .ds-card.is-horizontal { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); }
+  .ds-card.is-horizontal > .ds-card__media { aspect-ratio: auto; min-height: 100%; border-radius: 0; border-start-start-radius: calc(var(--ds-radius-card) - 1px); border-end-start-radius: calc(var(--ds-radius-card) - 1px); }
+  .ds-card.is-horizontal > .ds-card__content { display: flex; flex-direction: column; min-width: 0; }
+  .ds-card.is-horizontal > .ds-card__content > .ds-card__body { flex: 1; }
+
+  @media (max-width: 36rem) {
+    .ds-card.is-horizontal { grid-template-columns: minmax(0, 1fr); }
+    .ds-card.is-horizontal > .ds-card__media { aspect-ratio: 16 / 9; border-radius: 0; border-start-start-radius: calc(var(--ds-radius-card) - 1px); border-start-end-radius: calc(var(--ds-radius-card) - 1px); }
+  }
+
+  /* Interactive: one link per card; its ::after covers the card. Nested controls sit above (position + z-index). */
+  .ds-card.is-interactive { cursor: pointer; }
+  .ds-card__link { color: inherit; text-decoration: none; }
+  .ds-card__link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+  .ds-card__link:focus-visible { outline: none; }
+  .ds-card.is-interactive:has(.ds-card__link:focus-visible) { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+  .ds-card.is-interactive :is(.ds-card__actions, .ds-card__footer a, .ds-card__footer button, .ds-card__header button) { position: relative; z-index: 1; }
+  .ds-card.is-interactive:active { transform: none; background: color-mix(in oklab, var(--color-base-content) 3%, var(--color-base-100)); }
+
+  @media (hover: hover) {
+    .ds-card.is-interactive:hover {
+      transform: translateY(var(--ds-lift));
+      border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-base-300));
+      box-shadow: var(--ds-shadow-lift);
+    }
+  }
+
+  /* Selectable: a native checkbox or radio (class .ds-card__input) in the corner; the whole card is its label. */
+  .ds-card.is-selectable { display: block; cursor: pointer; }
+  .ds-card.is-selectable > .ds-card__input { z-index: 1; }
+  .ds-card.is-selectable:has(.ds-card__input:checked) { border-color: var(--color-primary); background: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100)); box-shadow: inset 0 0 0 1px var(--color-primary); }
+  .ds-card.is-selectable:has(.ds-card__input:focus-visible) { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+  .ds-card.is-selectable:has(.ds-card__input:disabled) { opacity: var(--ds-opacity-disabled); cursor: not-allowed; }
+  .ds-card.is-selectable:has(.ds-card__input:user-invalid) { border-color: var(--color-error); }
+
+  @media (hover: hover) {
+    .ds-card.is-selectable:hover:not(:has(.ds-card__input:checked, .ds-card__input:disabled)) { border-color: var(--ds-control-border); }
+  }
+
+  /* Availability and activity. */
+  .ds-card[aria-disabled="true"] { opacity: var(--ds-opacity-disabled); cursor: not-allowed; }
+  .ds-card[aria-disabled="true"]:hover { transform: none; box-shadow: none; }
+  .ds-card[aria-busy="true"] { pointer-events: none; }
+  .ds-card[aria-busy="true"] .ds-bone + .ds-bone { margin-block-start: 0.625rem; }
+
+  /* Empty content inside a card. */
+  .ds-card__empty { display: grid; justify-items: center; gap: 0.5rem; padding: 2rem var(--ds-space-card-x); text-align: center; color: var(--ds-subtle); }
+  .ds-card__empty > strong { color: var(--color-base-content); font-size: 0.9375rem; }
+
+  /* Danger zone: irreversible actions grouped at the end of a settings page. */
+  .ds-card.is-danger { border-color: color-mix(in oklab, var(--color-error) 35%, var(--color-base-300)); }
+  .ds-card.is-danger .ds-card-head :is(h2, h3),
+  .ds-card.is-danger .ds-card__title { color: var(--ds-error-text); }
+
+  .ds-grid-2,
+  .ds-grid-3 {
+    display: grid;
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  .ds-grid-2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr)); }
+  .ds-grid-3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); }
+
+  /* ------------------------------------------------------------------ stat (KPI): number first, meaning in one muted line */
+  .ds-kpis,
+  .ds-stats {
+    display: grid;
+    gap: 0.875rem;
+    grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  }
+
+  /* Divided variant: one hairline box, cells separated by hairlines. */
+  .ds-stats.is-divided { gap: 1px; overflow: hidden; border: 1px solid var(--color-base-300); border-radius: var(--ds-radius-card); background: var(--color-base-300); }
+  .ds-stats.is-divided > .ds-stat { border: 0; border-radius: 0; }
+
+  .ds-kpi,
+  .ds-stat {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    min-width: 0;
+    padding: 1rem 1.125rem;
+    overflow: hidden;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    background: var(--color-base-100);
+    color: inherit;
+    text-decoration: none;
+    transition: transform var(--ds-duration-base) var(--ds-ease-standard), border-color var(--ds-duration-fast) var(--ds-ease-standard), box-shadow var(--ds-duration-base) var(--ds-ease-standard);
+  }
+
+  .ds-kpi::before,
+  .ds-stat.has-bar::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--ds-border-tone-bar);
+    background: var(--ds-tone, var(--color-primary));
+    opacity: 0.9;
+  }
+
+  :is(a, button).ds-kpi, :is(a, button).ds-stat { cursor: pointer; text-align: start; font: inherit; }
+  :is(a, button).ds-kpi:focus-visible, :is(a, button).ds-stat:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+  :is(a, button).ds-stat:active, a.ds-kpi:active { transform: none; }
+
+  @media (hover: hover) {
+    a.ds-kpi:hover, a.ds-stat:hover, button.ds-stat:hover {
+      transform: translateY(var(--ds-lift));
+      border-color: color-mix(in oklab, var(--ds-tone, var(--color-primary)) 45%, var(--color-base-300));
+      box-shadow: var(--ds-shadow-lift);
+    }
+  }
+
+  .ds-kpi-top,
+  .ds-stat__top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+
+  .ds-kpi-label,
+  .ds-stat__label { font-size: 0.8125rem; font-weight: 600; color: var(--ds-subtle); }
+
+  .ds-kpi-icon,
+  .ds-stat__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--ds-radius-box);
+    background: color-mix(in oklab, var(--ds-tone, var(--color-primary)) 13%, transparent);
+    color: var(--ds-tone-text, var(--ds-tone, var(--color-primary)));
+  }
+
+  .ds-kpi-value,
+  .ds-stat__value {
+    font-size: var(--ds-type-metric-size);
+    font-weight: var(--ds-type-metric-weight);
+    line-height: var(--ds-type-metric-leading);
+    letter-spacing: var(--ds-type-metric-tracking);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds-kpi-value small,
+  .ds-stat__unit {
+    margin-inline-start: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--ds-subtle);
+  }
+
+  .ds-kpi-sub,
+  .ds-stat__sub { font-size: var(--ds-type-caption-size); line-height: var(--ds-type-caption-leading); color: var(--ds-subtle); }
+
+  /* Delta: arrow icon shows direction, tone (is-success / is-error / is-neutral) shows whether it is good. Full sentence in hidden text. */
+  .ds-stat__delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.0625rem 0.375rem;
+    border-radius: var(--ds-radius-full);
+    background: color-mix(in oklab, var(--ds-tone, var(--color-base-content)) 10%, transparent);
+    color: var(--ds-tone-text, var(--ds-subtle));
+    font-size: 0.75rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.125rem;
+    white-space: nowrap;
+  }
+
+  .ds-stat__delta > .ds-icon { width: 0.75rem; height: 0.75rem; }
+  .ds-stat__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; font-size: var(--ds-type-caption-size); color: var(--ds-subtle); }
+  .ds-stat__compare { display: flex; flex-wrap: wrap; gap: 0 0.75rem; font-size: 0.75rem; color: var(--ds-subtle); font-variant-numeric: tabular-nums; }
+  .ds-stat__spark { display: block; width: 100%; max-height: 2.5rem; margin-top: 0.25rem; color: var(--ds-tone, var(--color-primary)); }
+  .ds-stat__spark :is(path, polyline) { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+
+  .ds-stat[aria-busy="true"] { pointer-events: none; }
+  .ds-stat[aria-busy="true"] .ds-bone { margin-block: 0.125rem; }
+
+  /* ------------------------------------------------------------------ configuration summary: small uppercase label over a bold value */
+  .ds-config-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  }
+
+  .ds-config-item {
+    padding: 0.75rem 0.875rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-xl);
+    background: var(--color-base-100);
+  }
+
+  .ds-config-item dt {
+    font-size: var(--ds-type-eyebrow-size);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ds-subtle);
+  }
+
+  .ds-config-item dd {
+    margin-top: 0.25rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-config-item dd small {
+    display: block;
+    margin-top: 0.125rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--ds-subtle);
+  }
+
+  /* ------------------------------------------------------------------ description list */
+  .ds-dl {
+    display: grid;
+    gap: 0.75rem 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  }
+
+  .ds-dl dt {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ds-subtle);
+  }
+
+  .ds-dl dd {
+    margin: 0.125rem 0 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-dl > .ds-dl__row { min-width: 0; }
+  .ds-dl.is-vertical { grid-template-columns: minmax(0, 1fr); gap: 0.875rem; }
+
+  .ds-dl.is-horizontal { display: block; }
+  .ds-dl.is-horizontal > :is(div, .ds-dl__row) {
+    display: grid;
+    grid-template-columns: minmax(7rem, var(--ds-dl-label, 14rem)) minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 0.25rem 1.5rem;
+    padding-block: 0.75rem;
+    border-top: 1px solid var(--color-base-300);
+  }
+  .ds-dl.is-horizontal > :is(div, .ds-dl__row):first-child { border-top: 0; }
+  .ds-dl.is-horizontal dt { font-size: 0.8125rem; }
+  .ds-dl.is-horizontal dd { margin: 0; font-weight: 500; }
+  .ds-dl.is-horizontal.is-boxed { padding-inline: var(--ds-space-card-x); border: 1px solid var(--color-base-300); border-radius: var(--ds-radius-card); background: var(--color-base-100); }
+
+  .ds-dl.is-grid { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+  .ds-dl.is-grid.is-cells { gap: 0; overflow: hidden; border: 1px solid var(--color-base-300); border-radius: var(--ds-radius-card); }
+  .ds-dl.is-grid.is-cells > :is(div, .ds-dl__row) { padding: 0.75rem 1rem; box-shadow: 0 0 0 0.5px var(--color-base-300); }
+
+  .ds-dl__actions { display: inline-flex; align-items: center; gap: 0.25rem; justify-self: end; }
+
+  /* Empty value: dash for the eye, words for screen readers (.ds-dl__empty) or a bare empty dd. */
+  .ds-dl__empty { color: var(--ds-subtle); font-weight: 400; }
+  .ds-dl dd:empty::before { content: "\2014"; color: var(--ds-subtle); }
+
+  /* Detail page list: two columns, values may wrap and keep line breaks. */
+  .ds-dl.is-detail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  .ds-dl.is-detail dt { margin-bottom: 0.375rem; font-size: 0.8125rem; font-weight: 400; }
+  .ds-dl.is-detail dd { font-size: 1rem; font-weight: 400; white-space: pre-wrap; }
+
+  /* Key-value rows (summary panels, confirmation dialogs). */
+  .ds-kv {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .ds-kv dt { color: var(--ds-subtle); }
+  .ds-kv dd { font-weight: 500; overflow-wrap: anywhere; }
+
+  /* "Will be saved as": the stored value, shown before saving. */
+  .ds-preview-box {
+    padding: 1rem;
+    border-radius: var(--ds-radius-lg);
+    background: var(--color-base-200);
+  }
+
+  .ds-preview-box h3 { font-size: 0.8125rem; font-weight: 600; }
+  .ds-preview-box dl { display: grid; gap: 0.5rem; margin-top: 0.5rem; }
+  .ds-preview-box dl:empty { display: none; }
+
+  .ds-preview-box dl > div {
+    display: grid;
+    grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+    gap: 1rem;
+    font-size: 0.9375rem;
+  }
+
+  .ds-preview-box dt { color: var(--ds-subtle); }
+  .ds-preview-box dd { font-weight: 600; overflow-wrap: anywhere; }
+
+  /* Section divider inside a panel (audit trail, user roles). */
+  .ds-section {
+    margin-top: var(--ds-space-section);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-base-300);
+  }
+
+  .ds-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 700;
+  }
+
+  .ds-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 640px) {
+    .ds-dl.is-detail,
+    .ds-preview-box dl > div { grid-template-columns: minmax(0, 1fr); }
+    .ds-preview-box dl > div { gap: 0.125rem; }
+    .ds-dl.is-horizontal > :is(div, .ds-dl__row) { grid-template-columns: minmax(0, 1fr) auto; }
+    .ds-dl.is-horizontal dt { grid-column: 1 / -1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    a.ds-kpi:hover, a.ds-stat:hover, button.ds-stat:hover, .ds-card.is-interactive:hover { transform: none; }
+  }
+}
+
+/* daisyUI sets position on .checkbox/.radio in the utilities layer; the corner placement must win. */
+@layer utilities {
+  .ds-card.is-selectable > .ds-card__input { position: absolute; inset-block-start: 0.875rem; inset-inline-end: 0.875rem; inset-inline-start: auto; margin: 0; }
+}

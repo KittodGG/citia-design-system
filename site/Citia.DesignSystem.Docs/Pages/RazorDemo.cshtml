@@ -1,0 +1,137 @@
+@page "/{lang:docslang}/razor-demo"
+@model RazorDemoModel
+@{
+    ViewData["Title"] = Model.T("title");
+    ViewData["CurrentSlug"] = "razor-demo";
+    ViewData["AlternateSlug"] = "razor-demo";
+    var here = $"/{Model.Lang}/razor-demo";
+    var nav = new NavModel(
+        [new NavItem(Model.T("overview"), here, "dashboard", Active: true)],
+        [
+            new NavGroup("work", Model.T("work"), [new NavItem(Model.T("projects"), "#", "briefcase"), new NavItem(Model.T("tasks"), "#", "check-circle")]),
+            new NavGroup("admin", Model.T("admin"), [new NavItem(Model.T("users"), "#", "users"), new NavItem(Model.T("settings"), "#", "plug")], DefaultOpen: false),
+        ]);
+}
+<article class="docs-article">
+    <header class="doc-hero">
+        <p class="doc-hero__group">@SiteText.T(Model.Lang, "group.reference")</p>
+        <h1>@Model.T("title")</h1>
+        <p class="doc-hero__lede">@Model.T("lede") <code>site/Citia.DesignSystem.Docs/Pages/RazorDemo.cshtml</code>.</p>
+    </header>
+
+    <section class="doc-section doc-prose" aria-labelledby="icons-status">
+        <h2 id="icons-status">@Model.T("icons")</h2>
+        <div class="docs-preview"><div class="docs-preview__canvas">
+            <div class="ds-actions is-start">
+                <ds-icon name="briefcase" size="lg" />
+                @Icon.Svg("package", "ds-icon is-lg")
+                <ds-pill tone="Success">@Model.T("approved")</ds-pill>
+                <ds-pill tone="Warning">@Model.T("pending")</ds-pill>
+                <ds-pill tone="Error">@Model.T("rejected")</ds-pill>
+                <ds-pill tone="Info" outline>@Model.T("scheduled")</ds-pill>
+                <ds-pill tone="Success" live>@Model.T("live")</ds-pill>
+                <ds-tag tone="Info">@Model.T("trial")</ds-tag>
+                <ds-tag>@Model.T("general")</ds-tag>
+            </div>
+        </div></div>
+    </section>
+
+    <section class="doc-section doc-prose" aria-labelledby="table-paging">
+        <h2 id="table-paging">@Model.T("table")</h2>
+        <div class="docs-preview"><div class="docs-preview__canvas">
+            <div class="ds-surface">
+                <form method="get" class="ds-table-toolbar" role="search">
+                    <div class="ds-search">
+                        @Icon.Svg("search")
+                        <input class="input" type="search" name="q" value="@Model.Rows.Query" placeholder="@Model.T("search")" aria-label="@Model.T("searchLabel")" />
+                    </div>
+                    <partial name="_DsPageSize" model="Model.Rows.PageSize" />
+                    <button type="submit" class="btn">@Model.T("go")</button>
+                </form>
+                <div class="ds-table-wrap">
+                    <table class="ds-table">
+                        <thead>
+                            <tr>
+                                <partial name="_DsSortHeader" model='new SortHeaderModel(Model.T("code"), "code", Model.Rows.Sort)' />
+                                <partial name="_DsSortHeader" model='new SortHeaderModel(Model.T("name"), "name", Model.Rows.Sort)' />
+                                <partial name="_DsSortHeader" model='new SortHeaderModel(Model.T("budget"), "budget", Model.Rows.Sort, Numeric: true)' />
+                                <th scope="col">@Model.T("status")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Rows.Rows)
+                            {
+                                <tr>
+                                    <td data-label="@Model.T("code")" class="ds-main-cell">
+                                        <div class="ds-cell-main">
+                                            <span class="ds-avatar @Avatar.ColorClass(row.Owner)">@Avatar.Initials(row.Owner)</span>
+                                            <div><span class="ds-cell-title"><a href="#">@row.Code</a></span><span class="ds-cell-sub">@Model.T("updated") @Fmt.DateTime(row.UpdatedUtc)</span></div>
+                                        </div>
+                                    </td>
+                                    <td data-label="@Model.T("name")">@row.Name</td>
+                                    <td data-label="@Model.T("budget")" class="ds-num">@Fmt.Qty(row.Budget)@if (row.Budget is not null) {<span class="ds-unit">USD</span>}</td>
+                                    <td data-label="@Model.T("status")"><ds-pill tone="@(row.Active ? Tone.Success : Tone.Neutral)">@(row.Active ? Model.T("active") : Model.T("inactive"))</ds-pill></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <partial name="_DsPager" model='Model.Rows.Pager(Model.T("noun"))' />
+            </div>
+        </div></div>
+        <p>@Model.T("sortHint")</p>
+    </section>
+
+    <section class="doc-section doc-prose" aria-labelledby="empty-state">
+        <h2 id="empty-state">@Model.T("empty")</h2>
+        <div class="docs-preview"><div class="docs-preview__canvas">
+            <ds-empty icon="briefcase" title="@Model.T("emptyTitle")" action-label="@Model.T("emptyAction")" action-href="#" boxed level="3">
+                @Model.T("emptyText")
+            </ds-empty>
+        </div></div>
+    </section>
+
+    <section class="doc-section doc-prose" aria-labelledby="sidebar-nav">
+        <h2 id="sidebar-nav">@Model.T("nav")</h2>
+        <div class="docs-preview"><div class="docs-preview__canvas">
+            <div class="ds-sidebar" style="position:relative;transform:none;visibility:visible;height:auto;width:16rem;border-radius:var(--ds-radius-box)">
+                <partial name="_DsSidebarNav" model="nav" />
+            </div>
+        </div></div>
+    </section>
+
+    <section class="doc-section doc-prose" aria-labelledby="formatting">
+        <h2 id="formatting">@Model.T("format")</h2>
+        <div class="docs-table-wrap">
+            <table>
+                <thead><tr><th scope="col">@Model.T("call")</th><th scope="col">@Model.T("result")</th></tr></thead>
+                <tbody>
+                    <tr><td><code>Fmt.Qty(1574782m, "kg")</code></td><td>@Fmt.Qty(1574782m, "kg")</td></tr>
+                    <tr><td><code>Fmt.Number(20.0400m)</code></td><td>@Fmt.Number(20.0400m)</td></tr>
+                    <tr><td><code>Fmt.Decimal(1234.5678m)</code></td><td>@Fmt.Decimal(1234.5678m)</td></tr>
+                    <tr><td><code>Fmt.Diff(-746m)</code></td><td>@Fmt.Diff(-746m)</td></tr>
+                    <tr><td><code>Fmt.Percent(-0.00075m)</code></td><td>@Fmt.Percent(-0.00075m)</td></tr>
+                    <tr><td><code>Fmt.Date(new DateOnly(2026, 1, 25))</code></td><td>@Fmt.Date(new DateOnly(2026, 1, 25))</td></tr>
+                    <tr><td><code>Fmt.Range(1, 20, 57)</code></td><td>@Fmt.Range(1, 20, 57)</td></tr>
+                    <tr><td><code>Fmt.InZone(DateTime.UtcNow, TimeZoneInfo.Utc, "UTC")</code></td><td>@Fmt.InZone(DateTime.UtcNow, TimeZoneInfo.Utc, "UTC")</td></tr>
+                    <tr><td><code>Avatar.Initials("Ayu Lestari")</code></td><td>@Avatar.Initials("Ayu Lestari")</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</article>
+
+@section Tracker {
+    <aside class="scroll-tracker" aria-label="@SiteText.T(Model.Lang, "pageNav")" data-scroll-tracker>
+        <p class="scroll-tracker__eyebrow"><svg class="ds-icon" aria-hidden="true"><use href="#ds-icon-progress"></use></svg>@SiteText.T(Model.Lang, "onThisPage")</p>
+        <nav class="scroll-tracker__nav" aria-label="@SiteText.T(Model.Lang, "pageToc")">
+            <div class="scroll-tracker__links">
+                <a class="scroll-tracker__link" href="#icons-status" data-level="0">@Model.T("icons")</a>
+                <a class="scroll-tracker__link" href="#table-paging" data-level="0">@Model.T("table")</a>
+                <a class="scroll-tracker__link" href="#empty-state" data-level="0">@Model.T("empty")</a>
+                <a class="scroll-tracker__link" href="#sidebar-nav" data-level="0">@Model.T("nav")</a>
+                <a class="scroll-tracker__link" href="#formatting" data-level="0">@Model.T("format")</a>
+            </div>
+        </nav>
+    </aside>
+}

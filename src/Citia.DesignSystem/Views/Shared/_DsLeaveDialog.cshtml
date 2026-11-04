@@ -1,0 +1,14 @@
+@*
+  Unsaved changes: opened by ds.js when the user leaves a dirty <form data-ds-guard> through a link, the browser Back
+  button or a logout form marked <form data-ds-logout>. Stay is the safe default and gets the initial focus; Escape also stays. Reload/close uses the browser prompt.
+*@
+<dialog id="ds-leave" class="modal" aria-labelledby="ds-leave-title" aria-describedby="ds-leave-text">
+    <div class="modal-box ds-dialog">
+        <h2 id="ds-leave-title" class="ds-dialog-title">@DsText.T("leave.title")</h2>
+        <p id="ds-leave-text" class="ds-dialog-desc">@DsText.T("leave.text")</p>
+        <div class="modal-action">
+            <button type="button" class="btn" data-ds-leave-stay>@DsText.T("leave.stay")</button>
+            <button type="button" class="btn btn-error" data-ds-leave-go>@DsText.T("leave.go")</button>
+        </div>
+    </div>
+</dialog>

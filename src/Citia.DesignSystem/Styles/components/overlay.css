@@ -1,0 +1,606 @@
+/* Dialog and alert dialog (native <dialog>, alone or with daisyUI .modal), info notice. Owner: batch A9.
+   Origin: TPS .modal rules (L555–561, L3103–3106, L3347–3350), .preview-notice (L494–510).
+   Two markups, same look:
+     daisyUI   <dialog class="modal"><div class="modal-box ds-dialog">…</div></dialog>   (the dialog is the scrim)
+     native    <dialog class="ds-dialog">…</dialog>                                       (the dialog is the box, ::backdrop is the scrim)
+   Parts: __header (title, description, close), __body (scrolls), __footer (actions). v1 parts (-head, -body, -foot,
+   -title, -desc, -close) keep working.
+   Motion: enter = opacity + scale 0.97 → 1 from the centre (--ds-duration-base, emphasized); exit = same path back,
+   faster (--ds-duration-exit, exit easing); scrim fades. Reduced motion: opacity only. */
+
+@layer utilities {
+  /* ---------------------------------------------------------------- daisyUI .modal: scrim and motion */
+  .modal {
+    background-color: transparent;
+    opacity: 0;
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      background-color var(--ds-duration-exit) var(--ds-ease-exit),
+      visibility var(--ds-duration-exit) allow-discrete,
+      overlay var(--ds-duration-exit) allow-discrete,
+      display var(--ds-duration-exit) allow-discrete;
+  }
+
+  .modal:is([open], .modal-open, :target, :popover-open),
+  .modal-toggle:checked + .modal {
+    opacity: 1;
+    background-color: var(--ds-scrim);
+    transition:
+      opacity var(--ds-duration-base) var(--ds-ease-emphasized),
+      background-color var(--ds-duration-base) var(--ds-ease-emphasized),
+      visibility 0s allow-discrete,
+      overlay 0s allow-discrete,
+      display 0s allow-discrete;
+  }
+
+  @starting-style {
+    .modal:is([open], .modal-open, :target, :popover-open) {
+      opacity: 0;
+      background-color: transparent;
+    }
+  }
+
+  .modal::backdrop {
+    background: transparent;
+  }
+
+  /* A dialog opened from another dialog: half a scrim (the first one already dims the page), the lower box recedes. */
+  .modal[open][data-ds-nested] {
+    background-color: color-mix(in oklab, var(--ds-scrim) 50%, transparent);
+  }
+
+  .modal-box {
+    opacity: 0;
+    translate: 0;
+    scale: 0.97;
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      scale var(--ds-duration-exit) var(--ds-ease-exit),
+      box-shadow var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .modal:is([open], .modal-open, :target, :popover-open) > .modal-box,
+  .modal-toggle:checked + .modal > .modal-box {
+    opacity: 1;
+    translate: 0;
+    scale: 1;
+    transition:
+      opacity var(--ds-duration-base) var(--ds-ease-emphasized),
+      scale var(--ds-duration-base) var(--ds-ease-emphasized);
+  }
+
+  @starting-style {
+    .modal:is([open], .modal-open, :target, :popover-open) > .modal-box {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+
+  .modal[open][data-ds-covered] > .modal-box {
+    scale: 0.98;
+  }
+
+  .modal .btn {
+    min-height: var(--ds-size-target);
+    height: auto;
+  }
+
+  @media (max-width: 640px) {
+    .modal-action {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+  }
+
+  /* ---------------------------------------------------------------- the box (both markups) */
+  .ds-dialog {
+    display: flex;
+    flex-direction: column;
+    width: min(var(--ds-size-dialog-sm), calc(100vw - 2rem));
+    max-width: var(--ds-size-dialog-sm);
+    max-height: calc(100dvh - 2 * var(--ds-space-6));
+    padding: var(--ds-space-6);
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-2xl);
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+    box-shadow: var(--ds-shadow-overlay);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .ds-dialog.is-sm {
+    width: min(26rem, calc(100vw - 2rem));
+    max-width: 26rem;
+  }
+
+  .ds-dialog.is-md {
+    width: min(42rem, calc(100vw - 2rem));
+    max-width: 42rem;
+  }
+
+  .ds-dialog.is-lg {
+    width: min(var(--ds-size-dialog-lg), calc(100vw - 2rem));
+    max-width: var(--ds-size-dialog-lg);
+    padding: 0;
+  }
+
+  .ds-dialog.is-raised {
+    border: 2px solid var(--ds-popover-border);
+    background: var(--ds-popover);
+    box-shadow: var(--ds-shadow-popover);
+  }
+
+  /* Structured dialog: header and footer stay put, the body scrolls. */
+  .ds-dialog:has(> .ds-dialog__body) {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  @media (max-width: 640px) {
+    .ds-dialog {
+      padding: var(--ds-space-4);
+    }
+
+    /* Full screen on phones: the task gets the whole screen, the header keeps Close in reach. */
+    .ds-dialog.is-full-mobile {
+      width: 100vw;
+      max-width: none;
+      height: 100dvh;
+      max-height: none;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .modal:has(> .ds-dialog.is-full-mobile) {
+      place-items: stretch;
+    }
+  }
+
+  /* ---------------------------------------------------------------- native <dialog class="ds-dialog"> */
+  dialog.ds-dialog {
+    margin: auto;
+    inset: 0;
+    opacity: 0;
+    scale: 0.97;
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      scale var(--ds-duration-exit) var(--ds-ease-exit),
+      overlay var(--ds-duration-exit) allow-discrete,
+      display var(--ds-duration-exit) allow-discrete;
+  }
+
+  dialog.ds-dialog:not([open]) {
+    display: none;
+  }
+
+  dialog.ds-dialog[open] {
+    opacity: 1;
+    scale: 1;
+    transition:
+      opacity var(--ds-duration-base) var(--ds-ease-emphasized),
+      scale var(--ds-duration-base) var(--ds-ease-emphasized),
+      overlay 0s allow-discrete,
+      display 0s allow-discrete;
+  }
+
+  @starting-style {
+    dialog.ds-dialog[open] {
+      opacity: 0;
+      scale: 0.97;
+    }
+  }
+
+  dialog.ds-dialog[data-ds-covered] {
+    scale: 0.98;
+  }
+
+  dialog.ds-dialog::backdrop {
+    background: var(--ds-scrim);
+    opacity: 0;
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      overlay var(--ds-duration-exit) allow-discrete,
+      display var(--ds-duration-exit) allow-discrete;
+  }
+
+  dialog.ds-dialog[open]::backdrop {
+    opacity: 1;
+    transition: opacity var(--ds-duration-base) var(--ds-ease-emphasized);
+  }
+
+  @starting-style {
+    dialog.ds-dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  dialog.ds-dialog[data-ds-nested]::backdrop {
+    background: color-mix(in oklab, var(--ds-scrim) 50%, transparent);
+  }
+
+  @media (max-width: 640px) {
+    dialog.ds-dialog.is-full-mobile {
+      margin: 0;
+    }
+  }
+}
+
+@layer components {
+  /* ---------------------------------------------------------------- parts */
+  .ds-dialog__header,
+  .ds-dialog-head,
+  .ds-dialog__footer,
+  .ds-dialog-foot {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ds-space-4);
+  }
+
+  .ds-dialog__header {
+    flex: none;
+    padding: var(--ds-space-6) var(--ds-space-6) var(--ds-space-4);
+    border-block-end: var(--ds-border-hairline) solid transparent;
+    transition: border-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-dialog__heading {
+    display: grid;
+    gap: var(--ds-space-1-5);
+    min-width: 0;
+  }
+
+  .ds-dialog__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0 var(--ds-space-6) var(--ds-space-2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    outline: none;
+  }
+
+  /* Headings inside a dialog body are section labels, not page headings. */
+  .ds-dialog__body :is(h3, h4) {
+    margin: var(--ds-space-5) 0 var(--ds-space-1);
+    font-size: var(--ds-type-section-size);
+    font-weight: var(--ds-type-section-weight);
+    line-height: var(--ds-type-section-leading);
+  }
+
+  .ds-dialog__body > :first-child {
+    margin-block-start: 0;
+  }
+
+  .ds-dialog__body p {
+    margin: 0 0 var(--ds-space-2);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-callout-size);
+    line-height: var(--ds-type-callout-leading);
+  }
+
+  .ds-dialog__body:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: -2px;
+  }
+
+  .ds-dialog__footer {
+    flex: none;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--ds-space-2);
+    margin: 0;
+    padding: var(--ds-space-4) var(--ds-space-6) var(--ds-space-6);
+    border-block-start: var(--ds-border-hairline) solid transparent;
+    transition: border-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  /* Footer with a secondary note or action on the start side. */
+  .ds-dialog__footer > .ds-dialog__aside {
+    margin-inline-end: auto;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+  }
+
+  /* Scroll-edge hairlines: only while content is hidden under that edge (dialog.js sets the attributes). */
+  .ds-dialog:has(> .ds-dialog__body[data-ds-scrolled]) > .ds-dialog__header,
+  .ds-dialog:has(> .ds-dialog__body[data-ds-more]) > .ds-dialog__footer {
+    border-color: var(--color-base-300);
+  }
+
+  /* v1 large dialog: permanent separators. */
+  .ds-dialog.is-lg .ds-dialog-head,
+  .ds-dialog.is-lg .ds-dialog-foot {
+    padding: var(--ds-space-5) var(--ds-space-6);
+  }
+
+  .ds-dialog.is-lg .ds-dialog-head {
+    border-bottom: var(--ds-border-hairline) solid var(--color-base-300);
+  }
+
+  .ds-dialog.is-lg .ds-dialog-foot {
+    justify-content: flex-end;
+    border-top: var(--ds-border-hairline) solid var(--color-base-300);
+  }
+
+  .ds-dialog.is-lg .ds-dialog-body {
+    padding: var(--ds-space-6);
+  }
+
+  .ds-dialog__title,
+  .ds-dialog-title {
+    margin: 0;
+    font-size: var(--ds-type-headline-size);
+    font-weight: var(--ds-type-headline-weight);
+    line-height: var(--ds-type-headline-leading);
+    letter-spacing: var(--ds-type-headline-tracking);
+    text-wrap: balance;
+  }
+
+  .ds-dialog__description,
+  .ds-dialog-desc {
+    margin: 0;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-callout-size);
+    line-height: var(--ds-type-callout-leading);
+    text-wrap: pretty;
+  }
+
+  .ds-dialog-title + .ds-dialog-desc {
+    margin-top: var(--ds-space-2);
+  }
+
+  .ds-dialog-body {
+    margin-top: var(--ds-space-5);
+  }
+
+  /* Leading icon of an alert dialog: tonal disc, never the only signal (the title says it). */
+  .ds-dialog__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-block-end: var(--ds-space-3);
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-neutral-soft);
+    color: var(--ds-subtle);
+  }
+
+  .ds-dialog__icon.is-danger,
+  .ds-dialog__icon.is-error {
+    background: var(--ds-error-soft);
+    color: var(--ds-error-text);
+  }
+
+  .ds-dialog__icon.is-warning {
+    background: var(--ds-warning-soft);
+    color: var(--ds-warning-text);
+  }
+
+  .ds-dialog__icon.is-primary {
+    background: var(--ds-primary-soft);
+    color: var(--ds-primary-text);
+  }
+
+  /* Error returned by an async confirm action: stays inside the dialog, announced. */
+  .ds-dialog__error {
+    display: flex;
+    gap: var(--ds-space-2);
+    margin-top: var(--ds-space-3);
+    color: var(--ds-error-text);
+    font-size: var(--ds-type-footnote-size);
+  }
+
+  .ds-dialog__error[hidden] {
+    display: none;
+  }
+
+  /* Close: quiet icon button, 36px visual, 44px on touch. */
+  .ds-dialog__close,
+  .ds-dialog-close {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: var(--ds-size-target-compact);
+    height: var(--ds-size-target-compact);
+    margin: calc(var(--ds-space-1-5) * -1) calc(var(--ds-space-2) * -1) 0 0;
+    border: 0;
+    border-radius: var(--ds-radius-box);
+    background: transparent;
+    color: var(--ds-subtle);
+    cursor: pointer;
+    transition:
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      color var(--ds-duration-fast) var(--ds-ease-standard),
+      scale var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  @media (hover: hover) {
+    .ds-dialog__close:hover,
+    .ds-dialog-close:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      color: var(--color-base-content);
+    }
+  }
+
+  .ds-dialog__close:active,
+  .ds-dialog-close:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+    scale: var(--ds-press-scale);
+  }
+
+  .ds-dialog__close:focus-visible,
+  .ds-dialog-close:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-dialog__close:disabled,
+  .ds-dialog-close:disabled {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  @media (pointer: coarse) {
+    .ds-dialog__close,
+    .ds-dialog-close {
+      width: var(--ds-size-target);
+      height: var(--ds-size-target);
+    }
+  }
+
+  /* ---------------------------------------------------------------- busy (submitting) */
+  :is(dialog, .ds-dialog)[aria-busy="true"] :is(.ds-dialog__body, .ds-dialog__footer, .modal-action, .ds-dialog-body, .ds-dialog-foot) {
+    pointer-events: none;
+  }
+
+  :is(dialog, .ds-dialog)[aria-busy="true"] .ds-dialog__body {
+    opacity: 0.7;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  :is(dialog, .ds-dialog)[aria-busy="true"] :is(.ds-dialog__close, .ds-dialog-close) {
+    opacity: var(--ds-opacity-disabled);
+    pointer-events: none;
+  }
+
+  /* The submit button keeps its width; the spinner sits before the label. */
+  .ds-dialog .btn[aria-busy="true"] {
+    cursor: progress;
+  }
+
+  .ds-dialog .btn[aria-busy="true"] > .ds-spinner {
+    flex: none;
+  }
+
+  /* ---------------------------------------------------------------- info notice (v1) */
+  .ds-notice {
+    position: relative;
+  }
+
+  .ds-notice > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-2);
+    min-height: var(--ds-size-target);
+    padding: var(--ds-space-2) var(--ds-space-3);
+    border: var(--ds-border-hairline) solid color-mix(in oklab, var(--color-info) 22%, var(--color-base-300));
+    border-radius: var(--ds-radius-xl);
+    background: color-mix(in oklab, var(--color-info) 6%, var(--color-base-100));
+    font-size: var(--ds-type-caption-size);
+    font-weight: var(--ds-weight-strong);
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .ds-notice > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ds-notice > summary:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-notice > summary svg {
+    color: var(--color-info);
+  }
+
+  .ds-notice-panel {
+    position: absolute;
+    top: calc(100% + var(--ds-space-3));
+    inset-inline-end: 0;
+    z-index: var(--ds-z-popover);
+    width: min(20rem, calc(100vw - 2rem));
+    padding: var(--ds-space-4-5);
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    background: var(--color-base-100);
+    box-shadow: var(--ds-shadow-panel);
+    font-size: var(--ds-type-footnote-size);
+    line-height: 1.6;
+    transform-origin: top right;
+    animation: ds-enter var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  .ds-notice-panel strong {
+    font-weight: var(--ds-weight-bold);
+  }
+
+  .ds-notice-panel p {
+    margin-top: var(--ds-space-2);
+  }
+
+  @media (max-width: 640px) {
+    .ds-dialog.is-lg .ds-dialog-head,
+    .ds-dialog.is-lg .ds-dialog-foot,
+    .ds-dialog.is-lg .ds-dialog-body {
+      padding: var(--ds-space-4);
+    }
+
+    .ds-dialog.is-lg .ds-dialog-foot,
+    .ds-dialog__footer {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+
+    .ds-dialog__footer > .ds-dialog__aside {
+      margin-inline-end: 0;
+      text-align: center;
+    }
+
+    .ds-dialog__header {
+      padding: var(--ds-space-4) var(--ds-space-4) var(--ds-space-3);
+    }
+
+    .ds-dialog__body {
+      padding-inline: var(--ds-space-4);
+    }
+
+    .ds-dialog__footer {
+      padding: var(--ds-space-3) var(--ds-space-4) var(--ds-space-4);
+    }
+
+    .ds-notice-panel {
+      position: fixed;
+      top: 8rem;
+      inset-inline-end: var(--ds-space-4);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-notice-panel {
+      animation: none;
+    }
+  }
+}
+
+/* Reduced motion: the box no longer scales; opacity cross-fades stay (≤ 150 ms). */
+@layer utilities {
+  @media (prefers-reduced-motion: reduce) {
+    .modal-box,
+    .modal:is([open], .modal-open, :target, :popover-open) > .modal-box,
+    .modal[open][data-ds-covered] > .modal-box,
+    dialog.ds-dialog,
+    dialog.ds-dialog[open],
+    dialog.ds-dialog[data-ds-covered] {
+      scale: 1;
+    }
+
+    @starting-style {
+      .modal:is([open], .modal-open, :target, :popover-open) > .modal-box,
+      dialog.ds-dialog[open] {
+        scale: 1;
+      }
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-dialog {
+      border-color: CanvasText;
+    }
+  }
+}

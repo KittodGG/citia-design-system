@@ -1,0 +1,153 @@
+@inject DocsCatalog Catalog
+@*
+  Documentation shell, after the scroll-tracker reference: global navigation on the left, the article in the middle,
+  the page's own heading map on the right. Light and dark come from the design system themes; the language comes from the
+  first URL segment (/en/…, /id/…) and drives every string of the chrome (SiteText) and of the DS partials (DsText).
+*@
+@{
+    var o = Catalog.Options;
+    var lang = Context.Items["docs.lang"] as string ?? o.DefaultLanguage;
+    string T(string key, params object?[] args) => SiteText.T(lang, key, args);
+    var slug = ViewData["Slug"] as string;
+    var title = ViewData["Title"] as string;
+    var summary = ViewData["Summary"] as string ?? T("tagline");
+    var pageTitle = string.IsNullOrEmpty(title) ? o.SiteName : $"{title} · {o.SiteName}";
+    var home = $"/{lang}/";
+    var alternateSlug = slug ?? ViewData["AlternateSlug"] as string;
+}
+<!DOCTYPE html>
+<html lang="@lang" data-theme="@o.LightTheme">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>@pageTitle</title>
+    <meta name="description" content="@summary" />
+    @foreach (var other in o.Languages)
+    {
+        <link rel="alternate" hreflang="@other" href="@Catalog.AlternateUrl(other, alternateSlug)" />
+    }
+    <link rel="icon" type="image/png" href="~/images/citia-favicon.png" />
+    <partial name="_DsHead" model='new HeadOptions(Stylesheet: "~/css/docs.css", Light: o.LightTheme, Dark: o.DarkTheme, Storage: o.Storage)' />
+</head>
+<body class="docs-body" data-docs-lang="@lang" data-docs-storage="@o.Storage">
+    <partial name="_DsIconSprite" />
+    <a class="ds-skip-link btn btn-primary btn-sm" href="#docs-main">@T("skip")</a>
+
+    <div class="docs-shell" data-docs-shell>
+        <header class="docs-topbar">
+            <button type="button" class="docs-icon-button" data-docs-nav-open aria-controls="docs-sidebar" aria-expanded="false" aria-label="@T("openNav")">
+                <svg class="ds-icon is-lg" aria-hidden="true"><use href="#ds-icon-menu"></use></svg>
+            </button>
+            <a class="docs-brand" href="@home" aria-label="@T("home", o.SiteName)">
+                <img src="~/images/citia-favicon.png" alt="" width="28" height="28" />
+                <span class="docs-brand__name">@o.ShortName</span>
+            </a>
+            <div class="docs-topbar__actions">
+                <button type="button" class="docs-icon-button" data-docs-search-open aria-label="@T("search")">
+                    <svg class="ds-icon is-lg" aria-hidden="true"><use href="#ds-icon-search"></use></svg>
+                </button>
+                <button type="button" class="docs-icon-button" data-ds-theme-toggle aria-label="@T("toggleTheme")">
+                    <span data-ds-theme-icon="light"><svg class="ds-icon is-lg" aria-hidden="true"><use href="#ds-icon-moon"></use></svg></span>
+                    <span data-ds-theme-icon="dark" hidden><svg class="ds-icon is-lg" aria-hidden="true"><use href="#ds-icon-sun"></use></svg></span>
+                </button>
+            </div>
+        </header>
+
+        <aside id="docs-sidebar" class="docs-sidebar" aria-label="@T("docs")" data-docs-sidebar>
+            <div class="docs-sidebar__brand">
+                <a class="docs-brand" href="@home" aria-label="@T("home", o.SiteName)">
+                    <img src="~/images/citia-favicon.png" alt="" width="28" height="28" />
+                    <span class="docs-brand__name">@o.ShortName</span>
+                </a>
+                <span class="docs-version" title="@T("version")">v@(o.Version)</span>
+                <button type="button" class="docs-icon-button docs-sidebar__close" data-docs-nav-close aria-label="@T("closeNav")">
+                    <svg class="ds-icon is-lg" aria-hidden="true"><use href="#ds-icon-x"></use></svg>
+                </button>
+            </div>
+            <nav class="docs-sidebar__nav" aria-label="@T("docsNav")" data-docs-nav>
+                @foreach (var navSection in Catalog.Nav(lang))
+                {
+                    <div class="docs-sidebar__group">
+                        <p class="docs-sidebar__label">@T($"group.{navSection.Group}")</p>
+                        @foreach (var category in navSection.Categories)
+                        {
+                            @if (category.Category is not null)
+                            {
+                                <p class="docs-sidebar__sublabel">@T($"category.{category.Category}")</p>
+                            }
+                            @foreach (var doc in category.Pages)
+                            {
+                                var current = string.Equals(doc.Slug, slug, StringComparison.OrdinalIgnoreCase)
+                                    || (slug is null && string.Equals(doc.Slug, ViewData["CurrentSlug"] as string, StringComparison.OrdinalIgnoreCase));
+                                <a href="@Catalog.UrlFor(doc)" class="@(current ? "is-current" : null)" aria-current="@(current ? "page" : null)">@doc.Title</a>
+                            }
+                        }
+                    </div>
+                }
+            </nav>
+            <div class="docs-sidebar__footer">
+                <button type="button" class="docs-search-button" data-docs-search-open>
+                    <svg class="ds-icon" aria-hidden="true"><use href="#ds-icon-search"></use></svg>
+                    <span>@T("search")</span>
+                    <kbd data-docs-shortcut>Ctrl K</kbd>
+                </button>
+                <div class="docs-switches">
+                    <nav class="docs-lang" aria-label="@T("language")">
+                        @foreach (var other in o.Languages)
+                        {
+                            var active = other == lang;
+                            <a href="@Catalog.AlternateUrl(other, alternateSlug)" hreflang="@other" lang="@other" data-docs-lang-link="@other"
+                               aria-current="@(active ? "true" : null)" title="@SiteText.T(other, "lang.name")">@other.ToUpperInvariant()</a>
+                        }
+                    </nav>
+                    <div class="docs-theme" role="group" aria-label="@T("theme")">
+                        <button type="button" data-ds-theme-set="light" aria-pressed="false" title="@T("lightTitle")" aria-label="@T("lightTitle")">
+                            <svg class="ds-icon" aria-hidden="true"><use href="#ds-icon-sun"></use></svg>
+                        </button>
+                        <button type="button" data-ds-theme-set="dark" aria-pressed="false" title="@T("darkTitle")" aria-label="@T("darkTitle")">
+                            <svg class="ds-icon" aria-hidden="true"><use href="#ds-icon-moon"></use></svg>
+                        </button>
+                        <button type="button" data-ds-theme-set="system" aria-pressed="false" title="@T("systemTitle")" aria-label="@T("systemTitle")">
+                            <svg class="ds-icon" aria-hidden="true" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        <button type="button" class="docs-scrim" data-docs-nav-close tabindex="-1" aria-hidden="true"></button>
+
+        <div class="docs-frame" data-docs-frame>
+            <main id="docs-main" class="docs-content" tabindex="-1">
+                @RenderBody()
+                <footer class="docs-footer">
+                    <img src="~/images/citia-engineering.png" alt="@o.Owner" class="docs-footer__logo is-light" width="120" height="40" />
+                    <img src="~/images/citia-white.png" alt="@o.Owner" class="docs-footer__logo is-dark" width="40" height="40" />
+                    <p>@o.SiteName @o.Version · @o.Owner. @T("footer")</p>
+                </footer>
+            </main>
+            @await RenderSectionAsync("Tracker", required: false)
+        </div>
+    </div>
+
+    <dialog id="docs-search" class="docs-search" aria-labelledby="docs-search-label" data-docs-search>
+        <div class="docs-search__box" role="search">
+            <label id="docs-search-label" class="ds-visually-hidden" for="docs-search-input">@T("search")</label>
+            <svg class="ds-icon is-lg" aria-hidden="true"><use href="#ds-icon-search"></use></svg>
+            <input id="docs-search-input" type="search" autocomplete="off" spellcheck="false" placeholder="@T("searchPlaceholder")"
+                   role="combobox" aria-expanded="true" aria-controls="docs-search-results" aria-autocomplete="list" data-docs-search-input />
+            <kbd>Esc</kbd>
+        </div>
+        <ul id="docs-search-results" class="docs-search__results" role="listbox" aria-label="@T("searchResults")" data-docs-search-results></ul>
+        <p class="docs-search__empty" data-docs-search-empty hidden>@T("searchEmpty")</p>
+        <p class="ds-visually-hidden" role="status" aria-live="polite" data-docs-search-status></p>
+    </dialog>
+
+    <partial name="_DsToast" />
+    <partial name="_DsConfirmDialog" />
+    <partial name="_DsLeaveDialog" />
+    <script type="module" src="~/_content/Citia.DesignSystem/lib/cally/cally.js"></script>
+    <partial name="_DsScripts" />
+    <script src="~/js/tracker.js" asp-append-version="true" defer></script>
+    <script src="~/js/docs.js" asp-append-version="true" defer></script>
+</body>
+</html>

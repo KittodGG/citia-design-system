@@ -1,0 +1,535 @@
+/* File upload: dropzone, file list with per-file states, avatar upload.
+   Origin: TPS .excel-dropzone / .excel-file (app.css L574–594). Owner: batch A4.
+   States: rest, hover, focus-visible (the hidden input inside), page drag ([data-dragging]), drag over ([data-drop-target]),
+   disabled, invalid; file rows: ready, waiting, uploading, done, invalid, error. */
+
+@layer components {
+
+  .ds-file-upload {
+    display: grid;
+    gap: var(--ds-space-3);
+    min-width: 0;
+  }
+
+  /* ------------------------------------------------------------ dropzone */
+  .ds-dropzone {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-space-2);
+    min-height: 9rem;
+    padding: var(--ds-space-6) var(--ds-space-5);
+    border: 1px dashed var(--ds-control-border);
+    border-radius: var(--ds-radius-card);
+    background: color-mix(in oklab, var(--color-base-200) 45%, var(--color-base-100));
+    color: var(--color-base-content);
+    text-align: center;
+    cursor: pointer;
+    transition:
+      border-color var(--ds-duration-fast) var(--ds-ease-standard),
+      background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  /* The file input stays in the tab order (Enter and Space open the picker) but is drawn by the zone. */
+  .ds-dropzone__input,
+  .ds-dropzone > input[type="file"],
+  .ds-avatar-upload input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .ds-dropzone__icon,
+  .ds-dropzone > svg {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-primary-soft);
+    color: var(--ds-primary-text);
+    transition: transform var(--ds-duration-spring) var(--ds-ease-spring);
+  }
+
+  .ds-dropzone > svg {
+    padding: 0.625rem;
+  }
+
+  .ds-dropzone__icon > svg {
+    width: var(--ds-size-icon-md);
+    height: var(--ds-size-icon-md);
+  }
+
+  .ds-dropzone__text {
+    display: grid;
+    justify-items: center;
+    gap: var(--ds-space-1);
+    min-width: 0;
+  }
+
+  .ds-dropzone__title,
+  .ds-dropzone p {
+    margin: 0;
+    font-size: var(--ds-type-callout-size);
+    line-height: var(--ds-type-callout-leading);
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  .ds-dropzone__browse {
+    color: var(--ds-primary-text);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, var(--color-primary) 40%, transparent);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-dropzone__hint,
+  .ds-dropzone small {
+    margin: 0;
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+    color: var(--ds-subtle);
+  }
+
+  @media (hover: hover) {
+    .ds-dropzone:hover {
+      border-color: color-mix(in oklab, var(--color-primary) 55%, var(--ds-control-border));
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), var(--color-base-100));
+    }
+
+    .ds-dropzone:hover .ds-dropzone__browse {
+      text-decoration-color: currentColor;
+    }
+  }
+
+  .ds-dropzone:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), var(--color-base-100));
+  }
+
+  .ds-dropzone:has(input:focus-visible) {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  /* A file is being dragged somewhere on the page: show where it can go. */
+  .ds-dropzone[data-dragging] {
+    border-color: color-mix(in oklab, var(--color-primary) 70%, var(--ds-control-border));
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-hover) * 100%), var(--color-base-100));
+  }
+
+  /* Over the zone: the drop target. */
+  .ds-dropzone[data-drop-target],
+  .ds-dropzone.is-dragging {
+    border-color: var(--color-primary);
+    border-style: dashed;
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-drag) * 100%), var(--color-base-100));
+  }
+
+  .ds-dropzone[data-drop-target] .ds-dropzone__icon,
+  .ds-dropzone[data-drop-target] > svg {
+    transform: translateY(calc(var(--ds-enter-offset) * -1));
+  }
+
+  .ds-dropzone:has(input[aria-invalid="true"], input.input-validation-error) {
+    border-color: var(--color-error);
+  }
+
+  .ds-dropzone:has(input:disabled) {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+    background: var(--color-base-200);
+  }
+
+  .ds-dropzone:has(input:disabled):hover {
+    border-color: var(--ds-control-border);
+  }
+
+  [aria-busy="true"] > .ds-dropzone {
+    cursor: progress;
+  }
+
+  /* Compact: one row, for dialogs and dense forms. */
+  .ds-dropzone.is-compact {
+    flex-direction: row;
+    justify-content: flex-start;
+    min-height: 0;
+    gap: var(--ds-space-3);
+    padding: var(--ds-space-3) var(--ds-space-4);
+    text-align: start;
+  }
+
+  .ds-dropzone.is-compact .ds-dropzone__icon,
+  .ds-dropzone.is-compact > svg {
+    flex: none;
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .ds-dropzone.is-compact .ds-dropzone__text {
+    justify-items: start;
+    gap: var(--ds-space-0-5);
+  }
+
+  /* ------------------------------------------------------------ file list */
+  .ds-file-list {
+    display: grid;
+    gap: var(--ds-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-file-list:empty {
+    display: none;
+  }
+
+  .ds-file {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--ds-space-3);
+    padding: var(--ds-space-2-5) var(--ds-space-3);
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-xl);
+    background: var(--color-base-100);
+    opacity: 1;
+    transform: none;
+    transition:
+      border-color var(--ds-duration-fast) var(--ds-ease-standard),
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      opacity var(--ds-duration-enter) var(--ds-ease-emphasized),
+      transform var(--ds-duration-enter) var(--ds-ease-emphasized);
+  }
+
+  @starting-style {
+    .ds-file {
+      opacity: 0;
+      transform: translateY(calc(var(--ds-enter-offset) * -1));
+    }
+  }
+
+  .ds-file[hidden] {
+    display: none;
+  }
+
+  .ds-file:is([data-state="invalid"], [data-state="error"]) {
+    border-color: color-mix(in oklab, var(--color-error) 40%, var(--color-base-300));
+    background: color-mix(in oklab, var(--ds-error-soft) 45%, var(--color-base-100));
+  }
+
+  .ds-file__thumb {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    overflow: hidden;
+    border-radius: var(--ds-radius-md);
+    background: var(--color-base-200);
+    color: var(--ds-muted);
+  }
+
+  .ds-file__thumb > svg {
+    width: var(--ds-size-icon-md);
+    height: var(--ds-size-icon-md);
+  }
+
+  .ds-file__thumb > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ds-file[data-state="invalid"] .ds-file__thumb {
+    color: var(--ds-error-text);
+    background: var(--ds-error-soft);
+  }
+
+  .ds-file__body {
+    display: grid;
+    gap: var(--ds-space-0-5);
+    min-width: 0;
+  }
+
+  .ds-file__name {
+    overflow: hidden;
+    font-size: var(--ds-type-footnote-size);
+    font-weight: var(--ds-weight-semibold);
+    line-height: var(--ds-type-footnote-leading);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-file__meta {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--ds-space-1);
+    font-size: var(--ds-type-caption-size);
+    line-height: var(--ds-type-caption-leading);
+    color: var(--ds-subtle);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds-file__meta > svg {
+    flex: none;
+    width: 0.875rem;
+    height: 0.875rem;
+    margin-top: 0.0625rem;
+  }
+
+  .ds-file__meta.is-error {
+    color: var(--ds-error-text);
+  }
+
+  .ds-file__meta.is-success {
+    color: var(--ds-success-text);
+  }
+
+  /* Progress: a hairline bar that appears only after 300 ms, so quick uploads do not flash. */
+  .ds-file__progress {
+    width: 100%;
+    height: 0.25rem;
+    margin-top: var(--ds-space-1);
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--ds-radius-full);
+    background: var(--color-base-300);
+    color: var(--color-primary);
+    appearance: none;
+    animation: ds-enter var(--ds-duration-quick) var(--ds-ease-out) 300ms both;
+  }
+
+  .ds-file__progress::-webkit-progress-bar {
+    background: var(--color-base-300);
+  }
+
+  .ds-file__progress::-webkit-progress-value {
+    border-radius: var(--ds-radius-full);
+    background: var(--color-primary);
+    transition: width var(--ds-duration-base) var(--ds-ease-standard);
+  }
+
+  .ds-file__progress::-moz-progress-bar {
+    border-radius: var(--ds-radius-full);
+    background: var(--color-primary);
+  }
+
+  .ds-file__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-1);
+  }
+
+  .ds-file__action {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: var(--ds-radius-md);
+    background: transparent;
+    color: var(--ds-muted);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-file__action::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, var(--ds-size-target));
+    height: max(100%, var(--ds-size-target));
+    translate: -50% -50%;
+  }
+
+  .ds-file__action > svg {
+    width: var(--ds-size-icon-sm);
+    height: var(--ds-size-icon-sm);
+  }
+
+  @media (hover: hover) {
+    .ds-file__action:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      color: var(--color-base-content);
+    }
+
+    .ds-file__action.is-remove:hover {
+      color: var(--ds-error-text);
+    }
+  }
+
+  .ds-file__action:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+    transform: scale(var(--ds-press-scale));
+  }
+
+  .ds-file__action:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  /* Version 1 row markup: icon, <div><strong/><small/></div>, button. */
+  .ds-file > div:not([class]) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ds-file strong {
+    display: block;
+    font-size: 0.875rem;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-file small {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--ds-subtle);
+  }
+
+  .ds-file:not(:has(.ds-file__body)) {
+    display: flex;
+  }
+
+  .ds-file > progress:not([class]) {
+    display: none;
+  }
+
+  [aria-busy="true"] .ds-file > progress:not([class]) {
+    display: block;
+  }
+
+  /* ------------------------------------------------------------ avatar upload */
+  .ds-avatar-upload {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ds-space-4);
+    min-width: 0;
+  }
+
+  .ds-avatar-upload__preview {
+    position: relative;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    overflow: hidden;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-full);
+    background: var(--color-base-200);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-title-3-size);
+    font-weight: var(--ds-weight-semibold);
+    transition: border-color var(--ds-duration-fast) var(--ds-ease-standard), background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-avatar-upload__preview > svg {
+    width: var(--ds-size-icon-lg);
+    height: var(--ds-size-icon-lg);
+  }
+
+  .ds-avatar-upload__preview > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ds-avatar-upload__preview:is([data-dragging], [data-drop-target]) {
+    border: 1px dashed var(--color-primary);
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-drag) * 100%), var(--color-base-100));
+  }
+
+  .ds-avatar-upload__preview[data-drop-target] > img {
+    opacity: 0.6;
+  }
+
+  .ds-avatar-upload.is-lg .ds-avatar-upload__preview {
+    width: 6rem;
+    height: 6rem;
+  }
+
+  .ds-avatar-upload__body {
+    display: grid;
+    gap: var(--ds-space-1);
+    min-width: 0;
+    flex: 1 1 14rem;
+  }
+
+  .ds-avatar-upload__title {
+    margin: 0;
+    font-size: var(--ds-type-label-size);
+    font-weight: var(--ds-type-label-weight);
+  }
+
+  .ds-avatar-upload__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-space-2);
+    margin-top: var(--ds-space-1-5);
+  }
+
+  .ds-avatar-upload__actions > label {
+    position: relative;
+  }
+
+  .ds-avatar-upload__actions > label:has(input:focus-visible) {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-avatar-upload__actions > label:has(input:disabled) {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-avatar-upload:has(input[type="file"][aria-invalid="true"]) .ds-avatar-upload__preview {
+    border-color: var(--color-error);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-file,
+    .ds-dropzone__icon,
+    .ds-dropzone > svg {
+      transition-property: opacity, border-color, background-color;
+      transform: none;
+    }
+
+    @starting-style {
+      .ds-file {
+        transform: none;
+      }
+    }
+
+    .ds-dropzone[data-drop-target] .ds-dropzone__icon,
+    .ds-dropzone[data-drop-target] > svg {
+      transform: none;
+    }
+
+    .ds-file__action:active {
+      transform: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-dropzone[data-drop-target] {
+      border-color: Highlight;
+      border-width: 2px;
+    }
+
+    .ds-file__progress {
+      border: 1px solid CanvasText;
+    }
+  }
+}

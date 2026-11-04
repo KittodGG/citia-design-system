@@ -1,0 +1,1446 @@
+/* Checkbox, radio group, switch, slider, rating, tokens (multi-select and tags input chips), tags input, OTP input.
+   Owner: batch A3 forms-choice. Contract: docs/_contributing.md.
+   daisyUI .checkbox, .radio, .toggle and .range are refined in @layer utilities (daisyUI 5 nests its layers inside
+   utilities, so only rules there win). Row and card layouts refine .ds-check-row / .ds-choice from field.css (A2). */
+
+@layer components {
+  :root {
+    /* Glyph masks (24 px grid, drawn as alpha; the colour comes from background-color). */
+    --ds-mask-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+    --ds-mask-minus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E");
+    --ds-mask-x: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 7l10 10M17 7 7 17'/%3E%3C/svg%3E");
+    --ds-mask-star: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -1 26 26'%3E%3Cpath fill='black' d='M11.53 2.3a.53.53 0 0 1 .94 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.17.76a.53.53 0 0 1 .29.9l-3.74 3.64a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.88L2.16 9.8a.53.53 0 0 1 .3-.91l5.16-.75a2.12 2.12 0 0 0 1.6-1.16z'/%3E%3C/svg%3E");
+  }
+
+  /* ------------------------------------------------------------------ rows and groups */
+
+  /* A control with a title and an optional description. The whole row is the label (44 px tall). */
+  .ds-check-row {
+    align-items: flex-start;
+    gap: var(--ds-space-3);
+    padding-block: calc((var(--ds-size-target) - 1lh) / 2);
+    min-height: var(--ds-size-target);
+    line-height: var(--ds-type-body-leading);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ds-check-row :is(strong, .ds-check-row__label) {
+    display: block;
+    font-weight: var(--ds-weight-medium);
+  }
+
+  .ds-check-row :is(small, .ds-check-row__description) {
+    display: block;
+    margin-top: var(--ds-space-0-5);
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+    color: var(--ds-subtle);
+  }
+
+  .ds-check-row .ds-field-error,
+  .ds-choice .ds-field-error {
+    color: var(--ds-error-text);
+  }
+
+  /* Label first, control at the end (settings lists). */
+  .ds-check-row.is-end {
+    flex-direction: row-reverse;
+    justify-content: space-between;
+  }
+
+  .ds-check-row.is-end > :not(input) {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .ds-check-row:has(> input:disabled) {
+    cursor: not-allowed;
+  }
+
+  .ds-check-row:has(> input:disabled) > :not(input) {
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  /* Group of checkboxes, radios or switches inside a fieldset: vertical by default, .is-horizontal wraps in a row. */
+  :is(.ds-choice-group, .ds-checkbox-group, .ds-radio-group) {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  :is(.ds-choice-group, .ds-checkbox-group, .ds-radio-group) > legend {
+    float: none;
+    margin-bottom: var(--ds-space-1);
+    padding: 0;
+    font-size: var(--ds-type-label-size);
+    font-weight: var(--ds-type-label-weight);
+    line-height: var(--ds-type-label-leading);
+  }
+
+  .ds-choice-group__items {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  :is(.ds-choice-group, .ds-checkbox-group, .ds-radio-group).is-horizontal .ds-choice-group__items {
+    flex-flow: row wrap;
+    column-gap: var(--ds-space-6);
+  }
+
+  /* Group-level validation: the fieldset carries aria-invalid and aria-describedby → message. */
+  :is(.ds-choice-group, .ds-checkbox-group, .ds-radio-group) > .ds-field-error {
+    margin-top: var(--ds-space-1);
+  }
+
+  /* Selectable cards (.ds-choice, the whole card is the label). Refines field.css. */
+  .ds-choice-grid.is-3 {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  }
+
+  .ds-choice-grid.is-horizontal {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  }
+
+  .ds-choice {
+    position: relative;
+    border-color: var(--color-base-300);
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      border-color var(--ds-duration-fast) var(--ds-ease-standard),
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      box-shadow var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-choice:hover {
+    border-color: var(--color-base-300);
+  }
+
+  @media (hover: hover) {
+    .ds-choice:not(:has(:disabled)):hover {
+      border-color: color-mix(in oklab, var(--color-base-content) 30%, var(--color-base-300));
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 50%), var(--color-base-100));
+    }
+  }
+
+  .ds-choice:has(:checked),
+  .ds-choice:has(:checked):hover {
+    border-color: var(--color-primary);
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 50%), var(--color-base-100));
+    box-shadow: inset 0 0 0 1px var(--color-primary);
+  }
+
+  .ds-choice:has(:focus-visible) {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-choice:has(:disabled) {
+    cursor: not-allowed;
+    background: var(--color-base-200);
+  }
+
+  .ds-choice:has(:disabled) > :not(input) {
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  .ds-choice :is(strong, .ds-choice__label) {
+    display: block;
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  .ds-choice :is(small, .ds-choice__description) {
+    display: block;
+    margin-top: var(--ds-space-0-5);
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+    color: var(--ds-subtle);
+  }
+
+  /* Control at the inline end of the card; an optional leading icon in .ds-choice__icon. */
+  .ds-choice.is-end {
+    flex-direction: row-reverse;
+  }
+
+  .ds-choice.is-end > :not(input) {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .ds-choice__icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--ds-radius-md);
+    background: var(--color-base-200);
+    color: var(--ds-quiet);
+  }
+
+  .ds-choice__body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* Invalid group: every card and control border turns error until a choice is made. */
+  :is([aria-invalid="true"], .is-invalid) > :is(.ds-choice, .ds-choice-group__items > .ds-choice),
+  :is([aria-invalid="true"], .is-invalid) .ds-choice-grid > .ds-choice {
+    border-color: var(--color-error);
+  }
+
+  /* ------------------------------------------------------------------ slider */
+
+  .ds-slider {
+    --ds-range-thumb: 1.25rem;
+    --ds-range-track: 0.375rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-2);
+    min-width: 0;
+  }
+
+  .ds-slider__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--ds-space-3);
+  }
+
+  .ds-slider__head > :is(label, .ds-label) {
+    font-size: var(--ds-type-label-size);
+    font-weight: var(--ds-type-label-weight);
+    line-height: var(--ds-type-label-leading);
+  }
+
+  .ds-slider__output,
+  .ds-slider output {
+    font-size: var(--ds-type-label-size);
+    font-weight: var(--ds-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-base-content);
+    white-space: nowrap;
+  }
+
+  .ds-slider__control {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .ds-slider__control > .range {
+    grid-area: 1 / 1;
+  }
+
+  /* Two thumbs: two native range inputs stacked; the track is painted by the container. */
+  .ds-slider__control.is-range::before {
+    content: "";
+    grid-area: 1 / 1;
+    height: var(--ds-range-track);
+    border-radius: var(--ds-radius-full);
+    background: linear-gradient(
+      to right,
+      var(--ds-range-rest) calc(var(--ds-range-thumb) / 2 + (100% - var(--ds-range-thumb)) * var(--ds-range-lo, 0)),
+      var(--ds-range-color) calc(var(--ds-range-thumb) / 2 + (100% - var(--ds-range-thumb)) * var(--ds-range-lo, 0)),
+      var(--ds-range-color) calc(var(--ds-range-thumb) / 2 + (100% - var(--ds-range-thumb)) * var(--ds-range-hi, 1)),
+      var(--ds-range-rest) calc(var(--ds-range-thumb) / 2 + (100% - var(--ds-range-thumb)) * var(--ds-range-hi, 1))
+    );
+  }
+
+  .ds-slider__control.is-range:dir(rtl)::before {
+    scale: -1 1;
+  }
+
+  .ds-slider__control.is-range:has(.range:disabled)::before {
+    --ds-range-color: var(--ds-control-border);
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  /* Value bubble above the thumb while dragging or adjusting with the keyboard. */
+  .ds-slider__bubble {
+    position: absolute;
+    bottom: calc(50% + var(--ds-range-thumb) / 2 + var(--ds-space-2));
+    inset-inline-start: calc(var(--ds-range-thumb) / 2 + (100% - var(--ds-range-thumb)) * var(--ds-bubble-p, 0));
+    z-index: 3;
+    padding: var(--ds-space-0-5) var(--ds-space-2);
+    border-radius: var(--ds-radius-md);
+    background: var(--color-base-content);
+    color: var(--color-base-100);
+    font-size: var(--ds-type-caption-size);
+    font-weight: var(--ds-weight-semibold);
+    line-height: var(--ds-type-caption-leading);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+    translate: -50% var(--ds-enter-offset);
+    scale: 0.96;
+    opacity: 0;
+    transform-origin: 50% 100%;
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      translate var(--ds-duration-exit) var(--ds-ease-exit),
+      scale var(--ds-duration-exit) var(--ds-ease-exit);
+  }
+
+  .ds-slider__bubble:dir(rtl) {
+    translate: 50% var(--ds-enter-offset);
+  }
+
+  :is(.ds-slider[data-dragging], .ds-slider[data-keyboard]) .ds-slider__bubble[data-active] {
+    opacity: 1;
+    translate: -50% 0;
+    scale: 1;
+    transition:
+      opacity var(--ds-duration-quick) var(--ds-ease-emphasized),
+      translate var(--ds-duration-quick) var(--ds-ease-emphasized),
+      scale var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  :is(.ds-slider[data-dragging], .ds-slider[data-keyboard]) .ds-slider__bubble[data-active]:dir(rtl) {
+    translate: 50% 0;
+  }
+
+  /* Marks: tick + label under the track, generated from <datalist> options (value, label). */
+  .ds-slider__marks {
+    position: relative;
+    height: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-slider__mark {
+    position: absolute;
+    top: 0;
+    inset-inline-start: calc(var(--ds-range-thumb) / 2 + (100% - var(--ds-range-thumb)) * var(--ds-mark-p, 0));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ds-space-0-5);
+    translate: -50% 0;
+    font-size: var(--ds-type-caption-size);
+    line-height: var(--ds-type-caption-leading);
+    font-variant-numeric: tabular-nums;
+    color: var(--ds-subtle);
+    white-space: nowrap;
+  }
+
+  .ds-slider__mark:dir(rtl) {
+    translate: 50% 0;
+  }
+
+  .ds-slider__mark::before {
+    content: "";
+    width: 1px;
+    height: 0.375rem;
+    background: var(--ds-control-border);
+  }
+
+  .ds-slider__mark[data-in-range] {
+    color: var(--color-base-content);
+  }
+
+  .ds-slider__hint {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--ds-type-caption-size);
+    color: var(--ds-subtle);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds-slider:has(.range:disabled) :is(.ds-slider__head, .ds-slider__marks, .ds-slider__hint) {
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  .ds-slider.is-vertical {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .ds-slider.is-vertical .ds-slider__control {
+    height: 10rem;
+  }
+
+  /* ------------------------------------------------------------------ rating */
+
+  .ds-rating {
+    --ds-rating-size: 1.5rem;
+    --ds-rating-on: var(--color-primary);
+    --ds-rating-preview: color-mix(in oklab, var(--color-primary) 60%, var(--color-base-100));
+    --ds-rating-off: color-mix(in oklab, var(--color-base-content) 20%, var(--color-base-100));
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--ds-space-1);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .ds-rating > legend {
+    float: none;
+    margin-bottom: var(--ds-space-1);
+    padding: 0;
+    font-size: var(--ds-type-label-size);
+    font-weight: var(--ds-type-label-weight);
+    line-height: var(--ds-type-label-leading);
+  }
+
+  .ds-rating__row {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ds-space-2);
+  }
+
+  .ds-rating__stars {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .ds-rating__star {
+    --ds-star-fill: var(--ds-rating-off);
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: max(1.5rem, calc(var(--ds-rating-size) + 0.25rem));
+    height: max(1.5rem, calc(var(--ds-rating-size) + 0.25rem));
+    border-radius: var(--ds-radius-sm);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ds-rating__star::before {
+    content: "";
+    width: var(--ds-rating-size);
+    height: var(--ds-rating-size);
+    background-color: var(--ds-star-fill);
+    mask: var(--ds-mask-star) center / contain no-repeat;
+    transition:
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      scale var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  .ds-rating__star > input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+    appearance: none;
+  }
+
+  .ds-rating__star:has(:checked),
+  .ds-rating__star:has(~ .ds-rating__star :checked) {
+    --ds-star-fill: var(--ds-rating-on);
+  }
+
+  @media (hover: hover) {
+    .ds-rating__stars:not(:has(:disabled)):hover .ds-rating__star {
+      --ds-star-fill: var(--ds-rating-preview);
+    }
+
+    .ds-rating__stars:not(:has(:disabled)):hover .ds-rating__star:hover ~ .ds-rating__star {
+      --ds-star-fill: var(--ds-rating-off);
+    }
+
+    .ds-rating__stars:not(:has(:disabled)) .ds-rating__star:hover::before {
+      scale: 1.08;
+    }
+  }
+
+  .ds-rating__star:active::before {
+    scale: 0.92;
+  }
+
+  .ds-rating__star:has(:focus-visible) {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 0;
+  }
+
+  .ds-rating__stars:has(:disabled) .ds-rating__star {
+    cursor: not-allowed;
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  .ds-rating[aria-invalid="true"] {
+    --ds-rating-off: color-mix(in oklab, var(--color-error) 35%, var(--color-base-100));
+  }
+
+  .ds-rating__value {
+    min-width: 2ch;
+    font-size: var(--ds-type-label-size);
+    font-weight: var(--ds-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds-rating__clear {
+    padding: var(--ds-space-1) var(--ds-space-2);
+    border-radius: var(--ds-radius-sm);
+    font-size: var(--ds-type-footnote-size);
+    color: var(--ds-subtle);
+    cursor: pointer;
+    transition: color var(--ds-duration-fast) var(--ds-ease-standard), background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-rating:not(:has(:checked)) .ds-rating__clear {
+    visibility: hidden;
+  }
+
+  @media (hover: hover) {
+    .ds-rating__clear:hover {
+      color: var(--color-base-content);
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-rating.is-sm {
+    --ds-rating-size: 1rem;
+  }
+
+  .ds-rating-display.is-sm {
+    --ds-rating-size: 0.875rem;
+  }
+
+  .ds-rating.is-lg,
+  .ds-rating-display.is-lg {
+    --ds-rating-size: 2rem;
+  }
+
+  /* Read-only display, fractional: data-ds-rating-value="4.3" (data-ds-rating-max, default 5). */
+  .ds-rating-display {
+    --ds-rating-size: 1.125rem;
+    --ds-rating-on: var(--color-primary);
+    --ds-rating-off: color-mix(in oklab, var(--color-base-content) 20%, var(--color-base-100));
+    --ds-rating-value: attr(data-ds-rating-value type(<number>), 0);
+    --ds-rating-max: attr(data-ds-rating-max type(<number>), 5);
+    display: inline-block;
+    flex-shrink: 0;
+    width: calc(var(--ds-rating-size) * var(--ds-rating-max));
+    height: var(--ds-rating-size);
+    vertical-align: middle;
+    background: linear-gradient(
+      to right,
+      var(--ds-rating-on) calc(var(--ds-rating-value) / var(--ds-rating-max) * 100%),
+      var(--ds-rating-off) calc(var(--ds-rating-value) / var(--ds-rating-max) * 100%)
+    );
+    mask: var(--ds-mask-star) left center / var(--ds-rating-size) var(--ds-rating-size) repeat-x;
+  }
+
+  .ds-rating-display:dir(rtl) {
+    scale: -1 1;
+  }
+
+  .ds-rating-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-2);
+    font-size: var(--ds-type-footnote-size);
+    color: var(--ds-subtle);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds-rating-summary > strong {
+    font-weight: var(--ds-weight-semibold);
+    color: var(--color-base-content);
+  }
+
+  /* ------------------------------------------------------------------ tokens (chips inside multi-select and tags input) */
+
+  .ds-token {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-0-5);
+    max-width: 100%;
+    min-height: 1.75rem;
+    padding-inline: var(--ds-space-2) var(--ds-space-0-5);
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-md);
+    background: var(--color-base-200);
+    color: var(--color-base-content);
+    font-size: var(--ds-type-footnote-size);
+    font-weight: var(--ds-weight-medium);
+    line-height: 1.25rem;
+    transition:
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      border-color var(--ds-duration-fast) var(--ds-ease-standard),
+      opacity var(--ds-duration-quick) var(--ds-ease-emphasized),
+      scale var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  @starting-style {
+    .ds-token {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+
+  .ds-token__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-token__remove {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 1.375rem;
+    height: 1.375rem;
+    border-radius: var(--ds-radius-sm);
+    color: var(--ds-subtle);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  /* 24 px minimum hit area around the 22 px button. */
+  .ds-token__remove::after {
+    content: "";
+    position: absolute;
+    inset: -0.0625rem;
+  }
+
+  .ds-token__remove::before {
+    content: "";
+    width: 0.875rem;
+    height: 0.875rem;
+    background-color: currentColor;
+    mask: var(--ds-mask-x) center / contain no-repeat;
+  }
+
+  @media (hover: hover) {
+    .ds-token__remove:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+      color: var(--color-base-content);
+    }
+  }
+
+  .ds-token__remove:active {
+    scale: var(--ds-press-scale);
+  }
+
+  .ds-token__remove:disabled {
+    display: none;
+  }
+
+  .ds-token:has(.ds-token__remove:disabled) {
+    padding-inline-end: var(--ds-space-2);
+  }
+
+  .ds-token__remove:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 0;
+  }
+
+  .ds-token:has(.ds-token__remove:focus-visible) {
+    border-color: var(--ds-focus);
+  }
+
+  .ds-token.is-invalid,
+  .ds-token[aria-invalid="true"] {
+    border-color: var(--color-error);
+    background: var(--ds-error-soft);
+    color: var(--ds-error-text);
+  }
+
+  /* Duplicate entry: the existing token flashes a tonal fill for 1.6 s. */
+  .ds-token[data-state="duplicate"] {
+    border-color: var(--color-primary);
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-drag) * 100%), var(--color-base-100));
+  }
+
+  .ds-token.is-more {
+    padding-inline: var(--ds-space-2);
+    background: transparent;
+    border-style: dashed;
+    color: var(--ds-subtle);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ------------------------------------------------------------------ tags input and multi-select field */
+
+  :is(.ds-tags-input, .ds-multi-select) {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+  }
+
+  :is(.ds-tags-input__tokens, .ds-multi-select__tokens) {
+    display: contents;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  :is(.ds-tags-input__input, .ds-multi-select__input) {
+    flex: 1 1 6rem;
+    min-width: 6rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    outline: none;
+  }
+
+  :is(.ds-tags-input__input, .ds-multi-select__input)::placeholder {
+    color: var(--ds-subtle);
+  }
+
+  .ds-tags-input__meta {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--ds-space-3);
+    margin-top: var(--ds-space-1-5);
+    font-size: var(--ds-type-footnote-size);
+    color: var(--ds-subtle);
+  }
+
+  .ds-tags-input__count {
+    margin-inline-start: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds-tags-input[data-full] .ds-tags-input__count {
+    color: var(--color-base-content);
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  /* ------------------------------------------------------------------ OTP input */
+
+  .ds-otp {
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--ds-space-field-stack);
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .ds-otp__cells {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-2);
+  }
+
+  .ds-otp__sep {
+    flex-shrink: 0;
+    width: 0.625rem;
+    height: 2px;
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-control-border);
+  }
+
+  .ds-otp__status {
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-inline-start: var(--ds-space-1);
+    color: var(--color-success);
+  }
+
+  .ds-otp:not([data-state="success"], [aria-busy="true"]) .ds-otp__status {
+    display: none;
+  }
+
+  .ds-otp[data-state="success"] .ds-otp__status::before {
+    content: "";
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: currentColor;
+    mask: var(--ds-mask-check) center / contain no-repeat;
+  }
+
+  .ds-otp[aria-busy="true"] .ds-otp__status {
+    color: var(--ds-subtle);
+  }
+
+  .ds-otp[aria-busy="true"] .ds-otp__status::before {
+    content: "";
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid currentColor;
+    border-inline-end-color: transparent;
+    border-radius: var(--ds-radius-full);
+    opacity: 0;
+    animation:
+      ds-spin 0.7s linear infinite,
+      ds-choice-appear var(--ds-duration-fast) var(--ds-ease-standard) 300ms forwards;
+  }
+
+  .ds-otp__resend {
+    font-size: var(--ds-type-footnote-size);
+    color: var(--ds-subtle);
+  }
+}
+
+@keyframes ds-choice-appear {
+  to { opacity: 1; }
+}
+
+@layer utilities {
+  /* ------------------------------------------------------------------ alignment inside rows and cards (beats field.css) */
+  .ds-check-row > :is(.checkbox, .radio, .toggle) {
+    flex-shrink: 0;
+    margin-top: calc((1lh - var(--ds-control-h, 1.25rem)) / 2);
+  }
+
+  .ds-check-row.is-end > .toggle {
+    margin-inline-start: var(--ds-space-4);
+  }
+
+  .ds-choice > :is(.radio, .checkbox, .toggle) {
+    flex-shrink: 0;
+    margin-top: calc((1lh - var(--ds-control-h, 1.25rem)) / 2);
+  }
+
+  /* ------------------------------------------------------------------ checkbox (daisyUI .checkbox refined) */
+  input.checkbox {
+    --size: 1.25rem;
+    --ds-control-h: var(--size);
+    --ds-choice-on: var(--input-color, var(--color-primary));
+    padding: 0.1875rem;
+    border: 1px solid var(--ds-control-border);
+    border-radius: var(--ds-radius-sm);
+    background-color: var(--color-base-100);
+    box-shadow: none;
+    vertical-align: middle;
+    transition:
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      border-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  input.checkbox:is(.checkbox-sm, .is-sm) { --size: 1rem; padding: 0.125rem; }
+  input.checkbox:is(.checkbox-lg, .is-lg) { --size: 1.5rem; padding: 0.25rem; }
+  input.checkbox.checkbox-xs { --size: 0.875rem; padding: 0.0625rem; }
+
+  input.checkbox::before {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    rotate: 0deg;
+    translate: none;
+    opacity: 1;
+    box-shadow: none;
+    background-color: var(--color-primary-content);
+    mask: var(--ds-mask-check) center / contain no-repeat;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path var(--ds-duration-base) var(--ds-ease-out);
+    transition-delay: 0s;
+  }
+
+  input.checkbox:is(.checkbox-primary, .checkbox-secondary, .checkbox-accent, .checkbox-neutral, .checkbox-info, .checkbox-success, .checkbox-warning, .checkbox-error)::before {
+    background-color: currentColor;
+  }
+
+  input.checkbox:is(:checked, [aria-checked="true"]),
+  input.checkbox:is(:indeterminate, [aria-checked="mixed"]) {
+    border-color: var(--ds-choice-on);
+    background-color: var(--ds-choice-on);
+    box-shadow: none;
+  }
+
+  input.checkbox:is(:checked, [aria-checked="true"])::before {
+    clip-path: inset(0);
+    translate: none;
+    rotate: 0deg;
+  }
+
+  input.checkbox:is(:indeterminate, [aria-checked="mixed"])::before {
+    mask-image: var(--ds-mask-minus);
+    clip-path: inset(0);
+    translate: none;
+    rotate: 0deg;
+    transition: none;
+  }
+
+  @media (hover: hover) {
+    input.checkbox:not(:disabled, :checked, :indeterminate):hover,
+    :is(.ds-check-row, .ds-choice):not(:has(:disabled)):hover > input.checkbox:not(:checked, :indeterminate) {
+      border-color: color-mix(in oklab, var(--color-base-content) 60%, var(--ds-control-border));
+      background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), var(--color-base-100));
+    }
+
+    input.checkbox:not(:disabled):is(:checked, :indeterminate):hover,
+    :is(.ds-check-row, .ds-choice):not(:has(:disabled)):hover > input.checkbox:is(:checked, :indeterminate) {
+      border-color: color-mix(in oklab, var(--color-base-content) 14%, var(--ds-choice-on));
+      background-color: color-mix(in oklab, var(--color-base-content) 14%, var(--ds-choice-on));
+    }
+  }
+
+  input.checkbox:not(:disabled):active {
+    background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), var(--color-base-100));
+  }
+
+  input.checkbox:not(:disabled):is(:checked, :indeterminate):active {
+    background-color: color-mix(in oklab, var(--color-base-content) 20%, var(--ds-choice-on));
+  }
+
+  input:is(.checkbox, .radio, .toggle):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  input:is(.checkbox, .radio, .toggle):is(:user-invalid, [aria-invalid="true"]),
+  :is(.ds-choice-group, .ds-checkbox-group, .ds-radio-group, .ds-choice-grid)[aria-invalid="true"] input:is(.checkbox, .radio) {
+    border-color: var(--color-error);
+  }
+
+  input:is(.checkbox, .radio, .toggle):disabled {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  input:is(.checkbox, .radio):disabled:not(:checked, :indeterminate) {
+    background-color: var(--color-base-200);
+  }
+
+  /* ------------------------------------------------------------------ radio (daisyUI .radio refined) */
+  input.radio {
+    --size: 1.25rem;
+    --ds-control-h: var(--size);
+    padding: 0;
+    border: 1px solid var(--ds-control-border);
+    background-color: var(--color-base-100);
+    color: var(--input-color, var(--color-primary));
+    box-shadow: none;
+    vertical-align: middle;
+    transition:
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      border-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  input.radio:is(.radio-sm, .is-sm) { --size: 1rem; }
+  input.radio:is(.radio-lg, .is-lg) { --size: 1.5rem; }
+
+  input.radio::before {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--ds-radius-full);
+    background-color: currentColor;
+    box-shadow: none;
+    opacity: 0;
+    scale: 0.2;
+    transition:
+      scale var(--ds-duration-base) var(--ds-ease-emphasized),
+      opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  input.radio:is(:checked, [aria-checked="true"]) {
+    border-color: currentColor;
+    background-color: var(--color-base-100);
+    animation: none;
+  }
+
+  input.radio:is(:checked, [aria-checked="true"])::before {
+    opacity: 1;
+    scale: 0.5;
+  }
+
+  @media (hover: hover) {
+    input.radio:not(:disabled, :checked):hover,
+    :is(.ds-check-row, .ds-choice):not(:has(:disabled)):hover > input.radio:not(:checked) {
+      border-color: color-mix(in oklab, var(--color-base-content) 60%, var(--ds-control-border));
+      background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), var(--color-base-100));
+    }
+
+    input.radio:not(:disabled, :checked):hover::before,
+    :is(.ds-check-row, .ds-choice):not(:has(:disabled)):hover > input.radio:not(:checked)::before {
+      opacity: 0.18;
+      scale: 0.5;
+      background-color: var(--color-base-content);
+    }
+  }
+
+  input.radio:not(:disabled):active {
+    background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), var(--color-base-100));
+  }
+
+  /* ------------------------------------------------------------------ switch (input.toggle[role=switch], daisyUI refined) */
+  input.toggle {
+    --ds-switch-w: 2.5rem;
+    --ds-switch-h: 1.5rem;
+    --ds-switch-pad: 0.125rem;
+    --ds-switch-thumb: calc(var(--ds-switch-h) - var(--ds-switch-pad) * 2 - 2px);
+    --ds-switch-travel: calc(var(--ds-switch-w) - var(--ds-switch-thumb) - var(--ds-switch-pad) * 2 - 2px);
+    --ds-control-h: var(--ds-switch-h);
+    --ds-switch-on: var(--color-primary);
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: var(--ds-switch-w);
+    height: var(--ds-switch-h);
+    padding: 0;
+    border: 1px solid var(--ds-control-border);
+    border-radius: var(--ds-radius-full);
+    background-color: color-mix(in oklab, var(--color-base-content) 8%, var(--color-base-100));
+    color: var(--ds-control-border);
+    box-shadow: none;
+    vertical-align: middle;
+    grid-template-columns: none;
+    transition:
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      border-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  /* daisyUI defines --input-color on every .toggle (base-content), so tones map to the DS variable explicitly. */
+  input.toggle.toggle-success { --ds-switch-on: var(--color-success); }
+  input.toggle.toggle-warning { --ds-switch-on: var(--color-warning); }
+  input.toggle.toggle-error { --ds-switch-on: var(--color-error); }
+  input.toggle.toggle-info { --ds-switch-on: var(--color-info); }
+  input.toggle.toggle-neutral { --ds-switch-on: var(--color-neutral); }
+
+  input.toggle:is(.toggle-sm, .is-sm) { --ds-switch-w: 2rem; --ds-switch-h: 1.25rem; }
+  input.toggle:is(.toggle-lg, .is-lg) { --ds-switch-w: 3rem; --ds-switch-h: 1.75rem; --ds-switch-pad: 0.1875rem; }
+
+  input.toggle::before,
+  input.toggle::after {
+    content: "";
+    position: absolute;
+    inset-block-start: var(--ds-switch-pad);
+    inset-inline-start: var(--ds-switch-pad);
+    width: var(--ds-switch-thumb);
+    height: var(--ds-switch-thumb);
+    border-radius: var(--ds-radius-full);
+    translate: 0 0;
+    transition:
+      translate var(--ds-duration-spring) var(--ds-ease-spring),
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      scale var(--ds-duration-instant) var(--ds-ease-out),
+      opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  input.toggle::before {
+    grid-column: auto;
+    aspect-ratio: auto;
+    background-color: var(--ds-control-border);
+    background-image: none;
+    box-shadow: var(--ds-shadow-xs);
+    opacity: 1;
+  }
+
+  input.toggle::after {
+    display: none;
+  }
+
+  input.toggle:is(:checked, [aria-checked="true"]) {
+    border-color: var(--ds-switch-on);
+    background-color: var(--ds-switch-on);
+  }
+
+  input.toggle:is(:checked, [aria-checked="true"])::before {
+    background-color: var(--color-primary-content);
+  }
+
+  input.toggle:is(:checked, [aria-checked="true"]):is(.toggle-success, .toggle-warning, .toggle-error, .toggle-info, .toggle-neutral)::before {
+    background-color: var(--color-base-100);
+  }
+
+  input.toggle:is(:checked, [aria-checked="true"])::before,
+  input.toggle:is(:checked, [aria-checked="true"])::after {
+    translate: var(--ds-switch-travel) 0;
+  }
+
+  input.toggle:is(:checked, [aria-checked="true"]):dir(rtl)::before,
+  input.toggle:is(:checked, [aria-checked="true"]):dir(rtl)::after {
+    translate: calc(var(--ds-switch-travel) * -1) 0;
+  }
+
+  /* Press: the thumb stretches a little along its travel (Apple fluid feedback), on pointer-down. */
+  input.toggle:not(:disabled, [aria-busy="true"]):active::before {
+    scale: 1.14 1;
+  }
+
+  @media (hover: hover) {
+    input.toggle:not(:disabled, :checked):hover,
+    :is(.ds-check-row, .ds-choice):not(:has(:disabled)):hover > input.toggle:not(:checked) {
+      background-color: color-mix(in oklab, var(--color-base-content) 14%, var(--color-base-100));
+      border-color: color-mix(in oklab, var(--color-base-content) 60%, var(--ds-control-border));
+    }
+
+    input.toggle:not(:disabled):checked:hover,
+    :is(.ds-check-row, .ds-choice):not(:has(:disabled)):hover > input.toggle:checked {
+      background-color: color-mix(in oklab, var(--color-base-content) 14%, var(--ds-switch-on));
+      border-color: color-mix(in oklab, var(--color-base-content) 14%, var(--ds-switch-on));
+    }
+  }
+
+  /* Icons inside the thumb: check when on, cross when off. */
+  input.toggle.is-icons::after {
+    display: block;
+    background-color: var(--color-base-100);
+    mask: var(--ds-mask-x) center / 70% no-repeat;
+    scale: 0.8;
+  }
+
+  input.toggle.is-icons:checked::after {
+    background-color: var(--ds-switch-on);
+    mask-image: var(--ds-mask-check);
+  }
+
+  /* Busy (async save): spinner in the thumb after 300 ms, input blocked by JS, width unchanged. */
+  input.toggle[aria-busy="true"] {
+    cursor: progress;
+  }
+
+  input.toggle[aria-busy="true"]::after {
+    display: block;
+    box-sizing: border-box;
+    border: 2px solid var(--color-base-100);
+    border-inline-end-color: transparent;
+    background: none;
+    mask: none;
+    scale: 0.62;
+    opacity: 0;
+    animation:
+      ds-spin 0.7s linear infinite,
+      ds-choice-appear var(--ds-duration-fast) var(--ds-ease-standard) 300ms forwards;
+  }
+
+  input.toggle[aria-busy="true"]:checked::after {
+    border-color: var(--ds-switch-on);
+    border-inline-end-color: transparent;
+  }
+
+  /* ------------------------------------------------------------------ slider (daisyUI .range refined) */
+  input.range {
+    --ds-range-thumb: 1.25rem;
+    --ds-range-track: 0.375rem;
+    --ds-range-color: var(--color-primary);
+    --ds-range-rest: color-mix(in oklab, var(--color-base-content) 16%, var(--color-base-100));
+    --ds-range-stop: calc(var(--ds-range-thumb) / 2 + (100% - var(--ds-range-thumb)) * var(--ds-range-p, 0));
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: 1.75rem;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--ds-range-color);
+    cursor: pointer;
+    container-type: normal;
+    touch-action: pan-y;
+  }
+
+  input.range:is(.range-sm, .is-sm) { --ds-range-thumb: 1rem; --ds-range-track: 0.25rem; }
+  input.range:is(.range-lg, .is-lg) { --ds-range-thumb: 1.5rem; --ds-range-track: 0.5rem; }
+
+  @media (pointer: coarse) {
+    input.range {
+      height: var(--ds-size-target);
+    }
+  }
+
+  input.range:focus {
+    outline: none;
+  }
+
+  input.range::-webkit-slider-runnable-track {
+    height: var(--ds-range-track);
+    border-radius: var(--ds-radius-full);
+    background: linear-gradient(to right, var(--ds-range-color) var(--ds-range-stop), var(--ds-range-rest) var(--ds-range-stop));
+  }
+
+  input.range:dir(rtl)::-webkit-slider-runnable-track {
+    background: linear-gradient(to left, var(--ds-range-color) var(--ds-range-stop), var(--ds-range-rest) var(--ds-range-stop));
+  }
+
+  input.range::-moz-range-track {
+    height: var(--ds-range-track);
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-range-rest);
+  }
+
+  input.range::-moz-range-progress {
+    height: var(--ds-range-track);
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-range-color);
+  }
+
+  input.range::-webkit-slider-thumb {
+    appearance: none;
+    position: static;
+    box-sizing: border-box;
+    width: var(--ds-range-thumb);
+    height: var(--ds-range-thumb);
+    margin-top: calc((var(--ds-range-track) - var(--ds-range-thumb)) / 2);
+    border: 2px solid var(--ds-range-color);
+    border-radius: var(--ds-radius-full);
+    background: var(--color-base-100);
+    color: inherit;
+    transform: none;
+    box-shadow: var(--ds-shadow-xs), 0 0 0 0 transparent;
+    transition: box-shadow var(--ds-duration-fast) var(--ds-ease-standard), scale var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  input.range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: var(--ds-range-thumb);
+    height: var(--ds-range-thumb);
+    border: 2px solid var(--ds-range-color);
+    border-radius: var(--ds-radius-full);
+    background: var(--color-base-100);
+    box-shadow: var(--ds-shadow-xs), 0 0 0 0 transparent;
+    transition: box-shadow var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (hover: hover) {
+    input.range:not(:disabled):hover::-webkit-slider-thumb {
+      box-shadow: var(--ds-shadow-xs), 0 0 0 0.375rem color-mix(in oklab, var(--ds-range-color) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    }
+
+    input.range:not(:disabled):hover::-moz-range-thumb {
+      box-shadow: var(--ds-shadow-xs), 0 0 0 0.375rem color-mix(in oklab, var(--ds-range-color) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    }
+  }
+
+  input.range:not(:disabled):active::-webkit-slider-thumb {
+    box-shadow: var(--ds-shadow-xs), 0 0 0 0.5rem color-mix(in oklab, var(--ds-range-color) calc(var(--ds-opacity-state-drag) * 100%), transparent);
+  }
+
+  input.range:not(:disabled):active::-moz-range-thumb {
+    box-shadow: var(--ds-shadow-xs), 0 0 0 0.5rem color-mix(in oklab, var(--ds-range-color) calc(var(--ds-opacity-state-drag) * 100%), transparent);
+  }
+
+  input.range:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--ds-focus);
+  }
+
+  input.range:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--ds-focus);
+  }
+
+  input.range:is(:user-invalid, [aria-invalid="true"]) {
+    --ds-range-color: var(--color-error);
+  }
+
+  input.range:disabled {
+    --ds-range-color: var(--ds-control-border);
+    cursor: not-allowed;
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  /* Two thumbs: inputs stacked, only the thumbs take pointer events; the container paints the track. */
+  .ds-slider__control.is-range > input.range {
+    pointer-events: none;
+  }
+
+  .ds-slider__control.is-range > input.range::-webkit-slider-runnable-track {
+    background: transparent;
+  }
+
+  .ds-slider__control.is-range > input.range::-moz-range-track {
+    background: transparent;
+  }
+
+  .ds-slider__control.is-range > input.range::-moz-range-progress {
+    background: transparent;
+  }
+
+  .ds-slider__control.is-range > input.range::-webkit-slider-thumb {
+    pointer-events: auto;
+  }
+
+  .ds-slider__control.is-range > input.range::-moz-range-thumb {
+    pointer-events: auto;
+  }
+
+  .ds-slider__control.is-range > input.range[data-top] {
+    z-index: 2;
+  }
+
+  .ds-slider__control.is-range {
+    --ds-range-color: var(--color-primary);
+    --ds-range-rest: color-mix(in oklab, var(--color-base-content) 16%, var(--color-base-100));
+  }
+
+  .ds-slider__control.is-range:has(input.range:is(.range-sm, .is-sm)) { --ds-range-thumb: 1rem; --ds-range-track: 0.25rem; }
+  .ds-slider__control.is-range:has(input.range:is(.range-lg, .is-lg)) { --ds-range-thumb: 1.5rem; --ds-range-track: 0.5rem; }
+
+  /* Vertical (Chromium 124+, Firefox 120+, Safari 18+). */
+  .ds-slider.is-vertical input.range {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 1.75rem;
+    height: 100%;
+  }
+
+  .ds-slider.is-vertical input.range::-webkit-slider-runnable-track {
+    width: var(--ds-range-track);
+    height: 100%;
+    background: linear-gradient(to top, var(--ds-range-color) var(--ds-range-stop), var(--ds-range-rest) var(--ds-range-stop));
+  }
+
+  .ds-slider.is-vertical input.range::-webkit-slider-thumb {
+    margin-top: 0;
+    margin-left: calc((var(--ds-range-track) - var(--ds-range-thumb)) / 2);
+  }
+
+  /* ------------------------------------------------------------------ fields built on daisyUI .input */
+  :is(.ds-tags-input__field, .ds-multi-select__field).input {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ds-space-1-5);
+    width: 100%;
+    height: auto;
+    min-height: var(--ds-size-target);
+    padding-block: var(--ds-space-1-5);
+    padding-inline: var(--ds-space-2) var(--ds-space-3);
+    cursor: text;
+  }
+
+  .ds-field :is(.ds-tags-input__field, .ds-multi-select__field).input {
+    min-height: var(--ds-size-control-lg);
+  }
+
+  .ds-multi-select__field.input {
+    padding-inline-end: 4.5rem;
+  }
+
+  :is(.ds-tags-input, .ds-multi-select):has([aria-invalid="true"]) :is(.ds-tags-input__field, .ds-multi-select__field).input,
+  :is(.ds-tags-input, .ds-multi-select)[aria-invalid="true"] :is(.ds-tags-input__field, .ds-multi-select__field).input {
+    border-color: var(--color-error);
+  }
+
+  :is(.ds-tags-input__field, .ds-multi-select__field).input:has(input:disabled) {
+    cursor: not-allowed;
+    opacity: var(--ds-opacity-disabled);
+    background-color: var(--color-base-200);
+  }
+
+  .ds-otp .ds-otp__cell.input {
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 3.25rem;
+    min-height: 0;
+    padding: 0;
+    text-align: center;
+    font-size: var(--ds-type-title-3-size);
+    font-weight: var(--ds-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    caret-color: var(--color-primary);
+    text-transform: uppercase;
+  }
+
+  .ds-otp.is-sm .ds-otp__cell.input {
+    width: 2.25rem;
+    height: 2.75rem;
+    font-size: var(--ds-type-body-size);
+  }
+
+  .ds-otp .ds-otp__cell.input[data-filled] {
+    border-color: color-mix(in oklab, var(--color-base-content) 55%, var(--ds-control-border));
+  }
+
+  .ds-otp:is([data-state="error"], [aria-invalid="true"]) .ds-otp__cell.input,
+  .ds-otp .ds-otp__cell.input[aria-invalid="true"] {
+    border-color: var(--color-error);
+  }
+
+  .ds-otp[data-state="success"] .ds-otp__cell.input {
+    border-color: var(--color-success);
+  }
+
+  .ds-otp .ds-otp__cell.input:disabled {
+    cursor: not-allowed;
+    opacity: var(--ds-opacity-disabled);
+    background-color: var(--color-base-200);
+  }
+
+  @media (max-width: 380px) {
+    .ds-otp .ds-otp__cells {
+      gap: var(--ds-space-1-5);
+    }
+
+    .ds-otp .ds-otp__cell.input {
+      width: 2.5rem;
+      height: 3rem;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  input.checkbox::before {
+    transition: none;
+  }
+
+  input.toggle::before,
+  input.toggle::after {
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  input.toggle:active::before,
+  .ds-rating__star:is(:hover, :active)::before,
+  .ds-token__remove:active {
+    scale: none;
+  }
+
+  .ds-slider__bubble,
+  :is(.ds-slider[data-dragging], .ds-slider[data-keyboard]) .ds-slider__bubble[data-active] {
+    translate: -50% 0;
+    scale: 1;
+  }
+
+  input.toggle[aria-busy="true"]::after,
+  .ds-otp[aria-busy="true"] .ds-otp__status::before {
+    animation: ds-choice-appear 0.01ms linear 300ms forwards;
+    border-inline-end-color: currentColor;
+    border-style: dotted;
+  }
+}
+
+@media (forced-colors: active) {
+  input:is(.checkbox, .radio, .toggle),
+  input:is(.checkbox, .radio, .toggle)::before,
+  input.toggle::after,
+  .ds-rating__star::before,
+  .ds-rating-display,
+  .ds-token__remove::before,
+  .ds-otp__status::before {
+    forced-color-adjust: none;
+  }
+
+  input:is(.checkbox, .radio, .toggle) {
+    border-color: CanvasText;
+    background-color: Canvas;
+  }
+
+  input.checkbox::before { background-color: HighlightText; }
+  input.checkbox:is(:checked, :indeterminate),
+  input.toggle:checked {
+    border-color: Highlight;
+    background-color: Highlight;
+  }
+
+  input.radio { color: Highlight; }
+  input.toggle::before { background-color: CanvasText; }
+  input.toggle:checked::before { background-color: HighlightText; }
+  .ds-rating__star { --ds-star-fill: GrayText; }
+  .ds-rating__star:has(:checked),
+  .ds-rating__star:has(~ .ds-rating__star :checked) { --ds-star-fill: Highlight; }
+  .ds-rating-display { --ds-rating-on: Highlight; --ds-rating-off: GrayText; }
+  .ds-token__remove::before { background-color: ButtonText; }
+  .ds-otp__status::before { background-color: CanvasText; }
+  input.range::-webkit-slider-thumb { background: ButtonText; border-color: ButtonText; }
+  .ds-choice:has(:checked) { outline: 2px solid Highlight; }
+}
+
+@media print {
+  input.checkbox:checked::before {
+    clip-path: none;
+  }
+}

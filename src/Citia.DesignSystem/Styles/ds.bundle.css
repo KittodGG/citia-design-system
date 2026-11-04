@@ -1,0 +1,23 @@
+/*
+ * Builds wwwroot/css/ds.css: a complete stylesheet (Tailwind preflight + daisyUI 5 components + Citia tokens and components)
+ * for apps that do NOT run Tailwind.
+ * Build: powershell -File tools/css.ps1   (downloads the pinned Tailwind standalone CLI + daisyUI into .tools/)
+ *
+ * daisyUI 5 and Tailwind v4 only emit the classes they find in the scanned sources. Without the @source lines below,
+ * ds.css would miss .btn-sm, .btn-ghost, .badge, .menu, the .input border and most other daisyUI classes.
+ * Scanned: the library's own markup (partials, tag helpers, behaviours) and every example in the documentation,
+ * so markup copied from the documentation renders exactly as on the site.
+ */
+@import "tailwindcss" source(none);
+@plugin "../../../.tools/daisyui.mjs" {
+  themes: false;
+  logs: false;
+}
+@import "./ds.css";
+
+@source "../Views";
+@source "../TagHelpers";
+@source "../Ui";
+@source "../wwwroot/js";
+@source "../../../docs/en";
+@source "../../../docs/id";

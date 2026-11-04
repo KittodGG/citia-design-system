@@ -1,0 +1,34 @@
+@model PagerModel
+@*
+  One pager for every list: range text, then previous / "Halaman n / N" / next. Links keep the current query (search, filters, size).
+  Usage: <partial name="_DsPager" model="Model.Rows.Pager()" />
+*@
+@{
+    var hasPrev = Model.Page > 1;
+    var hasNext = Model.Page < Model.PageCount;
+}
+<footer class="ds-pager">
+    <p role="status">@Fmt.Range(Model.From, Model.To, Model.Total, Model.Noun)</p>
+    @if (Model.PageCount > 1)
+    {
+        <nav aria-label="@DsText.T("pager.label")">
+            @if (hasPrev)
+            {
+                <a class="btn btn-ghost btn-sm" href="@QueryUrl.With(Context.Request, ("page", (Model.Page - 1).ToString()))" rel="prev">@Icon.Svg("chevron-left") @DsText.T("pager.previous")</a>
+            }
+            else
+            {
+                <a class="btn btn-ghost btn-sm" aria-disabled="true">@Icon.Svg("chevron-left") @DsText.T("pager.previous")</a>
+            }
+            <span class="ds-num">@DsText.T("pager.page", Model.Page, Model.PageCount)</span>
+            @if (hasNext)
+            {
+                <a class="btn btn-ghost btn-sm" href="@QueryUrl.With(Context.Request, ("page", (Model.Page + 1).ToString()))" rel="next">@DsText.T("pager.next") @Icon.Svg("chevron-right")</a>
+            }
+            else
+            {
+                <a class="btn btn-ghost btn-sm" aria-disabled="true">@DsText.T("pager.next") @Icon.Svg("chevron-right")</a>
+            }
+        </nav>
+    }
+</footer>

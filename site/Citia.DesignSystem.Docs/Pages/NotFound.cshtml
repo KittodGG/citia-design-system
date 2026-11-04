@@ -1,0 +1,17 @@
+@page "/404"
+@{
+    var lang = HttpContext.Items["docs.lang"] as string ?? "en";
+    string T(string key) => SiteText.T(lang, key);
+    ViewData["Title"] = T("notFound.title");
+    Response.StatusCode = 404;
+}
+<article class="docs-article">
+    <header class="doc-hero">
+        <p class="doc-hero__group">404</p>
+        <h1>@T("notFound.title")</h1>
+        <p class="doc-hero__lede">@T("notFound.lede")</p>
+    </header>
+    <ds-empty icon="search" title="@T("search")" action-label="@T("notFound.action")" action-href="/@lang/" action-icon="arrow-left" boxed>
+        @T("notFound.hint")
+    </ds-empty>
+</article>

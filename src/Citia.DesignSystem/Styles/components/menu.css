@@ -1,0 +1,415 @@
+/* Dropdown menu, context menu, menubar (ARIA menu: items, checkbox / radio items, labels, separators, submenus,
+   shortcuts, descriptions, destructive and disabled items). Owner: batch A9.
+   Menus are [popover] panels on the top layer (shared motion in popover.css). Items sit on a 3-column subgrid
+   (indicator/icon · text · shortcut/chevron) so text lines up whether or not an item has an icon.
+   Highlight follows focus (menu.js moves focus on pointer move and arrow keys): state layer, plus an inset
+   focus ring for keyboard focus. */
+
+@layer components {
+  .ds-menu {
+    z-index: var(--ds-z-menu);
+    min-width: max(12rem, var(--ds-trigger-width, 0px));
+    max-width: min(22rem, calc(100vw - 1rem));
+    max-height: min(var(--ds-menu-max-height, 28rem), calc(100dvh - 1rem));
+    padding: var(--ds-space-1);
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-lg);
+    background: var(--ds-popover);
+    box-shadow: var(--ds-shadow-popover);
+    color: var(--color-base-content);
+    font-size: var(--ds-type-callout-size);
+    line-height: 1.35;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    outline: none;
+  }
+
+  .ds-menu:not([popover]),
+  .ds-menu[popover]:popover-open {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-content: start;
+  }
+
+  .ds-menu[popover] {
+    overflow-y: auto;
+  }
+
+  .ds-menu.is-sm {
+    font-size: var(--ds-type-footnote-size);
+  }
+
+  /* Static menu (documentation, inline navigation lists): no shadow, sits in the flow. */
+  .ds-menu.is-static {
+    box-shadow: none;
+    width: max-content;
+  }
+
+  /* ---------------------------------------------------------------- items */
+  .ds-menu__item,
+  .ds-menu [role^="menuitem"] {
+    position: relative;
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: center;
+    min-height: var(--ds-size-target-compact);
+    padding: var(--ds-space-1-5) var(--ds-space-2);
+    border: 0;
+    border-radius: var(--ds-radius-md);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    text-decoration: none;
+    cursor: default;
+    user-select: none;
+    outline: none;
+    scroll-margin-block: var(--ds-space-1);
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-menu a.ds-menu__item,
+  .ds-menu a[role^="menuitem"] {
+    cursor: pointer;
+  }
+
+  /* Column placement. */
+  .ds-menu__item > :is(.ds-icon, .ds-menu__indicator, .ds-avatar, svg:first-child),
+  .ds-menu [role^="menuitem"] > :is(.ds-icon, .ds-menu__indicator, svg:first-child) {
+    grid-column: 1;
+    margin-inline-end: var(--ds-space-2-5);
+  }
+
+  .ds-menu__item > :is(.ds-menu__text, span:not([class])),
+  .ds-menu [role^="menuitem"] > :is(.ds-menu__text, span:not([class])) {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .ds-menu__item > :is(.ds-menu__shortcut, .ds-menu__chevron, .ds-menu__meta, .ds-badge, .badge),
+  .ds-menu [role^="menuitem"] > :is(.ds-menu__shortcut, .ds-menu__chevron, .ds-menu__meta) {
+    grid-column: 3;
+    justify-self: end;
+    margin-inline-start: var(--ds-space-4);
+  }
+
+  .ds-menu__item > .ds-icon,
+  .ds-menu [role^="menuitem"] > .ds-icon {
+    width: var(--ds-size-icon-sm);
+    height: var(--ds-size-icon-sm);
+    color: var(--ds-subtle);
+  }
+
+  .ds-menu__text {
+    display: grid;
+    gap: var(--ds-space-0-5);
+    overflow-wrap: anywhere;
+  }
+
+  .ds-menu__description {
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-caption-size);
+    line-height: var(--ds-type-caption-leading);
+  }
+
+  .ds-menu__shortcut {
+    color: var(--ds-muted);
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-type-caption-size);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .ds-menu__meta {
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-caption-size);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds-menu__chevron {
+    width: var(--ds-size-icon-sm);
+    height: var(--ds-size-icon-sm);
+    color: var(--ds-subtle);
+  }
+
+  [dir="rtl"] .ds-menu__chevron {
+    scale: -1 1;
+  }
+
+  /* Hover / highlight (focus follows the pointer), pressed, keyboard ring. */
+  .ds-menu :is(.ds-menu__item, [role^="menuitem"]):focus,
+  .ds-menu :is(.ds-menu__item, [role^="menuitem"])[data-highlighted] {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100% + 1%), transparent);
+  }
+
+  .ds-menu :is(.ds-menu__item, [role^="menuitem"]):active:not([aria-disabled="true"], :disabled) {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-menu :is(.ds-menu__item, [role^="menuitem"]):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: -2px;
+  }
+
+  /* Submenu trigger while its submenu is open keeps a quiet highlight. */
+  .ds-menu :is(.ds-menu__item, [role^="menuitem"])[aria-expanded="true"] {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+  }
+
+  /* Destructive. */
+  .ds-menu :is(.ds-menu__item, [role^="menuitem"]):is(.is-danger, .is-destructive) {
+    color: var(--ds-error-text);
+  }
+
+  .ds-menu :is(.ds-menu__item, [role^="menuitem"]):is(.is-danger, .is-destructive) > .ds-icon {
+    color: currentColor;
+  }
+
+  .ds-menu :is(.ds-menu__item, [role^="menuitem"]):is(.is-danger, .is-destructive):is(:focus, [data-highlighted]) {
+    background: color-mix(in oklab, var(--color-error) 10%, transparent);
+  }
+
+  .ds-menu :is(.ds-menu__item, [role^="menuitem"]):is(.is-danger, .is-destructive):active:not([aria-disabled="true"]) {
+    background: color-mix(in oklab, var(--color-error) 16%, transparent);
+  }
+
+  /* Disabled: stays focusable (APG), explains itself in the description or a tooltip. */
+  .ds-menu :is(.ds-menu__item, [role^="menuitem"]):is([aria-disabled="true"], :disabled) {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-menu :is(.ds-menu__item, [role^="menuitem"]):is([aria-disabled="true"], :disabled):is(:focus, [data-highlighted]) {
+    background: color-mix(in oklab, var(--color-base-content) 3%, transparent);
+  }
+
+  /* Checkbox and radio items: the indicator column shows a check or a dot; weight adds a second signal. */
+  .ds-menu__indicator {
+    display: grid;
+    place-items: center;
+    width: var(--ds-size-icon-sm);
+    height: var(--ds-size-icon-sm);
+    color: var(--ds-primary-text);
+  }
+
+  .ds-menu__indicator > svg {
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    scale: 0.6;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard), scale var(--ds-duration-fast) var(--ds-ease-emphasized);
+  }
+
+  [role="menuitemradio"] > .ds-menu__indicator::before {
+    content: "";
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: var(--ds-radius-full);
+    background: currentColor;
+    opacity: 0;
+    scale: 0.4;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard), scale var(--ds-duration-fast) var(--ds-ease-emphasized);
+  }
+
+  [role="menuitemradio"] > .ds-menu__indicator > svg {
+    display: none;
+  }
+
+  :is([role="menuitemcheckbox"], [role="menuitemradio"])[aria-checked="true"] > .ds-menu__indicator > svg,
+  [role="menuitemradio"][aria-checked="true"] > .ds-menu__indicator::before {
+    opacity: 1;
+    scale: 1;
+  }
+
+  [role="menuitemcheckbox"][aria-checked="mixed"] > .ds-menu__indicator::before {
+    content: "";
+    width: 0.5rem;
+    height: 2px;
+    border-radius: var(--ds-radius-full);
+    background: currentColor;
+  }
+
+  :is([role="menuitemcheckbox"], [role="menuitemradio"])[aria-checked="true"] > :is(.ds-menu__text, span:not([class])) {
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  /* ---------------------------------------------------------------- labels, groups, separators */
+  .ds-menu__label {
+    grid-column: 1 / -1;
+    padding: var(--ds-space-2) var(--ds-space-2) var(--ds-space-1);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-eyebrow-size);
+    font-weight: var(--ds-type-eyebrow-weight);
+    line-height: var(--ds-type-eyebrow-leading);
+    letter-spacing: var(--ds-type-eyebrow-tracking);
+    text-transform: uppercase;
+  }
+
+  .ds-menu__group,
+  .ds-menu [role="group"],
+  .ds-menu__sub {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+
+  .ds-menu__separator,
+  .ds-menu [role="separator"] {
+    grid-column: 1 / -1;
+    height: var(--ds-border-hairline);
+    margin: var(--ds-space-1) calc(var(--ds-space-1) * -1);
+    border: 0;
+    background: var(--color-base-300);
+  }
+
+  /* Footer note inside a menu (why an item is unavailable, what a group does). */
+  .ds-menu__note {
+    grid-column: 1 / -1;
+    margin: var(--ds-space-1) 0 0;
+    padding: var(--ds-space-2) var(--ds-space-2) var(--ds-space-1);
+    border-block-start: var(--ds-border-hairline) solid var(--color-base-300);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+  }
+
+  /* Empty and loading rows (menus filled late, recent items). */
+  .ds-menu__empty {
+    grid-column: 1 / -1;
+    padding: var(--ds-space-3) var(--ds-space-2);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+    text-align: center;
+  }
+
+  .ds-menu[aria-busy="true"] .ds-menu__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-space-2);
+  }
+
+  @media (pointer: coarse) {
+    .ds-menu__item,
+    .ds-menu [role^="menuitem"] {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  /* ---------------------------------------------------------------- triggers */
+  /* Chevron in a menu button turns when the menu is open. */
+  [aria-haspopup="menu"] > .ds-menu-trigger__chevron,
+  [aria-haspopup="menu"] > .ds-icon:last-child:not(:first-child) {
+    transition: rotate var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  [aria-haspopup="menu"][aria-expanded="true"] > .ds-menu-trigger__chevron,
+  [aria-haspopup="menu"][aria-expanded="true"]:not([role="menuitem"]) > .ds-icon:last-child:not(:first-child) {
+    rotate: 180deg;
+  }
+
+  .btn[aria-haspopup="menu"][aria-expanded="true"] {
+    background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), var(--btn-bg, transparent));
+  }
+
+  /* ---------------------------------------------------------------- context menu region */
+  [data-ds-context-menu] {
+    -webkit-touch-callout: none;
+  }
+
+  [data-ds-context-menu][data-ds-pressing] {
+    background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    transition: background-color var(--ds-duration-settle) var(--ds-ease-standard);
+  }
+
+  .ds-context-area {
+    display: grid;
+    place-items: center;
+    min-height: 9rem;
+    padding: var(--ds-space-6);
+    border: var(--ds-border-hairline) dashed var(--ds-control-border);
+    border-radius: var(--ds-radius-xl);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-callout-size);
+    text-align: center;
+  }
+
+  .ds-context-area:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  /* ---------------------------------------------------------------- menubar */
+  .ds-menubar {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ds-space-0-5);
+    padding: var(--ds-space-1);
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-lg);
+    background: var(--color-base-100);
+  }
+
+  .ds-menubar__item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-1-5);
+    min-height: var(--ds-size-target-compact);
+    padding: var(--ds-space-1) var(--ds-space-3);
+    border: 0;
+    border-radius: var(--ds-radius-md);
+    background: transparent;
+    color: inherit;
+    font-size: var(--ds-type-callout-size);
+    font-weight: var(--ds-weight-medium);
+    cursor: default;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (hover: hover) {
+    .ds-menubar__item:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-menubar__item:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-menubar__item[aria-expanded="true"] {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-menubar__item:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: -2px;
+  }
+
+  .ds-menubar__item[aria-disabled="true"] {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  @media (pointer: coarse) {
+    .ds-menubar__item {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-menu__indicator > svg,
+    [role="menuitemradio"] > .ds-menu__indicator::before {
+      scale: 1;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-menu :is(.ds-menu__item, [role^="menuitem"]):is(:focus, [data-highlighted]) {
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+  }
+}

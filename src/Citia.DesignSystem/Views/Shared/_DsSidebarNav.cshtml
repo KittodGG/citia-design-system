@@ -1,0 +1,48 @@
+@model NavModel
+@*
+  Sidebar navigation. Two levels told apart by control type: a group is a button (chevron, aria-expanded), an item is a link (icon).
+  A group holding the current page is forced open; elsewhere the user's last choice wins (localStorage <prefix>-nav-groups).
+  Only this list scrolls; its position survives navigation (sessionStorage <prefix>-nav-scroll).
+*@
+@functions {
+    static string Slug(string key) => System.Text.RegularExpressions.Regex.Replace(key.ToLowerInvariant(), "[^a-z0-9]+", "-");
+}
+@{
+    void Item(NavItem item)
+    {
+        <li>
+            <a class="ds-nav-link" href="@(item.Disabled ? null : item.Href)" aria-current="@(item.Active ? "page" : null)" aria-disabled="@(item.Disabled ? "true" : null)" aria-label="@item.Label">
+                @Icon.Svg(item.Icon)<span>@item.Label</span>
+                @if (!string.IsNullOrEmpty(item.Badge))
+                {
+                    <span class="ds-nav-badge@(item.BadgeTone is null ? "" : " is-" + item.BadgeTone)">@item.Badge</span>
+                }
+            </a>
+        </li>
+    }
+}
+<nav class="ds-sidebar-nav" aria-label="@(Model.Label ?? DsText.T("nav.label"))" data-ds-nav-scroll>
+    <ul class="ds-nav-list">
+        @foreach (var item in Model.Top) { Item(item); }
+        @foreach (var group in Model.Groups)
+        {
+            var id = $"ds-nav-{Slug(group.Key)}";
+            var open = group.HasActive || group.DefaultOpen;
+            <li>
+                <button type="button" id="@id-toggle" class="ds-nav-group-toggle" aria-expanded="@(open ? "true" : "false")" aria-controls="@id-panel"
+                        data-ds-nav-group="@group.Key" data-ds-nav-active="@(group.HasActive ? "true" : "false")">
+                    <span>@group.Label</span>@Icon.Svg("chevron-down")
+                </button>
+                <div id="@id-panel" class="ds-nav-panel" data-open="@(open ? "" : null)" inert="@(!open)">
+                    <ul class="ds-nav-sub">
+                        @foreach (var item in group.Items) { Item(item); }
+                    </ul>
+                </div>
+            </li>
+        }
+        @if (Model.Bottom is { Count: > 0 })
+        {
+            @foreach (var item in Model.Bottom) { Item(item); }
+        }
+    </ul>
+</nav>

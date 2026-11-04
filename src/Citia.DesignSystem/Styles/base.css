@@ -1,0 +1,291 @@
+/* Base: page defaults, font rendering, focus baseline, selection, shared helpers and keyframes.
+   Owner: batch A12. Contract: docs/_contributing.md. Element looks (headings, lists, forms, tables) live in native.css.
+   Base keeps the Tailwind convention of zero margins: components own their spacing, long-form text uses .ds-prose. */
+
+@layer base {
+  html {
+    font-family: var(--ds-font-sans);
+    font-size: 100%;
+    font-optical-sizing: auto;
+    font-kerning: normal;
+    font-synthesis-weight: none;
+    line-height: var(--ds-type-body-leading);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Press feedback comes from :active styles, not from the grey mobile flash. */
+    -webkit-tap-highlight-color: transparent;
+    hanging-punctuation: first allow-end last;
+    tab-size: 4;
+  }
+
+  /* Anchor jumps glide only while focus is inside the page, so find-in-page and restore stay instant. */
+  @media (prefers-reduced-motion: no-preference) {
+    html:focus-within {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    min-block-size: 100dvh;
+    color: var(--color-base-content);
+    font-size: var(--ds-type-body-size);
+    font-weight: var(--ds-type-body-weight);
+    line-height: var(--ds-type-body-leading);
+    overflow-wrap: break-word;
+  }
+
+  /* Data lines up: tables, stats, counts, times, paging. */
+  table,
+  time,
+  data,
+  output,
+  meter,
+  progress,
+  input[type="number"],
+  .ds-num,
+  .tabular,
+  [data-ds-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Headings balance their lines; running text avoids orphans. */
+  :is(h1, h2, h3, h4, h5, h6, caption, legend, figcaption, summary) {
+    text-wrap: balance;
+  }
+
+  :is(p, li, dd, dt, blockquote, td, th, label) {
+    text-wrap: pretty;
+  }
+
+  /* One focus ring everywhere: 2px, theme focus colour (≥ 3:1), offset 2px. Components that sit flush use -2px.
+     Mouse focus shows no ring (browsers only match :focus-visible for keyboard and text entry). */
+  :focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  /* Programmatic focus targets (skip-link destinations, headings, main) never show a ring after a click. */
+  [tabindex="-1"]:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-primary) 24%, transparent);
+    color: inherit;
+  }
+
+  /* Remove the 300 ms double-tap delay on everything that is pressed. */
+  :is(a[href], button, [role="button"], label, summary, input, select, textarea, [tabindex]:not([tabindex="-1"])) {
+    touch-action: manipulation;
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--ds-font-mono);
+  }
+}
+
+@layer components {
+  /* Identifiers (references, codes, invoice numbers) use the interface font with tabular figures; literal code stays mono. */
+  .ds-id,
+  .code {
+    font-family: var(--ds-font-sans);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+
+  pre.code {
+    font-family: var(--ds-font-mono);
+  }
+
+  /* Identifier links (INV-2026-0418, PRJ-1024): link colour, always underlined so colour is never the only cue. */
+  .ds-link-ref,
+  .link-ref {
+    color: var(--ds-link);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    border-radius: var(--ds-radius-xs);
+    transition: color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (hover: hover) {
+    .ds-link-ref:hover,
+    .link-ref:hover {
+      text-decoration-thickness: 2px;
+    }
+  }
+
+  .ds-link-ref:focus-visible,
+  .link-ref:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  /* Plain text link that opens a record: underlined in the text colour. */
+  .ds-link {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  @media (hover: hover) {
+    .ds-link:hover {
+      text-decoration-thickness: 2px;
+    }
+  }
+
+  .ds-text-subtle {
+    color: var(--ds-subtle);
+  }
+
+  .ds-text-muted,
+  .text-muted {
+    color: var(--ds-muted);
+  }
+
+  .ds-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-1-5);
+    font-size: var(--ds-type-eyebrow-size);
+    font-weight: var(--ds-type-eyebrow-weight);
+    line-height: var(--ds-type-eyebrow-leading);
+    letter-spacing: var(--ds-type-eyebrow-tracking);
+    text-transform: uppercase;
+    color: var(--ds-quiet);
+  }
+
+  .ds-measure {
+    max-inline-size: var(--ds-size-measure);
+  }
+
+  .ds-visually-hidden {
+    position: absolute !important;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Hidden until focused: the first Tab stop of every page. */
+  .ds-skip-link {
+    position: absolute;
+    inset-inline-start: var(--ds-space-4);
+    inset-block-start: var(--ds-space-4);
+    z-index: var(--ds-z-tooltip);
+    translate: 0 calc(-100% - var(--ds-space-8));
+    transition: translate var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  .ds-skip-link:focus,
+  .ds-skip-link:focus-visible {
+    translate: 0 0;
+  }
+
+  .ds-clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+
+  /* Icons: 24 px grid drawn with a 2 px round stroke in currentColor. The stroke props also reach <use href="#ds-icon-…"> clones. */
+  .ds-icon {
+    width: var(--ds-size-icon-sm);
+    height: var(--ds-size-icon-sm);
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ds-icon.is-xs { width: 0.75rem; height: 0.75rem; }
+  .ds-icon.is-md { width: var(--ds-size-icon-md); height: var(--ds-size-icon-md); }
+  .ds-icon.is-lg { width: var(--ds-size-icon-lg); height: var(--ds-size-icon-lg); }
+  .ds-icon.is-xl { width: var(--ds-size-icon-xl); height: var(--ds-size-icon-xl); }
+
+  .ds-kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.5rem;
+    padding: 0 var(--ds-space-1-5);
+    border: 1px solid var(--color-base-300);
+    border-bottom-width: 2px;
+    border-radius: var(--ds-radius-sm);
+    background: var(--color-base-100);
+    font-family: var(--ds-font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+
+  /* Hide from print only. */
+  @media print {
+    .ds-print-hide,
+    [data-ds-print="hide"] {
+      display: none;
+    }
+  }
+}
+
+/* Page and panel entrance: short, small, interruptible by the next navigation. Distances read the motion tokens,
+   so reduced motion (accessibility.css sets --ds-enter-offset: 0) turns them into pure fades. */
+@keyframes ds-enter {
+  from { opacity: 0; transform: translateY(var(--ds-enter-offset)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ds-rise {
+  from { opacity: 0; transform: translateY(calc(var(--ds-enter-offset) * 1.2)); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ds-ping {
+  0% { transform: scale(1); opacity: 0.75; }
+  75%, 100% { transform: scale(2.8); opacity: 0; }
+}
+
+@keyframes ds-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-primary) 0%, transparent); }
+  50% { box-shadow: 0 0 0 0.3125rem color-mix(in oklab, var(--color-primary) 16%, transparent); }
+}
+
+@keyframes ds-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes ds-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Indeterminate bar (native <progress> without value): a 40% segment travels across the track. */
+@keyframes ds-indeterminate {
+  from { background-position: -40% 0, 0 0; }
+  to { background-position: 140% 0, 0 0; }
+}
+
+/* Cross-document view transitions (multi-page apps). SPAs ignore this rule. */
+@view-transition {
+  navigation: auto;
+}
+
+/* Page changes and theme changes (theme.js wraps the switch in a view transition) cross-fade calmly, no flash. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--ds-duration-theme);
+  animation-timing-function: var(--ds-ease-standard);
+}

@@ -1,0 +1,697 @@
+/* Feedback: alert (inline note), banner, toast, empty state, busy region.
+   Owner: batch A8 feedback. Contract: docs/_contributing.md.
+   Origin: TPS .pt-note, .access-banner, .notif-critical, _Toast partial, .pt-empty, .master-empty.
+   Four kinds of feedback: status, completion, warning, error. Status is always words and an icon; tint supports them. */
+
+@layer components {
+  /* Tone carrier shared by alert, banner, toast and the legacy note. Set with .is-<tone>; default info. */
+  :is(.ds-alert, .ds-banner, .ds-toast, .ds-note) {
+    --ds-fb-tone: var(--color-info);
+    --ds-fb-fill: var(--ds-info-soft);
+    --ds-fb-line: color-mix(in oklab, var(--ds-fb-tone) 30%, var(--color-base-300));
+    --ds-fb-text: color-mix(in oklab, var(--ds-fb-tone) 72%, var(--color-base-content));
+  }
+
+  :is(.ds-alert, .ds-banner, .ds-toast, .ds-note):is(.is-success) { --ds-fb-tone: var(--color-success); --ds-fb-fill: var(--ds-success-soft); }
+  :is(.ds-alert, .ds-banner, .ds-toast, .ds-note):is(.is-warning) { --ds-fb-tone: var(--color-warning); --ds-fb-fill: var(--ds-warning-soft); }
+  :is(.ds-alert, .ds-banner, .ds-toast, .ds-note):is(.is-error) { --ds-fb-tone: var(--color-error); --ds-fb-fill: var(--ds-error-soft); }
+  .ds-toast.is-loading { --ds-fb-tone: var(--ds-quiet); --ds-fb-fill: var(--ds-primary-soft); }
+  :is(.ds-alert, .ds-banner, .ds-toast, .ds-note):is(.is-neutral) {
+    --ds-fb-tone: var(--ds-subtle);
+    --ds-fb-fill: var(--ds-neutral-soft);
+    --ds-fb-line: var(--color-base-300);
+    --ds-fb-text: var(--color-base-content);
+  }
+
+  /* ------------------------------------------------------------------ Alert (and the legacy .ds-note) */
+  .ds-alert,
+  .ds-note {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 0.75rem;
+    align-items: start;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--ds-fb-line);
+    border-radius: var(--ds-radius-box);
+    background: var(--ds-fb-fill);
+    color: var(--color-base-content);
+    font-size: var(--ds-type-callout-size);
+    line-height: var(--ds-type-callout-leading);
+  }
+
+  .ds-alert__icon,
+  .ds-alert > svg:first-child,
+  .ds-note > svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.125rem;
+    color: var(--ds-fb-tone);
+  }
+
+  .ds-alert__body {
+    display: grid;
+    gap: 0.125rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-alert__title {
+    font-weight: var(--ds-weight-strong);
+  }
+
+  .ds-alert__text {
+    color: var(--ds-subtle);
+  }
+
+  .ds-alert__text > :where(p, ul, ol) {
+    margin: 0;
+  }
+
+  .ds-alert__text a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .ds-alert__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+  }
+
+  /* Legacy note: icon + a single paragraph or div. */
+  .ds-note {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .ds-note > :is(div, p) {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-alert.is-compact {
+    padding: 0.5rem 0.75rem;
+    column-gap: 0.5rem;
+    border-radius: var(--ds-radius-lg);
+    font-size: var(--ds-type-footnote-size);
+  }
+
+  .ds-alert.is-compact .ds-alert__icon,
+  .ds-alert.is-compact > svg:first-child {
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.1875rem;
+  }
+
+  .ds-alert.is-compact .ds-alert__body {
+    display: block;
+  }
+
+  .ds-alert.is-compact .ds-alert__title::after {
+    content: " ";
+  }
+
+  .ds-alert.is-compact :is(.ds-alert__title, .ds-alert__text) {
+    display: inline;
+  }
+
+  .ds-alert.is-compact .ds-alert__actions {
+    margin-top: 0.375rem;
+  }
+
+  /* Dismiss button: 28px visible, 44px hit area on touch. */
+  :is(.ds-alert__close, .ds-banner__close, .ds-toast-close, .ds-toast__close) {
+    position: relative;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: -0.25rem -0.375rem -0.25rem 0;
+    border-radius: var(--ds-radius-lg);
+    color: var(--ds-subtle);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  :is(.ds-alert__close, .ds-banner__close, .ds-toast-close, .ds-toast__close)::after {
+    content: "";
+    position: absolute;
+    inset: -0.25rem;
+  }
+
+  @media (pointer: coarse) {
+    :is(.ds-alert__close, .ds-banner__close, .ds-toast-close, .ds-toast__close)::after {
+      inset: -0.625rem;
+    }
+  }
+
+  @media (hover: hover) {
+    :is(.ds-alert__close, .ds-banner__close, .ds-toast-close, .ds-toast__close):hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      color: var(--color-base-content);
+    }
+  }
+
+  :is(.ds-alert__close, .ds-banner__close, .ds-toast-close, .ds-toast__close):active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+    transform: scale(var(--ds-press-scale));
+  }
+
+  :is(.ds-alert__close, .ds-banner__close, .ds-toast-close, .ds-toast__close):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  /* Dismiss motion: fade and a small move, then the space closes (interpolate-size; without it the space closes at the end). */
+  :is(.ds-alert, .ds-banner) {
+    interpolate-size: allow-keywords;
+  }
+
+  :is(.ds-alert, .ds-banner)[data-leaving] {
+    height: 0;
+    margin-block: 0;
+    padding-block: 0;
+    border-block-width: 0;
+    overflow: clip;
+    opacity: 0;
+    transform: translateY(calc(var(--ds-enter-offset) * -1));
+    pointer-events: none;
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      transform var(--ds-duration-exit) var(--ds-ease-exit),
+      height var(--ds-duration-layout) var(--ds-ease-emphasized),
+      margin-block var(--ds-duration-layout) var(--ds-ease-emphasized),
+      padding-block var(--ds-duration-layout) var(--ds-ease-emphasized),
+      border-block-width var(--ds-duration-layout) var(--ds-ease-emphasized);
+  }
+
+  :is(.ds-alert, .ds-banner)[hidden] {
+    display: none;
+  }
+
+  /* ------------------------------------------------------------------ Banner (page or app level) */
+  .ds-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--ds-fb-line);
+    border-radius: var(--ds-radius-box);
+    background: var(--ds-fb-fill);
+    color: var(--color-base-content);
+    font-size: var(--ds-type-callout-size);
+    line-height: var(--ds-type-callout-leading);
+  }
+
+  .ds-banner > svg,
+  .ds-banner__icon {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.125rem;
+    color: var(--ds-fb-tone);
+  }
+
+  .ds-banner > :is(p, div):not([class]),
+  .ds-banner__body {
+    flex: 1 1 16rem;
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-banner a:not(.btn) {
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .ds-banner__title {
+    font-weight: var(--ds-weight-strong);
+  }
+
+  .ds-banner > .ds-banner__actions {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .ds-banner > .ds-banner__close {
+    margin-inline-start: auto;
+    margin-block: -0.125rem;
+  }
+
+  /* Edge to edge bar; sticky keeps it at the top of the scrolling page. */
+  .ds-banner:is(.is-bar, .is-sticky) {
+    margin: 0;
+    padding-inline: max(1rem, calc((100% - 80rem) / 2));
+    border-width: 0 0 1px;
+    border-radius: 0;
+  }
+
+  .ds-banner.is-sticky {
+    position: sticky;
+    top: var(--ds-banner-top, 0);
+    z-index: var(--ds-z-sticky);
+  }
+
+  /* System status: a labelled dot instead of an icon ("Degraded performance"). */
+  .ds-banner__status {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: var(--ds-weight-strong);
+  }
+
+  .ds-banner__dot {
+    position: relative;
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-fb-tone);
+  }
+
+  .ds-banner__dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--ds-fb-tone);
+    animation: ds-ping 2s var(--ds-ease-ping) infinite;
+  }
+
+  .ds-banner.is-system:is(.is-success, .is-neutral) .ds-banner__dot::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  /* Critical: the icon blinks to draw the eye; stops under reduced motion. */
+  .ds-banner.is-critical > svg {
+    animation: ds-blink 1.6s ease-in-out infinite;
+  }
+
+  /* ------------------------------------------------------------------ Toast region and toast */
+  .ds-toast-region {
+    --ds-toast-gap: 0.5rem;
+    position: fixed;
+    inset-block-end: max(1rem, env(safe-area-inset-bottom));
+    inset-inline-end: 1rem;
+    z-index: var(--ds-z-tooltip);
+    width: min(24rem, calc(100vw - 2rem));
+    height: var(--ds-toast-region-h, 0);
+    pointer-events: none;
+  }
+
+  .ds-toast-region:is([data-position="bottom-start"], [data-position="top-start"]) {
+    inset-inline: 1rem auto;
+  }
+
+  .ds-toast-region:is([data-position="bottom-center"], [data-position="top-center"]) {
+    inset-inline: 50% auto;
+    translate: -50% 0;
+  }
+
+  .ds-toast-region[data-position^="top"] {
+    inset-block: max(1rem, env(safe-area-inset-top)) auto;
+  }
+
+  @media (max-width: 40rem) {
+    .ds-toast-region {
+      inset-inline: 1rem;
+      width: auto;
+      translate: none;
+    }
+  }
+
+  .ds-toast {
+    --ds-toast-dir: -1;
+    --ds-toast-y: 0px;
+    --ds-toast-leave-y: 0px;
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem 0.75rem 0.875rem 1rem;
+    border: 1px solid var(--ds-fb-line);
+    border-radius: var(--ds-radius-box);
+    background: var(--ds-fb-fill);
+    color: var(--color-base-content);
+    box-shadow: var(--ds-shadow-panel);
+    font-size: var(--ds-type-callout-size);
+    line-height: var(--ds-type-callout-leading);
+    pointer-events: auto;
+    touch-action: pan-y;
+    transform-origin: center bottom;
+    transform: translate3d(var(--ds-toast-x, 0px), calc(var(--ds-toast-y) * var(--ds-toast-dir) + var(--ds-toast-leave-y) + var(--ds-toast-dy, 0px)), 0) scale(var(--ds-toast-s, 1));
+    transition:
+      transform var(--ds-duration-settle) var(--ds-ease-emphasized),
+      opacity var(--ds-duration-enter) var(--ds-ease-standard);
+  }
+
+  /* Opaque even on the tonal fill: the toasts behind must not show through. */
+  .ds-toast::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--color-base-100);
+  }
+
+  /* Bridges the gap between expanded toasts so the stack does not collapse while the pointer crosses it. */
+  .ds-toast::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 100%;
+    height: calc(var(--ds-toast-gap) + 2px);
+  }
+
+  .ds-toast-region[data-position^="top"] .ds-toast {
+    --ds-toast-dir: 1;
+    inset-block: 0 auto;
+    transform-origin: center top;
+  }
+
+  .ds-toast-region[data-position^="top"] .ds-toast::after {
+    inset-block: 100% auto;
+  }
+
+  /* Enter from the edge the stack lives on. */
+  @starting-style {
+    .ds-toast {
+      --ds-toast-leave-y: calc(var(--ds-toast-dir) * -100%);
+      opacity: 0;
+    }
+  }
+
+  /* Exit the same way; a swipe leaves sideways instead (--ds-toast-x set by the script). */
+  .ds-toast[data-leaving] {
+    --ds-toast-leave-y: calc(var(--ds-toast-dir) * -60%);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform var(--ds-duration-exit) var(--ds-ease-exit),
+      opacity var(--ds-duration-exit) var(--ds-ease-exit);
+  }
+
+  .ds-toast[data-leaving][data-swiped] {
+    --ds-toast-leave-y: 0px;
+    transition-duration: var(--ds-toast-swipe-ms, 180ms);
+  }
+
+  .ds-toast[data-dragging] {
+    transition: none;
+    cursor: grabbing;
+    user-select: none;
+  }
+
+  .ds-toast[data-hidden] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Stacked behind the newest: only the edge shows, the content waits. */
+  .ds-toast-region:not([data-expanded]) .ds-toast:not([data-index="0"]) > * {
+    opacity: 0;
+  }
+
+  .ds-toast > * {
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-toast:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-toast > svg,
+  .ds-toast__icon {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.0625rem;
+    color: var(--ds-fb-tone);
+  }
+
+  .ds-toast.is-loading .ds-toast__icon {
+    animation: ds-spin 0.9s linear infinite;
+  }
+
+  .ds-toast-body,
+  .ds-toast__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ds-toast-title,
+  .ds-toast__title {
+    margin: 0;
+    font-weight: var(--ds-weight-strong);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-toast-text,
+  .ds-toast__text {
+    margin: 0.125rem 0 0;
+    color: var(--ds-subtle);
+    overflow-wrap: anywhere;
+  }
+
+  .ds-toast__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+  }
+
+  .ds-toast__action {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.75rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--ds-fb-line);
+    border-radius: var(--ds-radius-lg);
+    background: color-mix(in oklab, var(--color-base-content) 4%, transparent);
+    color: var(--color-base-content);
+    font-size: var(--ds-type-footnote-size);
+    font-weight: var(--ds-weight-strong);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  .ds-toast__action::after {
+    content: "";
+    position: absolute;
+    inset: -0.25rem -0.125rem;
+  }
+
+  @media (pointer: coarse) {
+    .ds-toast__action::after {
+      inset: -0.625rem -0.25rem;
+    }
+  }
+
+  @media (hover: hover) {
+    .ds-toast__action:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-toast__action:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+    transform: scale(var(--ds-press-scale));
+  }
+
+  .ds-toast__action:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-toast__action[aria-disabled="true"] {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  /* ------------------------------------------------------------------ Empty state */
+  .ds-empty {
+    --ds-empty-tone: var(--color-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2.5rem 1rem;
+    text-align: center;
+  }
+
+  .ds-empty.is-boxed {
+    border: 1px dashed var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-100);
+    padding-block: 3rem;
+  }
+
+  .ds-empty-icon,
+  .ds-empty__icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 0.25rem;
+    border-radius: var(--ds-radius-full);
+    background: color-mix(in oklab, var(--ds-empty-tone) 10%, transparent);
+    color: color-mix(in oklab, var(--ds-empty-tone) 75%, var(--color-base-content));
+  }
+
+  .ds-empty :is(h2, h3, h4),
+  .ds-empty__title {
+    margin: 0;
+    font-size: var(--ds-type-section-size);
+    font-weight: var(--ds-weight-bold);
+    line-height: 1.35;
+  }
+
+  .ds-empty p,
+  .ds-empty__text {
+    max-width: 32rem;
+    margin: 0;
+    font-size: var(--ds-type-callout-size);
+    color: var(--ds-subtle);
+  }
+
+  .ds-empty__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .ds-empty__hint {
+    margin-top: 0.25rem;
+    font-size: var(--ds-type-footnote-size);
+    color: var(--ds-muted);
+  }
+
+  .ds-empty.is-error { --ds-empty-tone: var(--color-error); }
+  .ds-empty.is-permission { --ds-empty-tone: var(--color-warning); }
+  .ds-empty.is-no-results { --ds-empty-tone: var(--ds-subtle); }
+  .ds-empty.is-first-use { --ds-empty-tone: var(--color-primary); }
+
+  .ds-empty.is-first-use .ds-empty-icon,
+  .ds-empty.is-first-use .ds-empty__icon {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  /* Compact inline: a row inside a table cell, a list or a card. */
+  .ds-empty.is-compact {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 0.75rem;
+    padding: 1rem;
+    text-align: start;
+  }
+
+  .ds-empty.is-compact :is(.ds-empty-icon, .ds-empty__icon) {
+    width: 2rem;
+    height: 2rem;
+    margin: 0;
+  }
+
+  .ds-empty.is-compact :is(h2, h3, h4, .ds-empty__title) {
+    font-size: var(--ds-type-callout-size);
+  }
+
+  .ds-empty.is-compact :is(p, .ds-empty__text) {
+    font-size: var(--ds-type-footnote-size);
+  }
+
+  .ds-empty.is-compact .ds-empty__actions {
+    margin: 0;
+  }
+
+  /* ------------------------------------------------------------------ Busy region, live status */
+  [aria-busy="true"].ds-busy {
+    cursor: progress;
+  }
+
+  [aria-busy="true"].ds-busy > * {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .ds-live-status {
+    min-height: 1rem;
+    margin-bottom: 0.75rem;
+    font-size: var(--ds-type-footnote-size);
+    color: var(--ds-subtle);
+  }
+
+  /* ------------------------------------------------------------------ Reduced motion: opacity only, no loops */
+  @media (prefers-reduced-motion: reduce) {
+    .ds-toast {
+      transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+    }
+
+    .ds-toast[data-leaving] {
+      --ds-toast-leave-y: 0px;
+      --ds-toast-x: 0px;
+      --ds-toast-dy: 0px;
+    }
+
+    .ds-banner__dot::after,
+    .ds-banner.is-critical > svg,
+    .ds-toast.is-loading .ds-toast__icon {
+      animation: none;
+    }
+
+    .ds-banner__dot::after {
+      opacity: 0;
+    }
+
+    :is(.ds-alert, .ds-banner)[data-leaving] {
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .ds-toast {
+      box-shadow: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    :is(.ds-alert, .ds-banner, .ds-toast, .ds-note) {
+      border-color: CanvasText;
+    }
+
+    .ds-banner__dot {
+      forced-color-adjust: none;
+      background: CanvasText;
+    }
+  }
+}
+
+/* daisyUI 5 emits part of its rules in the utilities layer, so the button spacing must live there too. */
+@layer utilities {
+  .ds-empty > .btn {
+    margin-top: 0.5rem;
+  }
+}

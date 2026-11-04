@@ -1,0 +1,654 @@
+/* Button group, split button, icon button, floating action button (FAB), toggle button, toggle group, link.
+   Owner: batch A1 actions. Contract: docs/_contributing.md. The shared state engine (hover, pressed, focus, selected,
+   disabled, busy, success) is in button.css; this file sets the colours and geometry of each family.
+   Rules that must beat the engine (variables, size, position) live in the utilities layer, the rest in components. */
+
+@layer utilities {
+  /* ---- Icon button: .ds-icon-button (square, standard style); sizes .is-xs .is-sm (md) .is-lg .is-xl, .is-round ----------- */
+  .ds-icon-button {
+    --_bg0: transparent;
+    --_fg0: var(--_sfg, var(--color-base-content));
+    --_bd0: transparent;
+    --_icon: 1.125rem;
+    width: var(--_h);
+    height: var(--_h);
+    padding: 0;
+  }
+
+  .ds-icon-button.is-xs { --_icon: 0.875rem; }
+  .ds-icon-button.is-sm { --_icon: 1rem; }
+  .ds-icon-button.is-lg { --_icon: 1.25rem; }
+  .ds-icon-button.is-xl { --_icon: 1.5rem; }
+
+  /* Variants */
+  :is(.ds-icon-button, .ds-toggle, .ds-fab).is-filled {
+    --_bg0: var(--_c);
+    --_fg0: var(--_cc);
+    --_bd0: var(--_c);
+    --_ly: var(--_deep);
+    --_hv: calc(var(--ds-opacity-state-pressed) * 100%);
+    --_pv: calc(var(--ds-opacity-state-drag) * 100%);
+    --_sel: var(--_deep);
+    --_selfg: var(--_cc);
+    --_selbd: var(--_c);
+    --_ringc-sel: var(--_cc);
+  }
+
+  :is(.ds-icon-button, .ds-toggle).is-tonal {
+    --_bg0: color-mix(in oklab, var(--_ct) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    --_fg0: var(--_ct);
+    --_bd0: transparent;
+    --_ly: var(--_ct);
+  }
+
+  :is(.ds-icon-button, .ds-toggle).is-outlined {
+    --_bg0: transparent;
+    --_bd0: var(--_sbd, var(--ds-control-border));
+  }
+
+  /* Badge slot: the dot or count sits on the top corner and is cut out with a 2 px ring in the surface colour. */
+  .ds-icon-button__badge {
+    position: absolute;
+    inset-block-start: -0.25rem;
+    inset-inline-end: -0.25rem;
+    display: grid;
+    place-items: center;
+    min-width: 1rem;
+    height: 1rem;
+    padding-inline: 0.25rem;
+    box-sizing: border-box;
+    border-radius: var(--ds-radius-full);
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+    box-shadow: 0 0 0 2px var(--color-base-100);
+    font-size: var(--ds-type-micro-size);
+    font-weight: var(--ds-type-micro-weight);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+  }
+
+  .ds-icon-button__badge.is-dot {
+    min-width: 0.5rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0;
+    inset-block-start: 0.125rem;
+    inset-inline-end: 0.125rem;
+  }
+
+  .ds-icon-button__badge.is-error {
+    background: var(--color-error);
+    color: var(--color-error-content);
+  }
+
+  /* ---- Toggle: .ds-toggle, a button with aria-pressed. Ghost until selected; .is-outlined, .is-filled, .is-tonal -------- */
+  .ds-toggle {
+    --_bg0: transparent;
+    --_fg0: var(--_sfg, var(--color-base-content));
+    --_bd0: transparent;
+  }
+
+  /* Filled toggle: a neutral fill while off, the solid tone while on. */
+  .ds-toggle.is-filled {
+    --_bg0: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+    --_fg0: var(--color-base-content);
+    --_bd0: transparent;
+    --_ly: var(--color-base-content);
+    --_hv: calc(var(--ds-opacity-state-hover) * 100%);
+    --_pv: calc(var(--ds-opacity-state-pressed) * 100%);
+  }
+
+  .ds-toggle.is-filled:is([aria-pressed="true"], [aria-checked="true"], .is-selected) {
+    --_bg: var(--_c);
+    --_fg: var(--_cc);
+    --_bd: var(--_c);
+    --_ly: var(--_deep);
+    --_ringc: var(--_cc);
+    --_ring: 0px;
+  }
+
+  .ds-toggle.is-outline,
+  .ds-toggle.is-outlined {
+    --_bd0: var(--_sbd, var(--ds-control-border));
+  }
+
+  .ds-toggle-group:not(.is-spaced) > .ds-toggle {
+    --_bd0: var(--ds-control-border);
+  }
+
+  .ds-toggle__on,
+  .ds-toggle__off {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--_gap);
+  }
+
+  :not([aria-pressed="true"], [aria-checked="true"], .is-selected) > .ds-toggle__on,
+  :is([aria-pressed="true"], [aria-checked="true"], .is-selected) > .ds-toggle__off {
+    display: none;
+  }
+
+  /* ---- Floating action button ----------------------------------------------------------------------------------------- */
+  .ds-fab {
+    --_h0: 3.5rem;
+    --_icon: 1.5rem;
+    --_spin: 1.5rem;
+    --_r: var(--ds-radius-2xl);
+    --_fs: var(--ds-type-body-size);
+    --_lh: 1.5rem;
+    /* primary, filled */
+    --_bg0: var(--_c);
+    --_fg0: var(--_cc);
+    --_bd0: var(--_c);
+    --_ly: var(--_deep);
+    --_hv: calc(var(--ds-opacity-state-pressed) * 100%);
+    --_pv: calc(var(--ds-opacity-state-drag) * 100%);
+    --_sel: var(--_deep);
+    --_selfg: var(--_cc);
+    --_selbd: var(--_c);
+    --_ringc-sel: var(--_cc);
+    width: var(--_h);
+    height: var(--_h);
+    padding: 0;
+    box-shadow: var(--ds-shadow-popover), inset 0 0 0 var(--_ring, 0px) var(--_ringc, var(--_bd));
+  }
+
+  .ds-fab.is-sm {
+    --_h0: 2.5rem;
+    --_icon: 1.25rem;
+    --_spin: 1.25rem;
+    --_r: var(--ds-radius-xl);
+  }
+
+  .ds-fab.is-lg {
+    --_h0: 6rem;
+    --_icon: 2.25rem;
+    --_spin: 2rem;
+    --_r: 1.75rem;
+  }
+
+  .ds-fab.is-extended {
+    --_h0: 3.5rem;
+    --_gap: 0.75rem;
+    width: auto;
+    padding-inline: 1.25rem;
+  }
+
+  /* Tonal and surface variants keep an opaque fill, because a FAB floats over content. */
+  .ds-fab.is-tonal {
+    --_bg0: color-mix(in oklab, var(--_ct) 16%, var(--color-base-100));
+    --_fg0: var(--_ct);
+    --_bd0: transparent;
+    --_ly: var(--_ct);
+    --_hv: calc(var(--ds-opacity-state-hover) * 100%);
+    --_pv: calc(var(--ds-opacity-state-pressed) * 100%);
+    --_sel: var(--_ct);
+    --_selfg: var(--_ct);
+    --_selbd: var(--_ct);
+    --_ringc-sel: var(--_ct);
+  }
+
+  .ds-fab.is-surface {
+    --_bg0: var(--color-base-100);
+    --_fg0: var(--_ct);
+    --_bd0: var(--ds-control-border);
+    --_ly: var(--_ct);
+    --_hv: calc(var(--ds-opacity-state-hover) * 100%);
+    --_pv: calc(var(--ds-opacity-state-pressed) * 100%);
+    --_sel: var(--_ct);
+    --_selfg: var(--_ct);
+    --_selbd: var(--_ct);
+    --_ringc-sel: var(--_ct);
+  }
+
+  .ds-fab:is(:disabled, [disabled], [aria-disabled="true"]) {
+    box-shadow: none;
+  }
+
+  /* Bottom-end placement above the safe area. --ds-fab-offset lifts it over a bottom navigation or snackbar. */
+  .ds-fab.is-floating {
+    position: fixed;
+    inset-inline-end: max(var(--ds-space-4), env(safe-area-inset-right));
+    inset-block-end: calc(max(var(--ds-space-4), env(safe-area-inset-bottom)) + var(--ds-fab-offset, 0px));
+    z-index: var(--ds-z-sticky);
+    transition:
+      color var(--ds-duration-fast) var(--ds-ease-standard),
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      border-color var(--ds-duration-fast) var(--ds-ease-standard),
+      box-shadow var(--ds-duration-fast) var(--ds-ease-standard),
+      transform var(--ds-duration-instant) var(--ds-ease-out),
+      translate var(--ds-duration-spring) var(--ds-ease-spring),
+      opacity var(--ds-duration-quick) var(--ds-ease-standard),
+      visibility 0s linear var(--ds-duration-spring);
+  }
+
+  .ds-fab.is-floating.is-start {
+    inset-inline-end: auto;
+    inset-inline-start: max(var(--ds-space-4), env(safe-area-inset-left));
+  }
+
+  /* Hides while scrolling down (data-ds-fab-hide on the button, set by toggle.js); never while it holds focus. */
+  .ds-fab[data-ds-hidden="true"]:not(:focus-visible, :focus-within) {
+    translate: 0 calc(100% + var(--ds-space-8));
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-fab.is-floating {
+      transition:
+        color var(--ds-duration-fast) var(--ds-ease-standard),
+        background-color var(--ds-duration-fast) var(--ds-ease-standard),
+        opacity var(--ds-duration-fast) var(--ds-ease-standard),
+        visibility 0s linear var(--ds-duration-fast);
+    }
+
+    .ds-fab[data-ds-hidden="true"]:not(:focus-visible, :focus-within) {
+      translate: none;
+    }
+  }
+
+  /* ---- Split button: action + menu trigger --------------------------------------------------------------------------- */
+  .ds-split-button__toggle {
+    --_px: 0.5rem;
+    min-width: var(--_h);
+    padding-inline: 0.5rem;
+  }
+
+  .ds-split-button__toggle .ds-icon {
+    transition: rotate var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  .ds-split-button__menu[open] > .ds-split-button__toggle .ds-icon {
+    rotate: 180deg;
+  }
+
+  /* Open menu: the trigger keeps the pressed layer. */
+  .ds-split-button__menu[open] > .ds-split-button__toggle {
+    background-color: color-mix(in oklab, var(--_ly) var(--_pv), var(--_bg));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-split-button__toggle .ds-icon {
+      transition: none;
+    }
+  }
+}
+
+@layer components {
+  /* ---- Button group: attached (daisyUI join style) or spaced ---------------------------------------------------------- */
+  .ds-btn-group,
+  .ds-toggle-group {
+    display: inline-flex;
+    align-items: stretch;
+    max-width: 100%;
+  }
+
+  .ds-btn-group.is-vertical,
+  .ds-toggle-group.is-vertical,
+  .ds-toggle-group[aria-orientation="vertical"] {
+    flex-direction: column;
+  }
+
+  .ds-btn-group.is-block {
+    display: flex;
+    width: 100%;
+  }
+
+  .ds-btn-group.is-block > * {
+    flex: 1 1 0;
+  }
+
+  :is(.ds-btn-group, .ds-toggle-group:not(.is-spaced)) > * {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  /* Attached: shared edges, only the outer corners stay round. */
+  :is(.ds-btn-group:not(.is-spaced), .ds-toggle-group:not(.is-spaced)) > :not(:first-child) {
+    --_rss: 0px;
+    --_res: 0px;
+    --_divs: var(--_div, var(--_bd));
+    margin-inline-start: calc(var(--ds-border-hairline) * -1);
+  }
+
+  :is(.ds-btn-group:not(.is-spaced), .ds-toggle-group:not(.is-spaced)) > :not(:last-child) {
+    --_rse: 0px;
+    --_ree: 0px;
+  }
+
+  :is(.ds-btn-group.is-vertical:not(.is-spaced), .ds-toggle-group.is-vertical:not(.is-spaced), .ds-toggle-group[aria-orientation="vertical"]:not(.is-spaced)) > :not(:first-child) {
+    --_rss: 0px;
+    --_rse: 0px;
+    --_res: var(--_r);
+    --_divs: var(--_bd);
+    margin-inline-start: 0;
+    margin-block-start: calc(var(--ds-border-hairline) * -1);
+  }
+
+  :is(.ds-btn-group.is-vertical:not(.is-spaced), .ds-toggle-group.is-vertical:not(.is-spaced), .ds-toggle-group[aria-orientation="vertical"]:not(.is-spaced)) > :not(:last-child) {
+    --_res: 0px;
+    --_ree: 0px;
+    --_rse: var(--_r);
+  }
+
+  :is(.ds-btn-group.is-vertical:not(.is-spaced), .ds-toggle-group.is-vertical:not(.is-spaced), .ds-toggle-group[aria-orientation="vertical"]:not(.is-spaced)) > :first-child:not(:last-child) {
+    --_res: 0px;
+    --_ree: 0px;
+  }
+
+  /* The raised item (hover, focus, selected) draws its whole edge over its neighbours. */
+  :is(.ds-btn-group, .ds-toggle-group:not(.is-spaced)) > :is(:hover, :focus-visible, [aria-pressed="true"], [aria-checked="true"], [aria-current]:not([aria-current="false"]), .is-selected) {
+    z-index: 1;
+  }
+
+  :is(.ds-btn-group, .ds-toggle-group) > :focus-visible {
+    z-index: 2;
+  }
+
+  :is(.ds-btn-group, .ds-toggle-group).is-spaced {
+    gap: 0.5rem;
+  }
+
+  /* ---- Split button --------------------------------------------------------------------------------------------------- */
+  .ds-split-button {
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+    max-width: 100%;
+  }
+
+  .ds-split-button > .ds-split-button__action {
+    --_rse: 0px;
+    --_ree: 0px;
+  }
+
+  .ds-split-button > .ds-split-button__menu > .ds-split-button__toggle {
+    --_rss: 0px;
+    --_res: 0px;
+    --_divs: var(--_div, var(--_bd));
+  }
+
+  .ds-split-button__menu {
+    position: static;
+    display: flex;
+  }
+
+  .ds-split-button__menu > .ds-split-button__toggle {
+    margin-inline-start: calc(var(--ds-border-hairline) * -1);
+  }
+
+  .ds-split-button__menu > .ds-split-button__toggle:focus-visible,
+  .ds-split-button__action:focus-visible {
+    z-index: 2;
+  }
+
+  .ds-split-button__panel {
+    position: absolute;
+    inset-block-start: calc(100% + 0.375rem);
+    inset-inline-start: 0;
+    z-index: var(--ds-z-menu);
+    display: grid;
+    gap: 0.125rem;
+    min-width: max(100%, 13rem);
+    max-width: min(22rem, calc(100vw - 1.5rem));
+    margin: 0;
+    padding: 0.25rem;
+    border: var(--ds-border-hairline) solid var(--ds-popover-border);
+    border-radius: var(--ds-radius-box);
+    background: var(--ds-popover);
+    box-shadow: var(--ds-shadow-popover);
+    transform-origin: top left;
+    transition:
+      opacity var(--ds-duration-quick) var(--ds-ease-emphasized),
+      transform var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  .ds-split-button:dir(rtl) .ds-split-button__panel {
+    transform-origin: top right;
+  }
+
+  .ds-split-button.is-up .ds-split-button__panel {
+    inset-block-start: auto;
+    inset-block-end: calc(100% + 0.375rem);
+    transform-origin: bottom left;
+  }
+
+  .ds-split-button.is-end .ds-split-button__panel {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+    transform-origin: top right;
+  }
+
+  @starting-style {
+    .ds-split-button__menu[open] > .ds-split-button__panel {
+      opacity: 0;
+      transform: translateY(calc(var(--ds-enter-offset) * -1)) scale(0.98);
+    }
+  }
+
+  .ds-split-button__menu::details-content {
+    opacity: 0;
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      content-visibility var(--ds-duration-exit) allow-discrete;
+  }
+
+  .ds-split-button__menu[open]::details-content {
+    opacity: 1;
+    transition-duration: var(--ds-duration-quick);
+    transition-timing-function: var(--ds-ease-emphasized);
+  }
+
+  .ds-split-button__item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    min-height: 2.25rem;
+    padding: 0.4375rem 0.75rem;
+    border: 0;
+    border-radius: var(--ds-radius-md);
+    background: transparent;
+    color: var(--color-base-content);
+    font: inherit;
+    font-size: var(--ds-type-callout-size);
+    font-weight: var(--ds-weight-medium);
+    line-height: 1.25rem;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (pointer: coarse) {
+    .ds-split-button__item {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  @media (hover: hover) {
+    .ds-split-button__item:hover:not([aria-disabled="true"], :disabled) {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-split-button__item:active:not([aria-disabled="true"], :disabled) {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-split-button__item:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: -2px;
+  }
+
+  .ds-split-button__item:is([aria-disabled="true"], :disabled) {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-split-button__item.is-danger {
+    color: var(--ds-error-text);
+  }
+
+  .ds-split-button__item > .ds-icon {
+    color: var(--ds-muted);
+  }
+
+  .ds-split-button__item.is-danger > .ds-icon {
+    color: inherit;
+  }
+
+  .ds-split-button__separator {
+    height: var(--ds-border-hairline);
+    margin: 0.25rem -0.25rem;
+    background: var(--color-base-300);
+  }
+
+  /* ---- Link ------------------------------------------------------------------------------------------------------------ */
+  .ds-link {
+    border-radius: var(--ds-radius-xs);
+    text-decoration-color: currentColor;
+    transition:
+      color var(--ds-duration-fast) var(--ds-ease-standard),
+      text-decoration-color var(--ds-duration-fast) var(--ds-ease-standard),
+      text-decoration-thickness var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-link:active:not([aria-disabled="true"]) {
+    opacity: 0.72;
+  }
+
+  .ds-link:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-link.is-accent {
+    color: var(--ds-primary-text);
+  }
+
+  .ds-link.is-subtle {
+    color: var(--ds-subtle);
+  }
+
+  /* Standalone: a call to read on. No underline at rest, the arrow is the cue; the underline appears on hover and focus. */
+  .ds-link.is-standalone {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 1.5rem;
+    color: var(--ds-primary-text);
+    font-weight: var(--ds-weight-semibold);
+    text-decoration-line: none;
+  }
+
+  @media (pointer: coarse) {
+    .ds-link.is-standalone {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  .ds-link.is-standalone::after,
+  .ds-link.is-external::after {
+    content: "";
+    flex: none;
+    width: 1em;
+    height: 1em;
+    background-color: currentColor;
+    -webkit-mask: var(--_ds-link-glyph) center / contain no-repeat;
+    mask: var(--_ds-link-glyph) center / contain no-repeat;
+    transition: translate var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  .ds-link.is-standalone {
+    --_ds-link-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M12 5l7 7-7 7'/%3E%3C/svg%3E");
+  }
+
+  .ds-link.is-external {
+    --_ds-link-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3C/svg%3E");
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .ds-link.is-external::after {
+    width: 0.875em;
+    height: 0.875em;
+  }
+
+  .ds-link:dir(rtl).is-standalone::after {
+    transform: scaleX(-1);
+  }
+
+  @media (hover: hover) {
+    .ds-link:hover:not([aria-disabled="true"]) {
+      text-decoration-line: underline;
+      text-decoration-thickness: 2px;
+    }
+
+    .ds-link.is-standalone:hover:not([aria-disabled="true"])::after {
+      translate: 0.125rem 0;
+    }
+
+    .ds-link.is-standalone:dir(rtl):hover:not([aria-disabled="true"])::after {
+      translate: -0.125rem 0;
+    }
+
+    .ds-link.is-external:hover:not([aria-disabled="true"])::after {
+      translate: 0.0625rem -0.0625rem;
+    }
+  }
+
+  .ds-link.is-standalone:focus-visible {
+    text-decoration-line: underline;
+  }
+
+  /* Current page or section: weight and a 2 px accent underline, not colour alone. */
+  .ds-link[aria-current]:not([aria-current="false"]) {
+    color: var(--color-base-content);
+    font-weight: var(--ds-weight-strong);
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--ds-quiet);
+  }
+
+  /* Disabled: an <a> without href, role="link" and aria-disabled. Stays focusable so the reason can be read. */
+  .ds-link[aria-disabled="true"] {
+    color: var(--ds-muted);
+    text-decoration-line: none;
+    cursor: not-allowed;
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  /* Visited links are styled only inside long text, where "already read" helps. */
+  .ds-link.is-prose:visited,
+  :where(.ds-prose, .prose) .ds-link:visited {
+    color: color-mix(in oklab, var(--ds-link) 62%, var(--color-error));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-link.is-standalone::after,
+    .ds-link.is-external::after {
+      transition: none;
+    }
+
+    .ds-link.is-standalone:hover::after,
+    .ds-link.is-external:hover::after {
+      translate: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-link {
+      text-decoration-line: underline;
+    }
+
+    .ds-link.is-standalone::after,
+    .ds-link.is-external::after {
+      background-color: LinkText;
+    }
+  }
+}

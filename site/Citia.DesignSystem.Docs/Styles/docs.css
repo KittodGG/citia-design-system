@@ -1,0 +1,16 @@
+/* Documentation site CSS. Built by tools/css.ps1 (or the MSBuild target) with the Tailwind standalone CLI + daisyUI.
+   It dogfoods the design system: same tokens, same components, plus the documentation chrome. */
+@import "tailwindcss" source(none);
+@plugin "../../../.tools/daisyui.mjs" {
+  themes: false;
+  logs: false;
+}
+@import "../../../src/Citia.DesignSystem/Styles/ds.css";
+@import "./docs-chrome.css";
+
+/* Utility classes used by pages, scripts and the Markdown previews. */
+@source "../Pages";
+@source "../Docs";
+@source "../wwwroot/js";
+@source "../../../docs";
+@source "../../../src/Citia.DesignSystem/Views";

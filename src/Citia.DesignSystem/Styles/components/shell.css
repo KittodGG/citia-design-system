@@ -1,0 +1,1661 @@
+/* Application shell: sidebar (expanded, rail, drawer), top bar, main, page header, ARIA toolbar, auth layout.
+   Desktop (>= 1024 px): the sidebar is a sticky column (16rem, or the 4.75rem icon rail). Below: an off-canvas drawer that
+   slides from its edge and leaves the same way. Collapse and drawer are plain CSS transitions, so they are interruptible.
+   Origin: TPS _Layout/_PlatformLayout/_AuthLayout, rebuilt as a universal shell (neutral surfaces, teal only for the current item). */
+
+@layer components {
+  .ds-shell {
+    --ds-shell-sidebar: var(--ds-size-sidebar);
+    --ds-topbar-h: 3.5rem;
+    --ds-main-pad-x: 1rem;
+    --ds-main-pad-y: 1.5rem;
+    --ds-page-max: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 100dvh;
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+  }
+
+  .ds-shell-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 100dvh;
+  }
+
+  /* Embedded shell: lives inside a card or a documentation preview. `contain: layout` makes the fixed drawer and scrim
+     position against the box instead of the viewport. */
+  .ds-shell.is-embedded {
+    position: relative;
+    height: var(--ds-shell-height, 30rem);
+    min-height: 0;
+    overflow: hidden;
+    contain: layout paint;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+  }
+
+  .ds-shell.is-embedded {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .ds-shell.is-embedded .ds-shell-main {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .ds-shell.is-embedded .ds-sidebar {
+    height: 100%;
+  }
+
+  /* Skip link: first focusable element, visible on focus (base.css owns the generic rule; this keeps it above the bars). */
+  .ds-shell .ds-skip-link:focus {
+    z-index: calc(var(--ds-z-modal) + 1);
+  }
+
+  /* ---------- Sidebar ---------- */
+  .ds-sidebar {
+    --ds-sidebar-bg: var(--color-base-200);
+    --ds-sidebar-fg: var(--color-base-content);
+    --ds-sidebar-muted: var(--ds-subtle);
+    --ds-sidebar-hover: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    --ds-sidebar-press: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+    --ds-sidebar-current-bg: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    --ds-sidebar-current-fg: var(--ds-quiet);
+    --ds-sidebar-line: var(--color-base-300);
+    --ds-sidebar-focus: var(--ds-focus);
+    --ds-rail-pad: calc((var(--ds-size-sidebar-rail) - var(--ds-size-icon-md) - 1.75rem) / 2);
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: calc(var(--ds-z-modal) - 1);
+    display: flex;
+    flex-direction: column;
+    width: min(var(--ds-size-sidebar), 86vw);
+    height: 100dvh;
+    background: var(--ds-sidebar-bg);
+    color: var(--ds-sidebar-fg);
+    box-shadow: none;
+    transform: translateX(-100%);
+    transition: transform var(--ds-duration-spring) var(--ds-ease-spring), box-shadow var(--ds-duration-layout) var(--ds-ease-standard), visibility 0s linear var(--ds-duration-spring);
+    visibility: hidden;
+  }
+
+  .ds-sidebar:dir(rtl) {
+    transform: translateX(100%);
+  }
+
+  .ds-shell[data-nav-open] .ds-sidebar {
+    transform: none;
+    visibility: visible;
+    box-shadow: var(--ds-shadow-overlay);
+    transition: transform var(--ds-duration-spring) var(--ds-ease-spring), box-shadow var(--ds-duration-layout) var(--ds-ease-standard);
+  }
+
+  /* Brand variant: the sidebar takes the secondary (deep teal) surface, like version 1. */
+  .ds-sidebar.is-brand {
+    --ds-sidebar-bg: var(--color-secondary);
+    --ds-sidebar-fg: var(--color-secondary-content);
+    --ds-sidebar-muted: color-mix(in srgb, var(--color-secondary-content) 78%, var(--color-secondary));
+    --ds-sidebar-hover: color-mix(in oklab, var(--color-secondary-content) 10%, transparent);
+    --ds-sidebar-press: color-mix(in oklab, var(--color-secondary-content) 16%, transparent);
+    --ds-sidebar-current-bg: color-mix(in oklab, var(--color-secondary-content) 18%, transparent);
+    --ds-sidebar-current-fg: var(--color-secondary-content);
+    --ds-sidebar-line: color-mix(in srgb, var(--color-secondary-content) 22%, transparent);
+    --ds-sidebar-focus: var(--color-secondary-content);
+  }
+
+  .ds-shell-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--ds-z-modal) - 2);
+    border: 0;
+    background: var(--ds-scrim);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--ds-duration-layout) var(--ds-ease-standard);
+  }
+
+  .ds-shell.is-embedded .ds-shell-scrim,
+  .ds-shell.is-embedded .ds-sidebar {
+    position: absolute;
+  }
+
+  .ds-shell[data-nav-open] .ds-shell-scrim {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  html:has(.ds-shell:not(.is-embedded)[data-nav-open]) {
+    overflow: hidden;
+  }
+
+  .ds-sidebar-head {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    min-height: var(--ds-topbar-h);
+    padding-inline: var(--ds-rail-pad) 0.75rem;
+  }
+
+  .ds-brand {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+    min-height: var(--ds-size-target);
+    padding-inline-start: 0.875rem;
+    border-radius: var(--ds-radius-lg);
+    color: inherit;
+    overflow: hidden;
+  }
+
+  .ds-brand:focus-visible,
+  .ds-sidebar-collapse:focus-visible,
+  .ds-nav-group-toggle:focus-visible,
+  .ds-nav-link:focus-visible,
+  .ds-sidebar-account > summary:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-sidebar-focus);
+    outline-offset: 2px;
+  }
+
+  /* Logo slot: a monogram, an inline svg or an img. */
+  .ds-brand-mark {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    overflow: hidden;
+    border-radius: var(--ds-radius-lg);
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .ds-brand-mark > :is(img, svg) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .ds-brand-mark:has(> img),
+  .ds-brand-mark:has(> svg) {
+    background: transparent;
+    color: inherit;
+  }
+
+  .ds-brand-name {
+    overflow: hidden;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-sidebar-collapse {
+    display: none;
+    flex-shrink: 0;
+    place-items: center;
+    width: var(--ds-size-target);
+    height: var(--ds-size-target);
+    border: 0;
+    border-radius: var(--ds-radius-lg);
+    background: transparent;
+    color: var(--ds-sidebar-muted);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-sidebar-collapse:active {
+    background: var(--ds-sidebar-press);
+  }
+
+  .ds-sidebar-collapse > svg {
+    transition: transform var(--ds-duration-spring) var(--ds-ease-spring);
+  }
+
+  @media (hover: hover) {
+    .ds-sidebar-collapse:hover {
+      background: var(--ds-sidebar-hover);
+      color: var(--ds-sidebar-fg);
+    }
+  }
+
+  /* Slots above the list: workspace switcher and search. */
+  .ds-sidebar-slot {
+    flex-shrink: 0;
+    padding: 0 var(--ds-rail-pad) 0.5rem;
+  }
+
+  .ds-sidebar-switcher {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    min-height: var(--ds-size-target);
+    padding: 0.375rem 0.875rem;
+    overflow: clip;
+    border-radius: var(--ds-radius-lg);
+    color: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-sidebar-switcher:active {
+    background: var(--ds-sidebar-press);
+  }
+
+  .ds-sidebar-switcher:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-sidebar-focus);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) {
+    .ds-sidebar-switcher:hover {
+      background: var(--ds-sidebar-hover);
+    }
+  }
+
+  .ds-sidebar-switcher > svg:last-child {
+    flex-shrink: 0;
+    margin-inline-start: auto;
+    width: var(--ds-size-icon-sm);
+    height: var(--ds-size-icon-sm);
+    color: var(--ds-sidebar-muted);
+  }
+
+  .ds-sidebar-switcher__text {
+    display: grid;
+    min-width: 0;
+    line-height: 1.25;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-sidebar-switcher__text > :first-child {
+    overflow: hidden;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-sidebar-switcher__text > :last-child {
+    overflow: hidden;
+    color: var(--ds-sidebar-muted);
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-sidebar-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: var(--ds-size-target-compact);
+    padding: 0 0.875rem;
+    overflow: clip;
+    border-radius: var(--ds-radius-lg);
+    background: var(--ds-sidebar-hover);
+    color: var(--ds-sidebar-muted);
+    font-size: 0.875rem;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-sidebar-search:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-sidebar-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-sidebar-search:active {
+    background: var(--ds-sidebar-press);
+  }
+
+  .ds-sidebar-search > svg {
+    flex-shrink: 0;
+    width: var(--ds-size-icon-md);
+    height: var(--ds-size-icon-md);
+  }
+
+  .ds-sidebar-search > span {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-sidebar :is(.ds-sidebar-search, .ds-sidebar-switcher) > :is(span, kbd, .ds-sidebar-switcher__text) {
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  /* Only the list scrolls. Edge fades (scroll-driven where supported) tell that more items sit above or below. */
+  .ds-sidebar-nav {
+    flex: 1;
+    min-height: 0;
+    padding: 0 var(--ds-rail-pad) 1rem;
+    overflow-x: clip;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    overflow-anchor: none;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--ds-sidebar-fg) 25%, transparent) transparent;
+    scrollbar-gutter: stable;
+    mask-image: linear-gradient(to bottom, transparent, #000 var(--ds-fade-top, 0px), #000 calc(100% - var(--ds-fade-bottom, 0px)), transparent);
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .ds-sidebar-nav {
+      --ds-fade-top: 0px;
+      --ds-fade-bottom: 0px;
+      animation: ds-edge-fade linear both;
+      animation-timeline: scroll(self block);
+    }
+  }
+
+  .ds-nav-list,
+  .ds-nav-sub {
+    display: grid;
+    gap: 0.125rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Group header is a button (chevron, aria-expanded); items are links (icon). */
+  .ds-nav-group-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: var(--ds-size-target-compact);
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--ds-radius-lg);
+    background: transparent;
+    color: var(--ds-sidebar-muted);
+    font-size: var(--ds-type-eyebrow-size);
+    font-weight: var(--ds-type-eyebrow-weight);
+    line-height: var(--ds-type-eyebrow-leading);
+    letter-spacing: var(--ds-type-eyebrow-tracking);
+    text-align: start;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color var(--ds-duration-fast) var(--ds-ease-standard), background-color var(--ds-duration-fast) var(--ds-ease-standard), opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-nav-group-toggle:active {
+    background: var(--ds-sidebar-press);
+  }
+
+  @media (hover: hover) {
+    .ds-nav-group-toggle:hover {
+      background: var(--ds-sidebar-hover);
+      color: var(--ds-sidebar-fg);
+    }
+  }
+
+  .ds-nav-group-toggle > span {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-nav-group-toggle > svg {
+    flex-shrink: 0;
+    width: var(--ds-size-icon-sm);
+    height: var(--ds-size-icon-sm);
+    transition: transform var(--ds-duration-base) var(--ds-ease-standard);
+  }
+
+  .ds-nav-group-toggle[aria-expanded="true"] > svg {
+    transform: rotate(180deg);
+  }
+
+  /* Collapsible panel: rows 0fr -> 1fr (200 ms, interruptible). The wrapper is the aria-controls target. */
+  .ds-nav-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    visibility: hidden;
+    transition: grid-template-rows 200ms var(--ds-ease-emphasized), visibility 0s linear 200ms;
+  }
+
+  li:has(> .ds-nav-group-toggle[aria-expanded="true"]) > .ds-nav-panel,
+  .ds-nav-panel[data-open] {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    transition: grid-template-rows 200ms var(--ds-ease-emphasized), visibility 0s;
+  }
+
+  .ds-nav-panel > .ds-nav-sub {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .ds-nav-sub {
+    margin: 0.125rem 0 0.5rem;
+  }
+
+  .ds-nav-panel > .ds-nav-sub {
+    margin: 0;
+    padding-block: 0.125rem 0.5rem;
+  }
+
+  .ds-nav-sub[hidden] {
+    display: none;
+  }
+
+  /* Item: hover = state layer only, the row never moves under the pointer. */
+  .ds-nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    min-height: var(--ds-size-target);
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--ds-radius-lg);
+    color: var(--ds-sidebar-fg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-nav-link > svg {
+    flex-shrink: 0;
+    width: var(--ds-size-icon-md);
+    height: var(--ds-size-icon-md);
+    color: var(--ds-sidebar-muted);
+    transition: color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-nav-link > span:not([class]) {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-nav-link:active {
+    background: var(--ds-sidebar-press);
+  }
+
+  @media (hover: hover) {
+    .ds-nav-link:hover {
+      background: var(--ds-sidebar-hover);
+    }
+
+    .ds-nav-link:hover > svg {
+      color: var(--ds-sidebar-fg);
+    }
+  }
+
+  /* Current: tonal fill + primary text + weight + an indicator bar (never colour alone). */
+  .ds-nav-link:is([aria-current="page"], [aria-current="true"], .is-active) {
+    background: var(--ds-sidebar-current-bg);
+    color: var(--ds-sidebar-current-fg);
+    font-weight: 650;
+  }
+
+  .ds-nav-link:is([aria-current="page"], [aria-current="true"], .is-active) > svg {
+    color: var(--ds-sidebar-current-fg);
+  }
+
+  .ds-nav-link:is([aria-current="page"], [aria-current="true"], .is-active)::before {
+    content: "";
+    position: absolute;
+    inset-block: 0.625rem;
+    inset-inline-start: 0;
+    width: var(--ds-border-accent);
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-sidebar-current-fg);
+  }
+
+  /* Disabled / aria-disabled: dimmed, no hover, still focusable when aria-disabled (explain why with a tooltip). */
+  .ds-nav-link:is([aria-disabled="true"], .is-disabled) {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-nav-link:is([aria-disabled="true"], .is-disabled):is(:hover, :active) {
+    background: transparent;
+  }
+
+  /* Badge (count) and dot: tabular numbers, tonal fill. */
+  .ds-nav-badge {
+    display: inline-grid;
+    flex-shrink: 0;
+    place-items: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding-inline: 0.375rem;
+    border-radius: var(--ds-radius-full);
+    background: var(--color-base-300);
+    color: var(--color-base-content);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 650;
+    line-height: 1;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-nav-badge.is-primary {
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+  }
+
+  .ds-nav-badge.is-error {
+    background: var(--ds-error-soft);
+    color: var(--ds-error-text);
+  }
+
+  .ds-nav-badge.is-dot {
+    min-width: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0;
+  }
+
+  .ds-sidebar.is-brand .ds-nav-badge:not(.is-primary, .is-error) {
+    background: color-mix(in oklab, var(--color-secondary-content) 22%, transparent);
+    color: var(--color-secondary-content);
+  }
+
+  /* Footer: account menu. Opens upward; in the rail it opens beside it. */
+  .ds-sidebar-footer {
+    position: relative;
+    display: block;
+    flex-shrink: 0;
+    padding: 0.5rem var(--ds-rail-pad) 0.75rem;
+  }
+
+  .ds-sidebar-account {
+    position: relative;
+  }
+
+  .ds-sidebar-account > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: var(--ds-size-target);
+    padding: 0.375rem 0.875rem 0.375rem 0.75rem;
+    border-radius: var(--ds-radius-lg);
+    font-size: 0.8125rem;
+    list-style: none;
+    cursor: pointer;
+    overflow: clip;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-sidebar-account > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ds-sidebar-account > summary:active {
+    background: var(--ds-sidebar-press);
+  }
+
+  @media (hover: hover) {
+    .ds-sidebar-account > summary:hover {
+      background: var(--ds-sidebar-hover);
+    }
+  }
+
+  .ds-sidebar-account[open] > summary {
+    background: var(--ds-sidebar-hover);
+  }
+
+  .ds-sidebar-account .ds-account-text {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.25;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-sidebar-account .ds-account-text > :first-child {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-sidebar-account .ds-account-text > :last-child {
+    overflow: hidden;
+    color: var(--ds-sidebar-muted);
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-sidebar-account .ds-account-panel {
+    inset-block-end: 100%;
+    inset-inline: 0 auto;
+    width: max(100%, 14rem);
+    margin: 0 0 0.5rem;
+    transform-origin: bottom left;
+    color: var(--color-base-content);
+  }
+
+  .ds-sidebar-mode {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.25rem;
+    padding: 0.5rem var(--ds-rail-pad);
+  }
+
+  /* Rail tooltip (positioned by shell.js, one element per page). */
+  .ds-rail-tip {
+    position: fixed;
+    z-index: var(--ds-z-tooltip);
+    max-width: 16rem;
+    padding: 0.375rem 0.625rem;
+    border-radius: var(--ds-radius-md);
+    background: var(--color-base-content);
+    color: var(--color-base-100);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.25;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateX(calc(var(--ds-enter-offset) * -1));
+    transition: opacity var(--ds-duration-exit) var(--ds-ease-exit), transform var(--ds-duration-exit) var(--ds-ease-exit), visibility 0s linear var(--ds-duration-exit);
+    visibility: hidden;
+  }
+
+  .ds-rail-tip:dir(rtl) {
+    transform: translateX(var(--ds-enter-offset));
+  }
+
+  .ds-rail-tip[data-open] {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    transition: opacity var(--ds-duration-quick) var(--ds-ease-emphasized), transform var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  /* ---------- Top bar: translucent, hairline only once the page has scrolled ---------- */
+  .ds-topbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--ds-z-sticky);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: var(--ds-topbar-h);
+    padding: 0.5rem var(--ds-main-pad-x);
+    background: color-mix(in oklab, var(--color-base-100) 82%, transparent);
+    backdrop-filter: saturate(1.5) blur(14px);
+    -webkit-backdrop-filter: saturate(1.5) blur(14px);
+  }
+
+  .ds-topbar::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    height: var(--ds-border-hairline);
+    background: var(--color-base-300);
+    transition: opacity var(--ds-duration-base) var(--ds-ease-standard);
+  }
+
+  .ds-topbar[data-ds-edge="top"]::after {
+    opacity: 0;
+  }
+
+  .ds-topbar-heading {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ds-topbar-context {
+    overflow: hidden;
+    color: var(--ds-muted);
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-topbar-title {
+    overflow: hidden;
+    font-size: var(--ds-type-title-3-size);
+    font-weight: var(--ds-type-title-3-weight);
+    line-height: var(--ds-type-title-3-leading);
+    letter-spacing: var(--ds-type-title-3-tracking);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-topbar-search {
+    flex: 0 1 22rem;
+    min-width: 0;
+  }
+
+  .ds-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .ds-nav-toggle {
+    display: inline-grid;
+  }
+
+  /* Who/where chip: the signed-in workspace. */
+  .ds-scope-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    max-width: 18rem;
+    min-height: 2rem;
+    padding: 0 0.75rem;
+    border-radius: var(--ds-radius-full);
+    background: color-mix(in oklab, var(--color-primary) 8%, var(--color-base-100));
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-primary) 30%, var(--color-base-100));
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .ds-scope-chip > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Account menu in the top bar: a plain details disclosure so a logout stays an ordinary form with a real button. */
+  .ds-account {
+    position: relative;
+  }
+
+  .ds-account > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: var(--ds-size-target);
+    padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+    border-radius: var(--ds-radius-full);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    list-style: none;
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-account > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ds-account > summary:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-account > summary:active,
+  .ds-account[open] > summary {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  @media (hover: hover) {
+    .ds-account > summary:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-account-avatar {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--ds-radius-full);
+    background: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100));
+    color: var(--ds-quiet);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .ds-account-panel {
+    position: absolute;
+    inset-inline-end: 0;
+    z-index: var(--ds-z-popover);
+    width: 14rem;
+    margin: 0.5rem 0 0;
+    padding: 0.375rem;
+    list-style: none;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-100);
+    box-shadow: var(--ds-shadow-popover);
+    animation: ds-enter var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  .ds-account-email {
+    padding: 0.5rem 0.75rem;
+    overflow: hidden;
+    color: var(--ds-subtle);
+    font-size: 0.8125rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-account-panel :is(a, button) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: var(--ds-size-target);
+    padding: 0 0.75rem;
+    border-radius: var(--ds-radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .ds-account-panel :is(a, button):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: -2px;
+  }
+
+  @media (hover: hover) {
+    .ds-account-panel :is(a, button):hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-account-panel :is(a, button):active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-account-panel form {
+    margin: 0;
+  }
+
+  /* ---------- Main and page ---------- */
+  .ds-main {
+    flex: 1;
+    min-width: 0;
+    padding: var(--ds-main-pad-y) var(--ds-main-pad-x) calc(var(--ds-main-pad-y) * 2);
+  }
+
+  .ds-main:focus {
+    outline: none;
+  }
+
+  /* Content width: .is-sm 40rem, .is-md 48rem, .is-lg 64rem, .is-xl 80rem, .is-prose 65ch, .is-full (default, no limit). */
+  .ds-main.is-sm { --ds-page-max: 40rem; }
+  .ds-main.is-md { --ds-page-max: 48rem; }
+  .ds-main.is-lg { --ds-page-max: 64rem; }
+  .ds-main.is-xl { --ds-page-max: 80rem; }
+  .ds-main.is-prose { --ds-page-max: var(--ds-size-measure); }
+  .ds-main.is-full { --ds-page-max: none; }
+
+  .ds-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: var(--ds-page-max);
+    min-width: 0;
+    margin-inline: auto;
+    animation: ds-enter var(--ds-duration-enter) var(--ds-ease-out) both;
+  }
+
+  /* ---------- Page header ---------- */
+  .ds-page-header {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .ds-page-header > div,
+  .ds-page-header__text {
+    min-width: 0;
+  }
+
+  .ds-page-header__breadcrumb {
+    flex: 0 0 100%;
+    order: -1;
+    min-width: 0;
+    color: var(--ds-subtle);
+    font-size: 0.8125rem;
+  }
+
+  .ds-page-header__tabs {
+    flex: 0 0 100%;
+    order: 3;
+    min-width: 0;
+    margin-top: 0.25rem;
+  }
+
+  .ds-page-header__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-inline-start: auto;
+  }
+
+  .ds-page-title {
+    font-size: var(--ds-type-title-1-size);
+    font-weight: var(--ds-type-title-1-weight);
+    line-height: var(--ds-type-title-1-leading);
+    letter-spacing: var(--ds-type-title-1-tracking);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-page-header.is-portal .ds-page-title,
+  .ds-page-header.is-compact .ds-page-title {
+    font-size: var(--ds-type-title-2-size);
+    font-weight: var(--ds-type-title-2-weight);
+    line-height: var(--ds-type-title-2-leading);
+    letter-spacing: var(--ds-type-title-2-tracking);
+  }
+
+  .ds-page-desc {
+    max-width: var(--ds-size-measure);
+    margin-top: 0.5rem;
+    color: var(--ds-subtle);
+    transition: opacity var(--ds-duration-base) var(--ds-ease-standard);
+  }
+
+  .ds-page-header__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 1rem;
+    margin-top: 0.625rem;
+    color: var(--ds-subtle);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Sticky: translucent bar under the top bar; once stuck it compacts (title steps down, description and meta fold away)
+     and a hairline fades in. shell.js sets data-stuck. */
+  .ds-page-header.is-sticky {
+    position: sticky;
+    top: var(--ds-topbar-h, 0);
+    z-index: calc(var(--ds-z-sticky) - 1);
+    margin-inline: calc(var(--ds-main-pad-x) * -1);
+    padding: 0.75rem var(--ds-main-pad-x);
+    background: color-mix(in oklab, var(--color-base-100) 82%, transparent);
+    backdrop-filter: saturate(1.5) blur(14px);
+    -webkit-backdrop-filter: saturate(1.5) blur(14px);
+  }
+
+  .ds-page-header.is-sticky::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    height: var(--ds-border-hairline);
+    background: var(--color-base-300);
+    opacity: 0;
+    transition: opacity var(--ds-duration-base) var(--ds-ease-standard);
+  }
+
+  .ds-page-header.is-sticky[data-stuck]::after {
+    opacity: 1;
+  }
+
+  .ds-page-header.is-sticky[data-stuck] .ds-page-title {
+    font-size: var(--ds-type-title-3-size);
+    line-height: var(--ds-type-title-3-leading);
+    letter-spacing: var(--ds-type-title-3-tracking);
+  }
+
+  .ds-page-header.is-sticky[data-stuck] :is(.ds-page-desc, .ds-page-header__meta, .ds-page-header__breadcrumb) {
+    display: none;
+  }
+
+  /* ---------- Toolbar ---------- */
+  /* Page toolbar (version 1): one text column and one action group. Without role="toolbar". */
+  .ds-toolbar:not([role="toolbar"]) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--ds-space-toolbar-gap);
+  }
+
+  .ds-toolbar:not([role="toolbar"]) > * {
+    min-width: 0;
+  }
+
+  .ds-toolbar:not([role="toolbar"]) .ds-actions {
+    max-width: 48rem;
+  }
+
+  .ds-toolbar-wide {
+    grid-column: 1 / -1;
+  }
+
+  /* ARIA toolbar: one tab stop, arrow keys move inside (roving focus). */
+  .ds-toolbar[role="toolbar"] {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: var(--ds-size-target);
+    padding: 0.25rem;
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-100);
+    box-shadow: inset 0 0 0 1px var(--color-base-300);
+  }
+
+  .ds-toolbar[role="toolbar"].is-flat {
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .ds-toolbar[role="toolbar"].is-vertical {
+    flex-direction: column;
+    align-items: stretch;
+    width: max-content;
+  }
+
+  .ds-toolbar__group {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  .ds-toolbar.is-vertical .ds-toolbar__group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ds-toolbar__separator {
+    flex-shrink: 0;
+    align-self: stretch;
+    width: var(--ds-border-hairline);
+    margin: 0.375rem 0.25rem;
+    background: var(--color-base-300);
+  }
+
+  .ds-toolbar.is-vertical .ds-toolbar__separator {
+    width: auto;
+    height: var(--ds-border-hairline);
+    margin: 0.25rem 0.375rem;
+  }
+
+  .ds-toolbar__spacer {
+    flex: 1;
+  }
+
+  .ds-toolbar__title {
+    padding-inline: 0.5rem;
+    color: var(--ds-subtle);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* Toolbar items: buttons without a frame; state layers like every chrome control. */
+  .ds-toolbar__item {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: var(--ds-size-target-compact);
+    min-height: var(--ds-size-target-compact);
+    padding-inline: 0.5rem;
+    border: 0;
+    border-radius: var(--ds-radius-lg);
+    background: transparent;
+    color: var(--color-base-content);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  .ds-toolbar__item > svg {
+    flex-shrink: 0;
+    width: var(--ds-size-icon-md);
+    height: var(--ds-size-icon-md);
+  }
+
+  @media (hover: hover) {
+    .ds-toolbar__item:hover:not(:disabled, [aria-disabled="true"]) {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-toolbar__item:active:not(:disabled, [aria-disabled="true"]) {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+    transform: scale(var(--ds-press-scale));
+  }
+
+  .ds-toolbar__item:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-toolbar__item:is([aria-pressed="true"], [aria-checked="true"], [aria-selected="true"]) {
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    color: var(--ds-quiet);
+  }
+
+  .ds-toolbar__item:is(:disabled, [aria-disabled="true"]) {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-toolbar__item[aria-busy="true"] {
+    pointer-events: none;
+  }
+
+  .ds-toolbar__overflow-menu {
+    flex-shrink: 0;
+    margin-inline-start: auto;
+  }
+
+  .ds-toolbar__overflow-menu[hidden] {
+    display: none;
+  }
+
+  /* Overflow panel: native popover, placed by shell.js (placeFloating). */
+  .ds-toolbar__overflow {
+    inset: auto;
+    min-width: 12rem;
+    margin: 0;
+    padding: 0.375rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+    box-shadow: var(--ds-shadow-popover);
+    opacity: 0;
+    transform: translateY(calc(var(--ds-enter-offset) * -1));
+    transition: opacity var(--ds-duration-exit) var(--ds-ease-exit), transform var(--ds-duration-exit) var(--ds-ease-exit), overlay var(--ds-duration-exit) allow-discrete, display var(--ds-duration-exit) allow-discrete;
+  }
+
+  .ds-toolbar__overflow:popover-open {
+    opacity: 1;
+    transform: none;
+    transition-duration: var(--ds-duration-quick);
+    transition-timing-function: var(--ds-ease-emphasized);
+  }
+
+  @starting-style {
+    .ds-toolbar__overflow:popover-open {
+      opacity: 0;
+      transform: translateY(calc(var(--ds-enter-offset) * -1));
+    }
+  }
+
+  .ds-toolbar__overflow .ds-toolbar__group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ds-toolbar__overflow .ds-toolbar__separator {
+    width: auto;
+    height: var(--ds-border-hairline);
+    margin: 0.25rem 0.375rem;
+  }
+
+  .ds-toolbar__overflow .ds-toolbar__item {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: var(--ds-size-target);
+  }
+
+  /* ---------- Auth layout ---------- */
+  .ds-auth {
+    display: grid;
+    min-height: 100dvh;
+    background: var(--color-base-100);
+  }
+
+  .ds-auth-hero {
+    position: relative;
+    display: none;
+    overflow: hidden;
+    padding: 3rem;
+    background: var(--color-secondary);
+    color: var(--color-secondary-content);
+  }
+
+  .ds-auth-hero > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ds-auth-hero:has(> img)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklab, black 55%, transparent);
+  }
+
+  .ds-auth-hero > :not(img) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .ds-auth-hero-title {
+    color: inherit;
+    font-size: var(--ds-type-display-size);
+    font-weight: var(--ds-type-display-weight);
+    line-height: var(--ds-type-display-leading);
+    letter-spacing: var(--ds-type-display-tracking);
+    text-wrap: balance;
+  }
+
+  .ds-auth-hero-slogan {
+    max-width: 28rem;
+    margin-top: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.5;
+    opacity: 0.88;
+    text-wrap: balance;
+  }
+
+  .ds-auth-hero-foot {
+    font-size: 0.8125rem;
+    opacity: 0.8;
+  }
+
+  .ds-auth-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+  }
+
+  .ds-auth-panel {
+    width: 100%;
+    max-width: var(--ds-size-auth-panel);
+    animation: ds-enter var(--ds-duration-enter) var(--ds-ease-out) both;
+  }
+
+  .ds-auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-bottom: 2rem;
+    font-weight: 700;
+  }
+
+  .ds-auth-title {
+    color: inherit;
+    font-size: var(--ds-type-title-auth-size);
+    font-weight: var(--ds-type-title-auth-weight);
+    line-height: var(--ds-type-title-auth-leading);
+    letter-spacing: var(--ds-type-title-auth-tracking);
+    text-wrap: balance;
+  }
+
+  .ds-auth-subtitle {
+    margin-top: 0.5rem;
+    color: var(--ds-subtle);
+  }
+
+  .ds-auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .ds-auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--ds-subtle);
+    font-size: 0.8125rem;
+  }
+
+  .ds-auth-divider::before,
+  .ds-auth-divider::after {
+    content: "";
+    flex: 1;
+    height: var(--ds-border-hairline);
+    background: var(--color-base-300);
+  }
+
+  .ds-auth-note {
+    margin-top: 1.25rem;
+    color: var(--ds-subtle);
+    font-size: 0.875rem;
+  }
+
+  .ds-auth-note a {
+    color: var(--ds-quiet);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  /* Centered card variant (no brand panel): sign-in on a plain surface. */
+  .ds-auth.is-centered {
+    place-items: center;
+    background: var(--color-base-200);
+    padding: 1.5rem;
+  }
+
+  .ds-auth.is-centered .ds-auth-main {
+    width: 100%;
+    max-width: calc(var(--ds-size-auth-panel) + 4rem);
+    padding: 2rem 1.5rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    background: var(--color-base-100);
+    box-shadow: var(--ds-shadow-menu);
+  }
+
+  .ds-auth.is-centered .ds-auth-hero {
+    display: none;
+  }
+
+  /* Embedded in a card or preview: no full-height page. */
+  .ds-auth.is-embedded {
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+  }
+
+  /* Hero on the right instead of the left. */
+  .ds-auth.is-reverse .ds-auth-hero {
+    order: 2;
+  }
+
+  @media (min-width: 640px) {
+    .ds-auth-main {
+      padding-inline: 2.5rem;
+    }
+
+    .ds-auth.is-centered .ds-auth-main {
+      padding: 2.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .ds-shell {
+      --ds-main-pad-x: 2rem;
+      grid-template-columns: var(--ds-shell-sidebar) minmax(0, 1fr);
+      transition: grid-template-columns var(--ds-duration-layout) var(--ds-ease-emphasized);
+    }
+
+    .ds-shell:is([data-collapsed="true"], :root[data-ds-sidebar-collapsed="true"] .ds-shell:not(.is-embedded)) {
+      --ds-shell-sidebar: var(--ds-size-sidebar-rail);
+    }
+
+    .ds-sidebar,
+    .ds-shell.is-embedded .ds-sidebar {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      transform: none;
+      visibility: visible;
+      overflow: visible;
+      transition: none;
+    }
+
+    .ds-shell.is-embedded .ds-sidebar {
+      position: relative;
+    }
+
+    .ds-shell.is-embedded .ds-shell-main {
+      grid-column: 2;
+    }
+
+    .ds-shell-scrim,
+    .ds-nav-toggle {
+      display: none;
+    }
+
+    .ds-sidebar-collapse {
+      display: grid;
+    }
+
+    .ds-auth {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    }
+
+    .ds-auth.is-centered {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ds-auth-hero {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .ds-auth.is-reverse {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+    }
+
+    /* Rail: icons only. Labels fade (the row keeps its geometry, the sidebar clips it); every link keeps aria-label. */
+    .ds-shell:is([data-collapsed="true"], :root[data-ds-sidebar-collapsed="true"] .ds-shell:not(.is-embedded)) {
+      & .ds-sidebar {
+        overflow: visible;
+      }
+
+      & .ds-sidebar-head {
+        padding-inline: var(--ds-rail-pad);
+      }
+
+      & .ds-brand {
+        flex: 0 0 0;
+        padding: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      & .ds-sidebar-collapse {
+        margin-inline: auto;
+      }
+
+      & .ds-sidebar-collapse > svg {
+        transform: rotate(180deg);
+      }
+
+      & .ds-sidebar-collapse:dir(rtl) > svg {
+        transform: rotate(180deg);
+      }
+
+      & .ds-nav-link > span:not([class]),
+      & .ds-nav-group-toggle > span,
+      & .ds-nav-group-toggle > svg,
+      & .ds-sidebar-switcher__text,
+      & .ds-sidebar-switcher > svg:last-child,
+      & .ds-sidebar-search > :not(svg),
+      & .ds-sidebar-account .ds-account-text,
+      & [data-ds-full] {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      & .ds-nav-group-toggle {
+        min-height: 0;
+        height: 1px;
+        margin-block: 0.5rem;
+        padding: 0;
+        background: var(--ds-sidebar-line);
+        pointer-events: none;
+      }
+
+      & .ds-nav-panel {
+        grid-template-rows: 1fr;
+        visibility: visible;
+      }
+
+      & .ds-nav-badge:not(.is-dot) {
+        position: absolute;
+        inset-block-start: 0.25rem;
+        inset-inline-end: 0.25rem;
+        min-width: 0.625rem;
+        width: 0.625rem;
+        height: 0.625rem;
+        padding: 0;
+        font-size: 0;
+        box-shadow: 0 0 0 2px var(--ds-sidebar-bg);
+      }
+
+      & .ds-nav-link:is([aria-current="page"], [aria-current="true"], .is-active)::before {
+        inset-inline-start: calc(var(--ds-rail-pad) * -1 + 0.125rem);
+      }
+
+      & .ds-sidebar-account .ds-account-panel {
+        inset-block-end: 0;
+        inset-inline: calc(100% + 0.5rem) auto;
+        margin: 0;
+      }
+    }
+
+    .ds-shell:not(:is([data-collapsed="true"], :root[data-ds-sidebar-collapsed="true"] .ds-shell:not(.is-embedded))) [data-ds-short] {
+      display: none;
+    }
+  }
+
+  @media (max-width: 1023.98px) {
+    [data-ds-short] {
+      display: none;
+    }
+  }
+
+  @media (max-width: 1180px) {
+    .ds-toolbar:not([role="toolbar"]) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ds-toolbar:not([role="toolbar"]) .ds-actions {
+      max-width: 100%;
+    }
+  }
+
+  @media (pointer: coarse) {
+    .ds-toolbar__item,
+    .ds-sidebar-search {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .ds-topbar {
+      gap: 0.5rem;
+    }
+
+    .ds-topbar-search,
+    .ds-scope-chip {
+      display: none;
+    }
+
+    .ds-account > summary > span:not(.ds-account-avatar) {
+      display: none;
+    }
+
+    .ds-page-header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .ds-page-header__actions {
+      justify-content: flex-start;
+      margin-inline-start: 0;
+    }
+
+    .ds-toolbar:not([role="toolbar"]) .ds-actions {
+      width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-sidebar,
+    .ds-shell-scrim,
+    .ds-nav-panel,
+    .ds-rail-tip {
+      transition-property: opacity, visibility, grid-template-rows;
+    }
+
+    .ds-sidebar {
+      transition-property: visibility;
+    }
+
+    .ds-page,
+    .ds-auth-panel,
+    .ds-account-panel {
+      animation: none;
+    }
+
+    .ds-toolbar__item:active:not(:disabled, [aria-disabled="true"]) {
+      transform: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-nav-link:is([aria-current="page"], [aria-current="true"], .is-active) {
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+
+    .ds-toolbar__item:is([aria-pressed="true"], [aria-checked="true"]) {
+      outline: 2px solid Highlight;
+    }
+
+    .ds-topbar::after,
+    .ds-page-header.is-sticky::after {
+      background: CanvasText;
+    }
+  }
+}
+
+@keyframes ds-edge-fade {
+  0% { --ds-fade-top: 0px; --ds-fade-bottom: 1.5rem; }
+  4% { --ds-fade-top: 1.5rem; --ds-fade-bottom: 1.5rem; }
+  96% { --ds-fade-top: 1.5rem; --ds-fade-bottom: 1.5rem; }
+  100% { --ds-fade-top: 1.5rem; --ds-fade-bottom: 0px; }
+}
+
+@property --ds-fade-top {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --ds-fade-bottom {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+/* Rules that must beat daisyUI (utilities layer). */
+@layer utilities {
+  .ds-auth-form .btn-primary {
+    width: 100%;
+  }
+}

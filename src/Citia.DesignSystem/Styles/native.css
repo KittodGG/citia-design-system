@@ -1,0 +1,1538 @@
+/* Native HTML elements in the design-system look, without classes. Owner: batch A12. Contract: docs/_contributing.md.
+
+   Layer: base (after Tailwind preflight). Components and daisyUI always win (later layers), whatever their specificity.
+   Text-level elements (headings, inline semantics, code, quotes, rules, media) are styled everywhere.
+   Structural and interactive elements (lists, links, tables, forms, details, dialog) are styled only when "bare":
+     - the element has no component class: no ds-*, no BEM part (__), no daisyUI class (.btn, .input, .table, …);
+     - it is not inside a component that draws it (.input, .join, .menu, .swap, .collapse, *-input, *combobox*, …;
+       buttons also skip [role=group|toolbar|tablist|menu|menubar|listbox|radiogroup] containers);
+     - it is not inside .ds-unstyled / [data-ds-unstyled] (opt-out).
+   Margins stay at zero (components own spacing); wrap long-form content in .ds-prose for vertical rhythm. */
+
+@layer base {
+  /* ------------------------------------------------------------------ page */
+  :root {
+    accent-color: var(--color-primary);
+  }
+
+  /* Higher than daisyUI's :root scrollbar rule (same layer, emitted later). */
+  html:root {
+    scrollbar-color: color-mix(in oklab, var(--color-base-content) 32%, transparent) transparent;
+  }
+
+  /* Inner scroll areas use the thin bar; the page keeps the full-size bar. */
+  :where(body *) {
+    scrollbar-width: thin;
+  }
+
+  :where(input, textarea, [contenteditable]:not([contenteditable="false"])) {
+    caret-color: var(--color-primary);
+  }
+
+  [inert] {
+    user-select: none;
+  }
+
+  /* ------------------------------------------------------------------ headings and text */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--color-base-content);
+    font-family: var(--ds-font-sans);
+  }
+
+  h1 {
+    font-size: var(--ds-type-title-1-size);
+    font-weight: var(--ds-type-title-1-weight);
+    line-height: var(--ds-type-title-1-leading);
+    letter-spacing: var(--ds-type-title-1-tracking);
+  }
+
+  h2 {
+    font-size: var(--ds-type-title-2-size);
+    font-weight: var(--ds-type-title-2-weight);
+    line-height: var(--ds-type-title-2-leading);
+    letter-spacing: var(--ds-type-title-2-tracking);
+  }
+
+  h3 {
+    font-size: var(--ds-type-title-3-size);
+    font-weight: var(--ds-type-title-3-weight);
+    line-height: var(--ds-type-title-3-leading);
+    letter-spacing: var(--ds-type-title-3-tracking);
+  }
+
+  h4 {
+    font-size: var(--ds-type-headline-size);
+    font-weight: var(--ds-type-headline-weight);
+    line-height: var(--ds-type-headline-leading);
+    letter-spacing: var(--ds-type-headline-tracking);
+  }
+
+  h5 {
+    font-size: var(--ds-type-section-size);
+    font-weight: var(--ds-type-section-weight);
+    line-height: var(--ds-type-section-leading);
+    letter-spacing: var(--ds-type-section-tracking);
+  }
+
+  h6 {
+    font-size: var(--ds-type-card-title-size);
+    font-weight: var(--ds-type-card-title-weight);
+    line-height: var(--ds-type-card-title-leading);
+    letter-spacing: var(--ds-type-card-title-tracking);
+  }
+
+  b,
+  strong {
+    font-weight: var(--ds-weight-strong);
+  }
+
+  :is(h1, h2, h3, h4, h5, h6) :is(b, strong) {
+    font-weight: var(--ds-weight-heavy);
+  }
+
+  em,
+  i,
+  cite,
+  var {
+    font-style: italic;
+    font-synthesis-style: auto;
+  }
+
+  small {
+    font-size: 0.8125em;
+    line-height: var(--ds-type-footnote-leading);
+  }
+
+  mark {
+    padding-inline: 0.125em;
+    border-radius: var(--ds-radius-xs);
+    background-color: var(--ds-warning-soft);
+    color: inherit;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  abbr[title] {
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: var(--ds-subtle);
+    text-underline-offset: 0.2em;
+    cursor: help;
+  }
+
+  del,
+  s {
+    color: var(--ds-muted);
+    text-decoration-line: line-through;
+    text-decoration-color: color-mix(in oklab, currentColor 70%, transparent);
+  }
+
+  del {
+    background-color: var(--ds-error-soft);
+    text-decoration-color: var(--ds-error-text);
+  }
+
+  ins {
+    background-color: var(--ds-success-soft);
+    text-decoration-line: underline;
+    text-decoration-color: var(--ds-success-text);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  u {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--ds-subtle);
+    text-underline-offset: 0.2em;
+  }
+
+  q {
+    quotes: "\201C" "\201D" "\2018" "\2019";
+  }
+
+  cite {
+    color: var(--ds-subtle);
+  }
+
+  dfn {
+    font-style: normal;
+    font-weight: var(--ds-weight-strong);
+  }
+
+  var {
+    font-family: var(--ds-font-mono);
+    font-size: 0.9em;
+  }
+
+  address {
+    font-style: normal;
+  }
+
+  output {
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  bdi {
+    unicode-bidi: isolate;
+  }
+
+  /* ------------------------------------------------------------------ links */
+  /* Bare links in running text: link colour plus a 1px underline (never colour alone). Navigation and menus are skipped. */
+  a[href]:not([class]):not(nav *, menu *, [role="navigation"] *, [role="menu"] *, [role="menubar"] *, [role="tablist"] *, [role="toolbar"] *, [role="listbox"] *, [role="tree"] *, .menu *, .navbar *, .dock *, .tabs *, .breadcrumbs *, .steps *, .join *, .dropdown-content *, .ds-unstyled *, [data-ds-unstyled] *) {
+    border-radius: var(--ds-radius-xs);
+    color: var(--ds-link);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in oklab, currentColor 55%, transparent);
+    text-underline-offset: 0.2em;
+    transition: color var(--ds-duration-fast) var(--ds-ease-standard), text-decoration-color var(--ds-duration-fast) var(--ds-ease-standard);
+
+    @media (hover: hover) {
+      &:hover {
+        text-decoration-color: currentColor;
+        text-decoration-thickness: 2px;
+      }
+    }
+
+    &:active {
+      color: color-mix(in oklab, var(--ds-link) 78%, var(--color-base-content));
+    }
+
+    &:focus-visible {
+      outline: var(--ds-border-focus) solid var(--ds-focus);
+      outline-offset: 2px;
+      text-decoration-color: currentColor;
+    }
+
+    &[aria-disabled="true"] {
+      color: var(--ds-muted);
+      text-decoration-style: dotted;
+      cursor: not-allowed;
+    }
+  }
+
+  /* ------------------------------------------------------------------ lists */
+  :is(ul, ol):not([class], [role]):not(nav *, menu *, [role="navigation"] *, [role="menu"] *, [role="menubar"] *, [role="tablist"] *, [role="listbox"] *, [role="tree"] *, .menu *, .ds-unstyled *, [data-ds-unstyled] *) {
+    padding-inline-start: 1.375rem;
+
+    & > li + li {
+      margin-block-start: var(--ds-space-1);
+    }
+
+    & > li > :is(ul, ol) {
+      margin-block-start: var(--ds-space-1);
+    }
+
+    & > li::marker {
+      color: var(--ds-subtle);
+    }
+  }
+
+  ul:not([class], [role]):not(nav *, menu *, [role="navigation"] *, [role="menu"] *, [role="menubar"] *, [role="tablist"] *, [role="listbox"] *, [role="tree"] *, .menu *, .ds-unstyled *, [data-ds-unstyled] *) {
+    list-style-type: disc;
+
+    & ul:not([class]) {
+      list-style-type: circle;
+    }
+  }
+
+  ol:not([class], [role]):not(nav *, menu *, [role="navigation"] *, [role="menu"] *, [role="menubar"] *, [role="tablist"] *, [role="listbox"] *, [role="tree"] *, .menu *, .ds-unstyled *, [data-ds-unstyled] *) {
+    list-style-type: decimal;
+    padding-inline-start: 1.625rem;
+
+    & > li::marker {
+      font-variant-numeric: tabular-nums;
+      font-weight: var(--ds-weight-semibold);
+    }
+
+    & ol:not([class]) {
+      list-style-type: lower-alpha;
+    }
+  }
+
+  dl:not([class*="ds-"], [class*="__"]):not(.ds-unstyled *, [data-ds-unstyled] *) {
+    & > dt,
+    & > div > dt {
+      color: var(--ds-subtle);
+      font-size: var(--ds-type-footnote-size);
+      font-weight: var(--ds-weight-semibold);
+      line-height: var(--ds-type-footnote-leading);
+    }
+
+    & > dd,
+    & > div > dd {
+      margin-inline-start: 0;
+    }
+
+    & > dd + dt,
+    & > div + div {
+      margin-block-start: var(--ds-space-3);
+    }
+  }
+
+  /* ------------------------------------------------------------------ quotes, figures, rules */
+  blockquote:not([class*="ds-"], [class*="__"]) {
+    padding-inline-start: var(--ds-space-4);
+    border-inline-start: var(--ds-border-accent) solid var(--color-base-300);
+    color: var(--ds-subtle);
+
+    & :is(footer, cite) {
+      color: var(--ds-muted);
+      font-size: var(--ds-type-footnote-size);
+      font-style: normal;
+    }
+  }
+
+  figcaption:not([class*="ds-"], [class*="__"]) {
+    margin-block-start: var(--ds-space-2);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+  }
+
+  figure > figcaption:first-child:not([class*="ds-"], [class*="__"]) {
+    margin-block: 0 var(--ds-space-2);
+  }
+
+  hr {
+    block-size: 0;
+    border: 0;
+    border-block-start: var(--ds-border-hairline) solid var(--color-base-300);
+    color: var(--color-base-300);
+  }
+
+  /* ------------------------------------------------------------------ code */
+  code:not([class*="ds-"], [class*="__"], [class*="language-"]):not(pre *, .mockup-code *, .ds-unstyled *) {
+    padding: 0.0625em 0.375em;
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-sm);
+    background-color: color-mix(in oklab, var(--color-base-content) 6%, transparent);
+    font-size: 0.875em;
+    overflow-wrap: anywhere;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+
+  pre:not([class*="ds-"], [class*="__"], [class*="code"]):not([class*="code"] > pre, [class*="mockup"] *, .ds-unstyled *) {
+    padding: var(--ds-space-4) var(--ds-space-5);
+    overflow: auto;
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+    background-color: color-mix(in oklab, var(--color-base-content) 4%, transparent);
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    tab-size: 2;
+    white-space: pre;
+
+    & code {
+      padding: 0;
+      border: 0;
+      background: none;
+      font-size: inherit;
+    }
+
+    &:focus-visible {
+      outline-offset: -2px;
+    }
+  }
+
+  samp {
+    font-size: 0.875em;
+  }
+
+  kbd:not([class*="ds-"], [class*="__"], .kbd) {
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 1.5rem;
+    padding: 0 var(--ds-space-1-5);
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-block-end-width: 2px;
+    border-radius: var(--ds-radius-sm);
+    background-color: var(--color-base-100);
+    color: var(--color-base-content);
+    font-size: 0.75rem;
+    font-weight: var(--ds-weight-semibold);
+    line-height: 1.5;
+    white-space: nowrap;
+
+    /* <kbd><kbd>Ctrl</kbd>+<kbd>K</kbd></kbd>: the outer element is the sequence, not a key. */
+    &:has(kbd) {
+      display: inline;
+      padding: 0;
+      border: 0;
+      background: none;
+      font-family: inherit;
+      font-weight: inherit;
+    }
+  }
+
+  /* ------------------------------------------------------------------ media */
+  img {
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+    font-style: italic;
+  }
+
+  :is(img, video, canvas, picture) {
+    max-inline-size: 100%;
+  }
+
+  video {
+    background-color: var(--color-base-200);
+  }
+
+  audio {
+    max-inline-size: 100%;
+    color-scheme: inherit;
+  }
+
+  audio:not([controls]) {
+    display: none;
+  }
+
+  iframe {
+    border: 0;
+    color-scheme: normal;
+  }
+
+  :is(video, audio, iframe):focus-visible {
+    outline-offset: 2px;
+  }
+
+  svg:not([fill]):not([class]) {
+    fill: currentColor;
+  }
+
+  /* ------------------------------------------------------------------ tables (bare <table>; .table and .ds-table belong to A6) */
+  table:not([class*="ds-"], [class*="__"], .table):not(.ds-unstyled *, [data-ds-unstyled] *) {
+    inline-size: 100%;
+    border-collapse: collapse;
+    font-size: var(--ds-type-callout-size);
+    line-height: var(--ds-type-callout-leading);
+
+    & caption {
+      padding-block-end: var(--ds-space-2);
+      caption-side: top;
+      color: var(--ds-subtle);
+      font-size: var(--ds-type-footnote-size);
+      text-align: start;
+    }
+
+    & :is(th, td) {
+      padding: var(--ds-space-2-5) var(--ds-space-3);
+      border-block-end: var(--ds-border-hairline) solid var(--color-base-300);
+      text-align: start;
+      vertical-align: top;
+    }
+
+    & thead th {
+      color: var(--ds-subtle);
+      font-size: var(--ds-type-table-head-size);
+      font-weight: var(--ds-type-table-head-weight);
+      line-height: var(--ds-type-table-head-leading);
+      letter-spacing: var(--ds-type-table-head-tracking);
+      text-transform: uppercase;
+      vertical-align: bottom;
+      white-space: nowrap;
+      border-block-end-color: var(--ds-control-border);
+    }
+
+    & tbody th {
+      font-weight: var(--ds-weight-semibold);
+    }
+
+    & tfoot :is(th, td) {
+      border-block-start: var(--ds-border-hairline) solid var(--ds-control-border);
+      border-block-end: 0;
+      font-weight: var(--ds-weight-semibold);
+    }
+
+    & :is(th, td):is([data-type="number"], .ds-num) {
+      text-align: end;
+    }
+
+    & tbody tr {
+      transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+    }
+
+    @media (hover: hover) {
+      & tbody tr:hover {
+        background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      }
+    }
+
+    & tbody tr:is([aria-selected="true"], [aria-current]:not([aria-current="false"])) {
+      background-color: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    }
+  }
+
+  /* ------------------------------------------------------------------ details / summary */
+  details:not([class*="ds-"], [class*="__"], .collapse, .dropdown):not(.menu *, nav *, [role="menu"] *, .ds-unstyled *, [data-ds-unstyled] *) {
+    interpolate-size: allow-keywords;
+
+    & > summary:not([class*="ds-"], [class*="__"], .collapse-title) {
+      display: flex;
+      align-items: center;
+      gap: var(--ds-space-2);
+      min-block-size: var(--ds-size-target);
+      border-radius: var(--ds-radius-md);
+      color: var(--color-base-content);
+      font-weight: var(--ds-weight-semibold);
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+      transition: color var(--ds-duration-fast) var(--ds-ease-standard);
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      /* Chevron at the end; turns 180° when open. */
+      &::after {
+        content: "";
+        flex: none;
+        inline-size: 0.5rem;
+        block-size: 0.5rem;
+        margin-inline: auto var(--ds-space-1);
+        border: solid var(--ds-subtle);
+        border-width: 0 1.5px 1.5px 0;
+        transform: translateY(-25%) rotate(45deg);
+        transition: transform var(--ds-duration-base) var(--ds-ease-emphasized);
+      }
+
+      @media (hover: hover) {
+        &:hover {
+          color: var(--ds-quiet);
+        }
+      }
+
+      &:focus-visible {
+        outline-offset: 2px;
+      }
+    }
+
+    &[open] > summary:not([class*="ds-"], [class*="__"], .collapse-title)::after {
+      transform: translateY(25%) rotate(225deg);
+    }
+
+    &:has(> summary[aria-disabled="true"]) > summary {
+      opacity: var(--ds-opacity-disabled);
+      cursor: not-allowed;
+    }
+  }
+
+  /* Animated reveal where ::details-content exists (Chromium 131+); elsewhere details open instantly. */
+  @supports selector(::details-content) {
+    details:not([class*="ds-"], [class*="__"], .collapse, .dropdown):not(.menu *, nav *, [role="menu"] *, .ds-unstyled *, [data-ds-unstyled] *) {
+      &::details-content {
+        block-size: 0;
+        overflow: clip;
+        opacity: 0;
+        transition:
+          block-size var(--ds-duration-exit) var(--ds-ease-exit),
+          opacity var(--ds-duration-exit) var(--ds-ease-exit),
+          content-visibility var(--ds-duration-exit) var(--ds-ease-exit) allow-discrete;
+      }
+
+      &[open]::details-content {
+        block-size: auto;
+        opacity: 1;
+        transition-duration: var(--ds-duration-layout), var(--ds-duration-enter), var(--ds-duration-layout);
+        transition-timing-function: var(--ds-ease-emphasized);
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------ dialog and popover */
+  dialog {
+    color: var(--color-base-content);
+  }
+
+  dialog::backdrop {
+    background-color: var(--ds-scrim);
+  }
+
+  dialog:not([class*="ds-"], [class*="__"], .modal) {
+    max-inline-size: min(var(--ds-size-dialog-sm), calc(100vw - 2 * var(--ds-space-4)));
+    max-block-size: calc(100dvh - 2 * var(--ds-space-4));
+    padding: var(--ds-space-6);
+    overflow: auto;
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    background-color: var(--color-base-100);
+    box-shadow: var(--ds-shadow-overlay);
+    opacity: 0;
+    scale: 0.98;
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      scale var(--ds-duration-exit) var(--ds-ease-exit),
+      overlay var(--ds-duration-exit) var(--ds-ease-exit) allow-discrete,
+      display var(--ds-duration-exit) var(--ds-ease-exit) allow-discrete;
+
+    &[open] {
+      opacity: 1;
+      scale: 1;
+      transition-duration: var(--ds-duration-base);
+      transition-timing-function: var(--ds-ease-emphasized);
+    }
+
+    @starting-style {
+      &[open] {
+        opacity: 0;
+        scale: 0.98;
+      }
+    }
+
+    &::backdrop {
+      opacity: 0;
+      transition:
+        opacity var(--ds-duration-exit) var(--ds-ease-exit),
+        overlay var(--ds-duration-exit) allow-discrete,
+        display var(--ds-duration-exit) allow-discrete;
+    }
+
+    &[open]::backdrop {
+      opacity: 1;
+      transition-duration: var(--ds-duration-base);
+    }
+
+    @starting-style {
+      &[open]::backdrop {
+        opacity: 0;
+      }
+    }
+  }
+
+  [popover]:not([class]) {
+    padding: var(--ds-space-3) var(--ds-space-4);
+    border: var(--ds-border-hairline) solid var(--ds-popover-border);
+    border-radius: var(--ds-radius-box);
+    background-color: var(--ds-popover);
+    color: var(--color-base-content);
+    box-shadow: var(--ds-shadow-panel);
+  }
+
+  /* ------------------------------------------------------------------ labels, fieldsets, output */
+  label:not([class]):has(> input:is([type="checkbox"], [type="radio"])) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-2);
+    min-block-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  label:not([class])[for]:not(:is([type="checkbox"], [type="radio"]) + label) {
+    font-size: var(--ds-type-label-size);
+    font-weight: var(--ds-type-label-weight);
+    line-height: var(--ds-type-label-leading);
+  }
+
+  label:not([class]):has(:disabled) {
+    color: var(--ds-muted);
+    cursor: not-allowed;
+  }
+
+  fieldset:not([class*="ds-"], [class*="__"], .fieldset):not(.ds-unstyled *, [data-ds-unstyled] *) {
+    min-inline-size: 0;
+    padding: var(--ds-space-3) var(--ds-space-5) var(--ds-space-5);
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+
+    & > legend {
+      padding-inline: var(--ds-space-1-5);
+      margin-inline-start: calc(var(--ds-space-1-5) * -1);
+      font-size: var(--ds-type-section-size);
+      font-weight: var(--ds-type-section-weight);
+      line-height: var(--ds-type-section-leading);
+    }
+
+    &:disabled > legend {
+      color: var(--ds-muted);
+    }
+  }
+
+  /* ------------------------------------------------------------------ text fields, select, textarea */
+  :is(input:is(:not([type]), [type="text"], [type="email"], [type="url"], [type="tel"], [type="password"], [type="search"], [type="number"], [type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]), select, textarea):not([class*="ds-"], [class*="__"], .input, .select, .textarea, .file-input, .join-item):not(:is(.ds-unstyled, [data-ds-unstyled], .input, .select, .textarea, .file-input, .join, .filter, .swap, .collapse, .tabs, .rating, .menu, .dock, .navbar, .dropdown-content, .modal-backdrop, .mockup-browser, [class*="-input"], [class*="combobox"], [class*="picker"], [class*="segmented"], [class*="otp"]) *) {
+    min-block-size: var(--ds-size-target);
+    max-inline-size: 100%;
+    padding: var(--ds-space-2) var(--ds-space-3);
+    border: var(--ds-border-hairline) solid var(--ds-control-border);
+    border-radius: var(--radius-field);
+    background-color: var(--color-base-100);
+    color: var(--color-base-content);
+    font-size: 1rem;
+    line-height: 1.5;
+    vertical-align: middle;
+    transition:
+      border-color var(--ds-duration-fast) var(--ds-ease-standard),
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      outline-color var(--ds-duration-fast) var(--ds-ease-standard);
+
+    &::placeholder {
+      color: var(--ds-subtle);
+      opacity: 1;
+    }
+
+    @media (hover: hover) {
+      &:hover:not(:disabled, [readonly], :focus-visible) {
+        border-color: color-mix(in oklab, var(--ds-control-border) 55%, var(--color-base-content));
+      }
+    }
+
+    &:focus-visible {
+      border-color: var(--color-primary);
+      outline: var(--ds-border-focus) solid var(--ds-focus);
+      outline-offset: 2px;
+    }
+
+    &:is(:user-invalid, [aria-invalid="true"], .input-validation-error) {
+      border-color: var(--color-error);
+    }
+
+    &[data-state="success"] {
+      border-color: var(--color-success);
+    }
+
+    &[data-state="warning"] {
+      border-color: var(--color-warning);
+    }
+
+    &[readonly] {
+      border-color: var(--color-base-300);
+      background-color: var(--color-base-200);
+    }
+
+    &:disabled {
+      opacity: var(--ds-opacity-disabled);
+      cursor: not-allowed;
+      background-color: var(--color-base-200);
+    }
+
+    &[aria-busy="true"] {
+      cursor: progress;
+    }
+
+    &:autofill {
+      box-shadow: inset 0 0 0 100vmax var(--color-base-100);
+      -webkit-text-fill-color: var(--color-base-content);
+    }
+
+    /* Textarea grows with its content (field-sizing), between 3 lines and 24rem, then scrolls. */
+    &:is(textarea) {
+      min-block-size: calc(3lh + 2 * var(--ds-space-2) + 2px);
+      max-block-size: 24rem;
+      field-sizing: content;
+      resize: vertical;
+    }
+  }
+
+  /* Vendor pseudo-elements in their own rules: an unknown pseudo would drop the whole rule in other engines. */
+  :is(input:is(:not([type]), [type="text"], [type="email"], [type="url"], [type="tel"], [type="password"], [type="search"], [type="number"], [type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]), select, textarea):not([class*="ds-"], [class*="__"], .input, .select, .textarea, .file-input, .join-item):not(:is(.ds-unstyled, [data-ds-unstyled], .input, .select, .textarea, .file-input, .join, .filter, .swap, .collapse, .tabs, .rating, .menu, .dock, .navbar, .dropdown-content, .modal-backdrop, .mockup-browser, [class*="-input"], [class*="combobox"], [class*="picker"], [class*="segmented"], [class*="otp"]) *):-webkit-autofill {
+    box-shadow: inset 0 0 0 100vmax var(--color-base-100);
+    -webkit-text-fill-color: var(--color-base-content);
+    caret-color: var(--color-primary);
+  }
+
+  /* Search: the clear button is a 16px cross in the text colour, 44px reachable through the field padding. */
+  input[type="search"]::-webkit-search-cancel-button {
+    appearance: none;
+    inline-size: 1rem;
+    block-size: 1rem;
+    margin-inline-start: var(--ds-space-2);
+    background-color: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E") center / contain no-repeat;
+    opacity: 0.55;
+    cursor: pointer;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  input[type="search"]::-webkit-search-cancel-button:hover {
+    opacity: 1;
+  }
+
+  /* Number: keep the spin buttons (keyboard arrows also work), quieter at rest. */
+  input[type="number"]::-webkit-inner-spin-button {
+    margin-inline-start: var(--ds-space-2);
+    opacity: 0.6;
+    cursor: pointer;
+  }
+
+  input[type="number"]:is(:hover, :focus-visible)::-webkit-inner-spin-button {
+    opacity: 1;
+  }
+
+  /* Date and time family: themed picker button and segment highlight. */
+  input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"])::-webkit-calendar-picker-indicator {
+    margin-inline-start: var(--ds-space-2);
+    padding: var(--ds-space-1);
+    border-radius: var(--ds-radius-sm);
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard), background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"])::-webkit-calendar-picker-indicator:hover {
+    background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    opacity: 1;
+  }
+
+  input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"])::-webkit-datetime-edit-text {
+    padding-inline: 0.125em;
+    color: var(--ds-subtle);
+  }
+
+  input::-webkit-datetime-edit-day-field:focus,
+  input::-webkit-datetime-edit-month-field:focus,
+  input::-webkit-datetime-edit-year-field:focus,
+  input::-webkit-datetime-edit-hour-field:focus,
+  input::-webkit-datetime-edit-minute-field:focus,
+  input::-webkit-datetime-edit-second-field:focus,
+  input::-webkit-datetime-edit-millisecond-field:focus,
+  input::-webkit-datetime-edit-meridiem-field:focus,
+  input::-webkit-datetime-edit-week-field:focus {
+    border-radius: var(--ds-radius-xs);
+    background-color: color-mix(in oklab, var(--color-primary) 20%, transparent);
+    color: var(--color-base-content);
+  }
+
+  /* Select: closed state shares the field look. Multiple and size>1 render as a listbox. */
+  select:not([class*="ds-"], [class*="__"], .select):not(:is(.ds-unstyled, [data-ds-unstyled], .select, .join, .filter, [class*="-input"], [class*="combobox"], [class*="picker"]) *) {
+    cursor: pointer;
+
+    &:is([multiple], [size]:not([size="1"])) {
+      padding: var(--ds-space-1);
+      cursor: default;
+
+      & option {
+        padding: var(--ds-space-1-5) var(--ds-space-2);
+        border-radius: var(--ds-radius-sm);
+      }
+
+      & option:checked {
+        background: linear-gradient(color-mix(in oklab, var(--color-primary) 18%, var(--color-base-100)), color-mix(in oklab, var(--color-primary) 18%, var(--color-base-100)));
+        color: var(--color-base-content);
+        font-weight: var(--ds-weight-semibold);
+      }
+    }
+
+    & optgroup {
+      color: var(--ds-subtle);
+      font-size: var(--ds-type-footnote-size);
+      font-weight: var(--ds-weight-bold);
+    }
+
+    & optgroup option {
+      color: var(--color-base-content);
+      font-size: 1rem;
+      font-weight: var(--ds-weight-regular);
+    }
+
+    & option:disabled {
+      color: var(--ds-muted);
+    }
+
+    /* Customizable select (Chromium 135+): themed picker that opens from the field. Other engines keep the OS picker. */
+    @supports (appearance: base-select) {
+      &:not([multiple], [size]:not([size="1"])) {
+        appearance: base-select;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--ds-space-2);
+
+        &::picker-icon {
+          content: "";
+          inline-size: 1rem;
+          block-size: 1rem;
+          margin-inline-start: auto;
+          background-color: var(--ds-subtle);
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+          transition: rotate var(--ds-duration-base) var(--ds-ease-emphasized);
+        }
+
+        &:open::picker-icon {
+          rotate: 180deg;
+        }
+
+        &::picker(select) {
+          appearance: base-select;
+          min-inline-size: anchor-size(inline);
+          max-block-size: min(20rem, 50dvh);
+          margin-block: var(--ds-space-1);
+          padding: var(--ds-space-1);
+          border: var(--ds-border-hairline) solid var(--ds-popover-border);
+          border-radius: var(--ds-radius-box);
+          background-color: var(--ds-popover);
+          color: var(--color-base-content);
+          box-shadow: var(--ds-shadow-panel);
+          opacity: 0;
+          translate: 0 calc(var(--ds-enter-offset) * -1);
+          transition:
+            opacity var(--ds-duration-exit) var(--ds-ease-exit),
+            translate var(--ds-duration-exit) var(--ds-ease-exit),
+            overlay var(--ds-duration-exit) allow-discrete,
+            display var(--ds-duration-exit) allow-discrete;
+        }
+
+        &:open::picker(select) {
+          opacity: 1;
+          translate: 0 0;
+          transition-duration: var(--ds-duration-quick);
+          transition-timing-function: var(--ds-ease-emphasized);
+        }
+
+        @starting-style {
+          &:open::picker(select) {
+            opacity: 0;
+            translate: 0 calc(var(--ds-enter-offset) * -1);
+          }
+        }
+
+        & option {
+          display: flex;
+          align-items: center;
+          gap: var(--ds-space-2);
+          min-block-size: var(--ds-size-target-compact);
+          padding: var(--ds-space-1-5) var(--ds-space-3);
+          border-radius: var(--ds-radius-md);
+          cursor: pointer;
+          transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+        }
+
+        & option::checkmark {
+          content: "";
+          order: 1;
+          inline-size: 1rem;
+          block-size: 1rem;
+          margin-inline-start: auto;
+          background-color: var(--color-primary);
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5L20 7'/%3E%3C/svg%3E") center / contain no-repeat;
+        }
+
+        & option:is(:hover, :focus-visible) {
+          background-color: var(--ds-popover-hover);
+          outline: none;
+        }
+
+        & option:focus-visible {
+          box-shadow: inset 0 0 0 var(--ds-border-focus) var(--ds-focus);
+        }
+
+        & option:checked {
+          background-color: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+          font-weight: var(--ds-weight-semibold);
+        }
+
+        & option:disabled {
+          opacity: var(--ds-opacity-disabled);
+          cursor: not-allowed;
+        }
+
+        & optgroup {
+          padding-block-start: var(--ds-space-1);
+        }
+
+        & optgroup > legend {
+          padding: var(--ds-space-2) var(--ds-space-3) var(--ds-space-1);
+          color: var(--ds-quiet);
+          font-size: var(--ds-type-eyebrow-size);
+          font-weight: var(--ds-type-eyebrow-weight);
+          letter-spacing: var(--ds-type-eyebrow-tracking);
+          text-transform: uppercase;
+        }
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------ checkbox, radio, switch */
+  /* Glyphs are drawn with borders, so they survive forced colours. 18px box, 24px hit area (44px on touch). */
+  input:is([type="checkbox"], [type="radio"]):not([class*="ds-"], [class*="__"], .checkbox, .radio, .toggle, .mask, .tab, .btn, .drawer-toggle, .modal-toggle, .theme-controller, .filter-reset):not(:is(.ds-unstyled, [data-ds-unstyled], .swap, .collapse, .tabs, .rating, .filter, .menu, .dock, .dropdown, .join, [class*="segmented"], [class*="combobox"], [class*="picker"]) *) {
+    appearance: none;
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-content: center;
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+    margin: 0;
+    border: var(--ds-border-emphasis) solid var(--ds-control-border);
+    border-radius: var(--ds-radius-sm);
+    background-color: var(--color-base-100);
+    color: var(--color-primary-content);
+    vertical-align: -0.1875em;
+    cursor: pointer;
+    transition:
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      border-color var(--ds-duration-fast) var(--ds-ease-standard),
+      box-shadow var(--ds-duration-fast) var(--ds-ease-standard);
+
+    /* Check glyph. */
+    &::before {
+      content: "";
+      inline-size: 0.3125rem;
+      block-size: 0.625rem;
+      border: solid currentColor;
+      border-width: 0 2px 2px 0;
+      opacity: 0;
+      transform: translateY(-1px) rotate(45deg) scale(0.4);
+      transition: opacity var(--ds-duration-instant) var(--ds-ease-out), transform var(--ds-duration-instant) var(--ds-ease-out);
+    }
+
+    /* Hit area. */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: -0.25rem;
+    }
+
+    @media (pointer: coarse) {
+      &::after {
+        inset: calc((var(--ds-size-target) - 1.125rem) / -2);
+      }
+    }
+
+    &:checked {
+      border-color: var(--color-primary);
+      background-color: var(--color-primary);
+
+      &::before {
+        opacity: 1;
+        transform: translateY(-1px) rotate(45deg) scale(1);
+      }
+    }
+
+    &[type="checkbox"]:indeterminate {
+      border-color: var(--color-primary);
+      background-color: var(--color-primary);
+
+      &::before {
+        inline-size: 0.625rem;
+        block-size: 0;
+        border-width: 0 0 2px;
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    &[type="radio"] {
+      border-radius: var(--ds-radius-full);
+
+      &::before {
+        inline-size: 0;
+        block-size: 0;
+        border: 0.21875rem solid currentColor;
+        border-radius: var(--ds-radius-full);
+        transform: scale(0.4);
+      }
+
+      &:checked::before {
+        transform: scale(1);
+      }
+    }
+
+    @media (hover: hover) {
+      &:hover:not(:disabled) {
+        border-color: color-mix(in oklab, var(--ds-control-border) 55%, var(--color-base-content));
+        box-shadow: 0 0 0 0.375rem color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      }
+
+      &:is(:checked, :indeterminate):hover:not(:disabled) {
+        border-color: var(--color-primary);
+      }
+    }
+
+    &:active:not(:disabled) {
+      box-shadow: 0 0 0 0.375rem color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+    }
+
+    &:focus-visible {
+      outline: var(--ds-border-focus) solid var(--ds-focus);
+      outline-offset: 2px;
+    }
+
+    &:is(:user-invalid, [aria-invalid="true"], .input-validation-error) {
+      border-color: var(--color-error);
+    }
+
+    &:disabled {
+      opacity: var(--ds-opacity-disabled);
+      cursor: not-allowed;
+    }
+
+    &[aria-disabled="true"] {
+      opacity: var(--ds-opacity-disabled);
+      cursor: not-allowed;
+    }
+
+    /* Switch: <input type="checkbox" role="switch"> (and Safari's switch attribute). Thumb travels on the spring. */
+    &:is([role="switch"], [switch]) {
+      --_switch-travel: calc(2.375rem - 2 * var(--ds-border-emphasis) - 2 * 0.1875rem - 0.875rem);
+      justify-content: start;
+      inline-size: 2.375rem;
+      block-size: 1.375rem;
+      padding-inline: 0.1875rem;
+      border-radius: var(--ds-radius-full);
+      background-color: var(--color-base-100);
+
+      /* Off: outlined track with a control-border thumb (≥ 3:1 in both themes). On: primary track, light thumb. */
+      &::before {
+        inline-size: 0;
+        block-size: 0;
+        border: 0.4375rem solid var(--ds-control-border);
+        border-radius: var(--ds-radius-full);
+        box-shadow: var(--ds-shadow-xs);
+        opacity: 1;
+        transform: none;
+        transition: transform var(--ds-duration-spring) var(--ds-ease-spring), border-color var(--ds-duration-fast) var(--ds-ease-standard);
+      }
+
+      &:checked {
+        border-color: var(--color-primary);
+        background-color: var(--color-primary);
+      }
+
+      &:checked::before {
+        border-color: var(--color-primary-content);
+        transform: translateX(var(--_switch-travel));
+      }
+
+      &:checked:dir(rtl)::before {
+        transform: translateX(calc(var(--_switch-travel) * -1));
+      }
+
+      &:active:not(:disabled)::before {
+        transform: scale(var(--ds-press-scale));
+      }
+
+      &:checked:active:not(:disabled)::before {
+        transform: translateX(var(--_switch-travel)) scale(var(--ds-press-scale));
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------ range */
+  /* Fill follows --ds-range-fill (forms.js keeps it in sync); without JS the track is plain and the thumb shows the value. */
+  input[type="range"]:not([class*="ds-"], [class*="__"], .range):not(:is(.ds-unstyled, [data-ds-unstyled], .join, [class*="slider"]) *) {
+    appearance: none;
+    inline-size: 100%;
+    max-inline-size: 20rem;
+    block-size: 1.5rem;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    vertical-align: middle;
+
+    &::-webkit-slider-runnable-track {
+      block-size: 0.375rem;
+      border-radius: var(--ds-radius-full);
+      background:
+        linear-gradient(var(--color-primary), var(--color-primary)) 0 0 / var(--ds-range-fill, 0%) 100% no-repeat,
+        color-mix(in oklab, var(--color-base-content) 16%, var(--color-base-100));
+    }
+
+    &:dir(rtl)::-webkit-slider-runnable-track {
+      background-position: 100% 0, 0 0;
+    }
+
+    &::-webkit-slider-thumb {
+      appearance: none;
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
+      margin-block-start: calc((0.375rem - 1.25rem) / 2);
+      border: var(--ds-border-emphasis) solid var(--color-primary);
+      border-radius: var(--ds-radius-full);
+      background-color: var(--color-base-100);
+      box-shadow: var(--ds-shadow-xs);
+      transition: box-shadow var(--ds-duration-fast) var(--ds-ease-standard);
+    }
+
+    &::-moz-range-track {
+      block-size: 0.375rem;
+      border-radius: var(--ds-radius-full);
+      background-color: color-mix(in oklab, var(--color-base-content) 16%, var(--color-base-100));
+    }
+
+    &::-moz-range-progress {
+      block-size: 0.375rem;
+      border-radius: var(--ds-radius-full);
+      background-color: var(--color-primary);
+    }
+
+    &::-moz-range-thumb {
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
+      box-sizing: border-box;
+      border: var(--ds-border-emphasis) solid var(--color-primary);
+      border-radius: var(--ds-radius-full);
+      background-color: var(--color-base-100);
+      box-shadow: var(--ds-shadow-xs);
+      transition: box-shadow var(--ds-duration-fast) var(--ds-ease-standard);
+    }
+
+    @media (hover: hover) {
+      &:hover:not(:disabled)::-webkit-slider-thumb {
+        box-shadow: var(--ds-shadow-xs), 0 0 0 0.375rem color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      }
+
+      &:hover:not(:disabled)::-moz-range-thumb {
+        box-shadow: var(--ds-shadow-xs), 0 0 0 0.375rem color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      }
+    }
+
+    &:active:not(:disabled)::-webkit-slider-thumb {
+      box-shadow: var(--ds-shadow-xs), 0 0 0 0.5rem color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+    }
+
+    &:active:not(:disabled)::-moz-range-thumb {
+      box-shadow: var(--ds-shadow-xs), 0 0 0 0.5rem color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+    }
+
+    /* The ring sits on the thumb; forced colours restore the outline (accessibility.css). */
+    &:focus-visible {
+      outline: none;
+    }
+
+    &:focus-visible::-webkit-slider-thumb {
+      box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--ds-focus);
+    }
+
+    &:focus-visible::-moz-range-thumb {
+      box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--ds-focus);
+    }
+
+    &:disabled {
+      opacity: var(--ds-opacity-disabled);
+      cursor: not-allowed;
+    }
+
+    @media (pointer: coarse) {
+      block-size: var(--ds-size-target);
+    }
+  }
+
+  /* ------------------------------------------------------------------ color */
+  input[type="color"]:not([class*="ds-"], [class*="__"]):not(:is(.ds-unstyled, [data-ds-unstyled], [class*="picker"], .join) *) {
+    inline-size: var(--ds-size-target);
+    block-size: var(--ds-size-target);
+    padding: var(--ds-space-1);
+    border: var(--ds-border-hairline) solid var(--ds-control-border);
+    border-radius: var(--radius-field);
+    background-color: var(--color-base-100);
+    cursor: pointer;
+    transition: border-color var(--ds-duration-fast) var(--ds-ease-standard);
+
+    @media (hover: hover) {
+      &:hover:not(:disabled) {
+        border-color: color-mix(in oklab, var(--ds-control-border) 55%, var(--color-base-content));
+      }
+    }
+
+    &:focus-visible {
+      outline: var(--ds-border-focus) solid var(--ds-focus);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: var(--ds-opacity-disabled);
+      cursor: not-allowed;
+    }
+  }
+
+  input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  input[type="color"]::-webkit-color-swatch {
+    border: var(--ds-border-hairline) solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
+    border-radius: var(--ds-radius-sm);
+  }
+
+  input[type="color"]::-moz-color-swatch {
+    border: var(--ds-border-hairline) solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
+    border-radius: var(--ds-radius-sm);
+  }
+
+  /* ------------------------------------------------------------------ file */
+  input[type="file"]:not([class*="ds-"], [class*="__"], .file-input):not(:is(.ds-unstyled, [data-ds-unstyled], .join, [class*="dropzone"], [class*="upload"]) *) {
+    max-inline-size: 100%;
+    border-radius: var(--radius-field);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-callout-size);
+    cursor: pointer;
+
+    &::file-selector-button {
+      min-block-size: var(--ds-size-target);
+      margin-inline-end: var(--ds-space-3);
+      padding: var(--ds-space-2) var(--ds-space-4);
+      border: var(--ds-border-hairline) solid var(--ds-control-border);
+      border-radius: var(--radius-field);
+      background-color: var(--color-base-100);
+      color: var(--color-base-content);
+      font-weight: var(--ds-weight-semibold);
+      cursor: pointer;
+      transition:
+        background-color var(--ds-duration-fast) var(--ds-ease-standard),
+        border-color var(--ds-duration-fast) var(--ds-ease-standard),
+        transform var(--ds-duration-instant) var(--ds-ease-out);
+    }
+
+    @media (hover: hover) {
+      &:hover:not(:disabled)::file-selector-button {
+        background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), var(--color-base-100));
+      }
+    }
+
+    &:active:not(:disabled)::file-selector-button {
+      background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), var(--color-base-100));
+      transform: scale(var(--ds-press-scale));
+    }
+
+    &:focus-visible {
+      outline: var(--ds-border-focus) solid var(--ds-focus);
+      outline-offset: 2px;
+    }
+
+    &:is(:user-invalid, [aria-invalid="true"], .input-validation-error)::file-selector-button {
+      border-color: var(--color-error);
+    }
+
+    &:disabled {
+      opacity: var(--ds-opacity-disabled);
+      cursor: not-allowed;
+
+      &::file-selector-button {
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------ buttons */
+  /* Bare <button> and input buttons look like the secondary button; type="submit" is the primary action. */
+  :is(button, input:is([type="button"], [type="submit"], [type="reset"])):not([class*="ds-"], [class*="__"], [class*="btn"], .tab, .join-item, .filter-reset, .swap, .menu-dropdown-toggle):not(:is(.ds-unstyled, [data-ds-unstyled], [role="group"], [role="toolbar"], [role="tablist"], [role="menu"], [role="menubar"], [role="listbox"], [role="radiogroup"], .input, .select, .join, .filter, .menu, .dock, .navbar, .tabs, .modal-backdrop, .dropdown-content, [class*="-input"], [class*="combobox"], [class*="picker"], [class*="segmented"], [class*="otp"], [class*="toolbar"], [class*="calendar"]) *) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-space-2);
+    min-block-size: var(--ds-size-target);
+    padding: var(--ds-space-2) var(--ds-space-4);
+    border: var(--ds-border-hairline) solid var(--ds-control-border);
+    border-radius: var(--radius-field);
+    background-color: var(--color-base-100);
+    color: var(--color-base-content);
+    font-size: var(--ds-type-callout-size);
+    font-weight: var(--ds-weight-semibold);
+    line-height: 1.25;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      color var(--ds-duration-fast) var(--ds-ease-standard),
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      border-color var(--ds-duration-fast) var(--ds-ease-standard),
+      transform var(--ds-duration-instant) var(--ds-ease-out);
+
+    @media (hover: hover) {
+      &:hover:not(:disabled, [aria-disabled="true"], [aria-busy="true"]) {
+        background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), var(--color-base-100));
+      }
+    }
+
+    &:active:not(:disabled, [aria-disabled="true"], [aria-busy="true"]) {
+      background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), var(--color-base-100));
+      transform: scale(var(--ds-press-scale));
+    }
+
+    &:focus-visible {
+      outline: var(--ds-border-focus) solid var(--ds-focus);
+      outline-offset: 2px;
+    }
+
+    &[aria-pressed="true"] {
+      border-color: var(--color-primary);
+      background-color: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), var(--color-base-100));
+      color: var(--ds-primary-text);
+    }
+
+    &[aria-expanded="true"] {
+      background-color: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), var(--color-base-100));
+    }
+
+    &[type="submit"] {
+      border-color: var(--color-primary);
+      background-color: var(--color-primary);
+      color: var(--color-primary-content);
+
+      @media (hover: hover) {
+        &:hover:not(:disabled, [aria-disabled="true"], [aria-busy="true"]) {
+          background-color: color-mix(in oklab, var(--color-primary) 88%, var(--color-base-content));
+        }
+      }
+
+      &:active:not(:disabled, [aria-disabled="true"], [aria-busy="true"]) {
+        background-color: color-mix(in oklab, var(--color-primary) 80%, var(--color-base-content));
+      }
+    }
+
+    &[aria-busy="true"] {
+      cursor: progress;
+    }
+
+    &:is(:disabled, [aria-disabled="true"]) {
+      opacity: var(--ds-opacity-disabled);
+      cursor: not-allowed;
+    }
+  }
+
+  input[type="image"] {
+    border-radius: var(--ds-radius-md);
+    cursor: pointer;
+  }
+
+  input[type="hidden"] {
+    display: none;
+  }
+
+  /* ------------------------------------------------------------------ progress and meter */
+  progress:not([class*="ds-"], [class*="__"], .progress):not(.ds-unstyled *, [data-ds-unstyled] *, [class*="file"] *) {
+    appearance: none;
+    inline-size: 100%;
+    max-inline-size: 20rem;
+    block-size: 0.5rem;
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--ds-radius-full);
+    background-color: color-mix(in oklab, var(--color-base-content) 12%, var(--color-base-100));
+    color: var(--color-primary);
+    vertical-align: middle;
+
+    &::-webkit-progress-bar {
+      border-radius: var(--ds-radius-full);
+      background-color: transparent;
+    }
+
+    &::-webkit-progress-value {
+      border-radius: var(--ds-radius-full);
+      background-color: var(--color-primary);
+      transition: inline-size var(--ds-duration-spring) var(--ds-ease-spring);
+    }
+
+    &::-moz-progress-bar {
+      border-radius: var(--ds-radius-full);
+      background-color: var(--color-primary);
+    }
+
+    &:indeterminate {
+      background:
+        linear-gradient(var(--color-primary), var(--color-primary)) -40% 0 / 40% 100% no-repeat,
+        color-mix(in oklab, var(--color-base-content) 12%, var(--color-base-100));
+      animation: ds-indeterminate var(--ds-duration-shimmer) var(--ds-ease-in-out) infinite;
+    }
+
+    &:indeterminate::-webkit-progress-bar {
+      background-color: transparent;
+    }
+
+    &:indeterminate::-moz-progress-bar {
+      background-color: transparent;
+    }
+  }
+
+  /* Meter: optimum = success, sub-optimum = warning, worst = error. Always pair it with the number in text. */
+  meter:not([class*="ds-"], [class*="__"]):not(.ds-unstyled *, [data-ds-unstyled] *) {
+    appearance: none;
+    inline-size: 100%;
+    max-inline-size: 20rem;
+    block-size: 0.5rem;
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--ds-radius-full);
+    background: color-mix(in oklab, var(--color-base-content) 12%, var(--color-base-100));
+    vertical-align: middle;
+
+    &::-webkit-meter-inner-element {
+      block-size: 100%;
+    }
+
+    &::-webkit-meter-bar {
+      block-size: 100%;
+      border: 0;
+      border-radius: var(--ds-radius-full);
+      background: transparent;
+    }
+
+    &::-webkit-meter-optimum-value {
+      border-radius: var(--ds-radius-full);
+      background: var(--color-success);
+    }
+
+    &::-webkit-meter-suboptimum-value {
+      border-radius: var(--ds-radius-full);
+      background: var(--color-warning);
+    }
+
+    &::-webkit-meter-even-less-good-value {
+      border-radius: var(--ds-radius-full);
+      background: var(--color-error);
+    }
+
+    &::-moz-meter-bar {
+      border-radius: var(--ds-radius-full);
+      background: var(--color-success);
+    }
+
+    &:-moz-meter-sub-optimum::-moz-meter-bar {
+      background: var(--color-warning);
+    }
+
+    &:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+      background: var(--color-error);
+    }
+  }
+
+  /* ------------------------------------------------------------------ print */
+  @media print {
+    :is(pre, blockquote, figure, img, svg, tr, details, dl, li) {
+      break-inside: avoid;
+    }
+
+    :is(h1, h2, h3, h4, h5, h6) {
+      break-after: avoid;
+    }
+
+    p {
+      orphans: 3;
+      widows: 3;
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
+    pre {
+      overflow: visible;
+      white-space: pre-wrap;
+    }
+
+    /* Closed disclosures print their content. */
+    details::details-content {
+      block-size: auto;
+      content-visibility: visible;
+      opacity: 1;
+    }
+
+    dialog:not([open]),
+    [popover]:not(:popover-open) {
+      display: none;
+    }
+
+    :is(button, input[type="submit"], input[type="reset"], input[type="button"]):not([class]) {
+      display: none;
+    }
+  }
+}

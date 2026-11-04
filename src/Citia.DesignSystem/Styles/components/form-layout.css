@@ -1,0 +1,649 @@
+/* Form layout (sections, grid, sticky action bar), form messages (error and success summary), ASP.NET Core validation
+   output, read-only view mode, color picker. Owner: batch A4. Field anatomy (.ds-field, .ds-hint, .ds-field-error)
+   lives in field.css (A2); this file only refines it for whole forms. */
+
+@layer components {
+
+  /* ------------------------------------------------------------ layout: sections with a title column */
+  .ds-form-layout {
+    container: ds-form / inline-size;
+    display: grid;
+    min-width: 0;
+  }
+
+  .ds-form-section {
+    display: grid;
+    gap: var(--ds-space-4) var(--ds-space-8);
+    min-width: 0;
+    padding-block: var(--ds-space-8);
+    border-top: 1px solid var(--color-base-300);
+  }
+
+  .ds-form-section:first-child {
+    padding-block-start: 0;
+    border-top: 0;
+  }
+
+  .ds-form-section__header {
+    display: grid;
+    align-content: start;
+    gap: var(--ds-space-1-5);
+    min-width: 0;
+  }
+
+  .ds-form-section__title {
+    margin: 0;
+    font-size: var(--ds-type-section-size);
+    font-weight: var(--ds-type-section-weight);
+    line-height: var(--ds-type-section-leading);
+    letter-spacing: var(--ds-type-section-tracking);
+  }
+
+  .ds-form-section__description {
+    margin: 0;
+    max-inline-size: 60ch;
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+    color: var(--ds-subtle);
+  }
+
+  .ds-form-section__body {
+    display: grid;
+    gap: var(--ds-space-field-group);
+    min-width: 0;
+  }
+
+  /* Card body: the fields sit on a surface, the title stays outside. */
+  .ds-form-section.is-card > .ds-form-section__body {
+    padding: var(--ds-space-card-y) var(--ds-space-card-x);
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    background: var(--color-base-100);
+    box-shadow: var(--ds-shadow-xs);
+  }
+
+  /* Field grid: one column on narrow containers, two (or three) where there is room. Rows span with .is-full. */
+  .ds-form-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ds-space-field-group);
+    min-width: 0;
+  }
+
+  .ds-form-grid > :is(.is-full, .is-wide) {
+    grid-column: 1 / -1;
+  }
+
+  @container ds-form (min-width: 36rem) {
+    .ds-form-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ds-form-grid.is-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @container ds-form (max-width: 35.99rem) {
+    .ds-field-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /* Wide containers: title and description on the start, fields on the end. */
+  @container ds-form (min-width: 52rem) {
+    .ds-form-section:not(.is-stacked) {
+      grid-template-columns: minmax(0, 17rem) minmax(0, 1fr);
+    }
+  }
+
+  /* ------------------------------------------------------------ sticky action bar */
+  .ds-form-bar {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: var(--ds-z-sticky);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-space-3) var(--ds-space-4);
+    margin-block-start: var(--ds-space-6);
+    padding: var(--ds-space-3) var(--ds-space-panel);
+    padding-block-end: calc(var(--ds-space-3) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-base-300);
+    background: var(--color-base-100);
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--ds-duration-spring) var(--ds-ease-spring),
+      transform var(--ds-duration-spring) var(--ds-ease-spring);
+  }
+
+  .ds-form-bar.is-floating {
+    inset-block-end: var(--ds-space-4);
+    margin-inline: auto;
+    width: fit-content;
+    max-width: calc(100% - 2rem);
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    box-shadow: var(--ds-shadow-panel);
+  }
+
+  /* Appears only while the form has unsaved changes. */
+  .ds-form-bar.is-dirty-only {
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(calc(100% + var(--ds-space-4)));
+    transition-duration: var(--ds-duration-exit);
+    transition-timing-function: var(--ds-ease-exit);
+  }
+
+  form[data-ds-dirty] .ds-form-bar.is-dirty-only,
+  .ds-form-bar.is-dirty-only:focus-within {
+    pointer-events: auto;
+    opacity: 1;
+    transform: none;
+    transition-duration: var(--ds-duration-spring);
+    transition-timing-function: var(--ds-ease-spring);
+  }
+
+  .ds-form-bar__status,
+  [data-ds-dirty-status],
+  [data-ds-save-status] {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-2);
+    min-width: 0;
+    margin: 0;
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+    color: var(--ds-subtle);
+  }
+
+  form[data-ds-dirty] :is(.ds-form-bar__status, [data-ds-dirty-status]):not(:empty)::before {
+    content: "";
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--ds-radius-full);
+    background: var(--color-warning);
+  }
+
+  .ds-form-bar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ds-space-3);
+    margin-inline-start: auto;
+  }
+
+  form[aria-busy="true"] {
+    cursor: progress;
+  }
+
+  form[aria-busy="true"] :is(.ds-form-bar, .ds-form-actions) [aria-disabled="true"] {
+    cursor: progress;
+  }
+
+  @media (max-width: 640px) {
+    .ds-form-bar {
+      padding-inline: var(--ds-space-4);
+    }
+
+    .ds-form-bar__actions {
+      flex: 1 1 100%;
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+  }
+
+  /* ------------------------------------------------------------ form messages: error summary (client and server) and success */
+  .ds-error-summary,
+  .validation-summary-errors,
+  .ds-form-summary {
+    position: relative;
+    display: grid;
+    gap: var(--ds-space-1-5);
+    padding: var(--ds-space-4) var(--ds-space-5) var(--ds-space-4) calc(var(--ds-space-5) + 1.75rem);
+    border: 1px solid color-mix(in oklab, var(--color-error) 45%, var(--color-base-300));
+    border-radius: var(--ds-radius-box);
+    background: var(--ds-error-soft);
+    color: var(--color-base-content);
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--ds-duration-enter) var(--ds-ease-emphasized),
+      transform var(--ds-duration-enter) var(--ds-ease-emphasized),
+      display var(--ds-duration-enter) allow-discrete;
+  }
+
+  @starting-style {
+    :is(.ds-error-summary, .validation-summary-errors, .ds-form-summary):not([hidden]) {
+      opacity: 0;
+      transform: translateY(calc(var(--ds-enter-offset) * -1));
+    }
+  }
+
+  :is(.ds-error-summary, .ds-form-summary)[hidden],
+  .ds-error-summary:empty,
+  .validation-summary-valid {
+    display: none;
+  }
+
+  :is(.ds-error-summary, .validation-summary-errors, .ds-form-summary)::before {
+    content: "";
+    position: absolute;
+    inset-block-start: calc(var(--ds-space-4) + 0.125rem);
+    inset-inline-start: var(--ds-space-5);
+    width: 1.125rem;
+    height: 1.125rem;
+    background: var(--ds-error-text);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4M12 16h.01'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  :is(.ds-error-summary, .validation-summary-errors, .ds-form-summary):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  :is(.ds-error-summary, .validation-summary-errors, .ds-form-summary):focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  :is(.ds-error-summary, .ds-form-summary) :is(h2, h3, .ds-form-summary__title) {
+    margin: 0;
+    font-size: var(--ds-type-callout-size);
+    font-weight: var(--ds-weight-semibold);
+    line-height: var(--ds-type-callout-leading);
+  }
+
+  :is(.ds-error-summary, .validation-summary-errors, .ds-form-summary) p {
+    margin: 0;
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+    color: var(--ds-muted);
+  }
+
+  .validation-summary-errors > span {
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  :is(.ds-error-summary, .validation-summary-errors) ul {
+    display: grid;
+    gap: var(--ds-space-1);
+    margin: var(--ds-space-1) 0 0;
+    padding-inline-start: 1.125rem;
+    list-style: disc;
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+  }
+
+  :is(.ds-error-summary, .validation-summary-errors) li::marker {
+    color: var(--ds-error-text);
+  }
+
+  :is(.ds-error-summary, .validation-summary-errors, .ds-form-summary) a {
+    color: var(--ds-error-text);
+    font-weight: var(--ds-weight-medium);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  @media (hover: hover) {
+    :is(.ds-error-summary, .validation-summary-errors, .ds-form-summary) a:hover {
+      text-decoration-thickness: 2px;
+    }
+  }
+
+  :is(.ds-error-summary, .validation-summary-errors, .ds-form-summary) a:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+    border-radius: var(--ds-radius-xs);
+  }
+
+  /* Success after a save without navigation; info for a neutral outcome. */
+  .ds-form-summary.is-success {
+    border-color: color-mix(in oklab, var(--color-success) 45%, var(--color-base-300));
+    background: var(--ds-success-soft);
+  }
+
+  .ds-form-summary.is-success::before {
+    background: var(--ds-success-text);
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m8 12 3 3 5-6'/%3E%3C/svg%3E");
+  }
+
+  .ds-form-summary.is-info {
+    border-color: color-mix(in oklab, var(--color-info) 45%, var(--color-base-300));
+    background: var(--ds-info-soft);
+  }
+
+  .ds-form-summary.is-info::before {
+    background: var(--ds-info-text);
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 16v-4M12 8h.01'/%3E%3C/svg%3E");
+  }
+
+  /* A checkbox or radio row without a field wrapper: its message sits right under the row, not one form gap away. */
+  .ds-form > :is(.ds-check-row, .ds-choice) + :is(.ds-field-error, .field-validation-error):not(:empty) {
+    margin-block-start: calc(var(--ds-space-1) - var(--ds-space-field-group));
+  }
+
+  /* ------------------------------------------------------------ ASP.NET Core field messages look like .ds-field-error */
+  .field-validation-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.375rem;
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--ds-error-text);
+  }
+
+  .field-validation-error:not(.ds-field-error):not(:empty)::before {
+    content: "";
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1.2rem;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 8v4M12 16h.01'/%3E%3C/svg%3E") center / 1rem 1rem no-repeat;
+  }
+
+  .field-validation-valid:empty,
+  .field-validation-error:empty {
+    display: none;
+  }
+
+  /* jquery-validation adds .error / .valid on controls and <span class="error"> when no ASP.NET span exists. */
+  span.error:not(:empty)[id$="-error"] {
+    display: block;
+    margin-top: var(--ds-space-1);
+    font-size: 0.875rem;
+    color: var(--ds-error-text);
+  }
+
+  /* Field-level state hook set by validation.js. */
+  .ds-field[data-state="invalid"] > label {
+    color: var(--color-base-content);
+  }
+
+  /* ------------------------------------------------------------ read-only view mode: the same form, values as text */
+  form[data-ds-mode="view"] :is(.input, .select, .textarea):not([type="checkbox"], [type="radio"]) {
+    border-color: transparent;
+    background-color: transparent;
+    background-image: none;
+    box-shadow: none;
+    padding-inline: 0;
+    opacity: 1;
+    color: var(--color-base-content);
+    cursor: text;
+    user-select: text;
+  }
+
+  form[data-ds-mode="view"] :is(.input, .select, .textarea):focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  form[data-ds-mode="view"] select {
+    appearance: none;
+  }
+
+  form[data-ds-mode="view"] :is(input, textarea)::placeholder {
+    color: transparent;
+  }
+
+  form[data-ds-mode="view"] [data-ds-view-lock="disabled"] {
+    opacity: 1;
+    cursor: default;
+  }
+
+  form[data-ds-mode="view"] :is(.ds-picker-trigger, .ds-picker-clear, .ds-dropzone, .ds-file__action, .ds-color-picker__swatches, .ds-color-picker__dropper, .ds-hint, .ds-label-note, .ds-required) {
+    display: none;
+  }
+
+  form[data-ds-mode="view"] .ds-field > label {
+    font-size: var(--ds-type-footnote-size);
+    font-weight: var(--ds-weight-medium);
+    color: var(--ds-subtle);
+  }
+
+  form[data-ds-mode="view"] .ds-form-section__body,
+  form[data-ds-mode="view"] .ds-form-grid {
+    row-gap: var(--ds-space-4);
+  }
+
+  /* ------------------------------------------------------------ color picker */
+  .ds-color-picker {
+    --ds-swatch: var(--color-base-300);
+    display: grid;
+    gap: var(--ds-space-3);
+    min-width: 0;
+  }
+
+  .ds-color-picker__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ds-space-2);
+  }
+
+  .ds-color-picker__swatch {
+    position: relative;
+    display: block;
+    flex: none;
+    width: var(--ds-size-target);
+    height: var(--ds-size-target);
+    overflow: hidden;
+    border-radius: var(--ds-radius-lg);
+    background: var(--ds-swatch);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-base-content) 16%, transparent);
+    transition: box-shadow var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-color-picker__native,
+  .ds-color-picker__swatch > input[type="color"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    .ds-color-picker__swatch:hover {
+      box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-base-content) 30%, transparent);
+    }
+  }
+
+  .ds-color-picker__swatch:has(input:focus-visible) {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 2px;
+  }
+
+  .ds-color-picker__swatch:has(input:disabled) {
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  .ds-color-picker__swatch:has(input:disabled) > input {
+    cursor: not-allowed;
+  }
+
+  .ds-color-picker__hex {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-0-5);
+    width: 9.5rem;
+    max-width: 100%;
+    font-family: var(--ds-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds-color-picker__hash {
+    color: var(--ds-subtle);
+    user-select: none;
+  }
+
+  .ds-color-picker__hex-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .ds-color-picker__hex:has(input[aria-invalid="true"]) {
+    border-color: var(--color-error);
+  }
+
+  .ds-color-picker__hex:has(input:disabled) {
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  .ds-color-picker__swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-space-2);
+  }
+
+  .ds-color-picker__preset {
+    position: relative;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-swatch);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-base-content) 16%, transparent);
+    cursor: pointer;
+    transition: box-shadow var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  .ds-color-picker__preset::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, 2.25rem);
+    height: max(100%, 2.25rem);
+    translate: -50% -50%;
+  }
+
+  @media (pointer: coarse) {
+    .ds-color-picker__preset::after {
+      width: var(--ds-size-target);
+      height: var(--ds-size-target);
+    }
+  }
+
+  .ds-color-picker__preset:active {
+    transform: scale(var(--ds-press-scale));
+  }
+
+  /* Selected: a ring separated by the surface (shape, not only colour). */
+  .ds-color-picker__preset[aria-checked="true"] {
+    box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 3.5px var(--color-base-content);
+  }
+
+  .ds-color-picker__preset:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 5px;
+  }
+
+  .ds-color-picker__preset:disabled {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-color-picker__contrast {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-1-5);
+    margin: 0;
+    font-size: var(--ds-type-footnote-size);
+    line-height: var(--ds-type-footnote-leading);
+    color: var(--ds-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ds-color-picker__contrast::before {
+    content: "";
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-subtle);
+  }
+
+  .ds-color-picker__contrast[data-state="success"]::before { background: var(--ds-success-text); }
+  .ds-color-picker__contrast[data-state="warning"]::before { background: var(--color-warning); }
+  .ds-color-picker__contrast[data-state="error"] { color: var(--ds-error-text); }
+  .ds-color-picker__contrast[data-state="error"]::before { background: var(--color-error); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-form-bar,
+    .ds-form-bar.is-dirty-only,
+    :is(.ds-error-summary, .validation-summary-errors, .ds-form-summary) {
+      transform: none;
+      transition-property: opacity, display;
+      transition-duration: var(--ds-duration-fast);
+    }
+
+    @starting-style {
+      :is(.ds-error-summary, .validation-summary-errors, .ds-form-summary):not([hidden]) {
+        transform: none;
+      }
+    }
+
+    .ds-color-picker__preset:active {
+      transform: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-color-picker__preset,
+    .ds-color-picker__swatch {
+      forced-color-adjust: none;
+      border: 1px solid CanvasText;
+    }
+
+    .ds-color-picker__preset[aria-checked="true"] {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
+    }
+
+    :is(.ds-error-summary, .validation-summary-errors, .ds-form-summary)::before {
+      background: CanvasText;
+    }
+  }
+
+  @media print {
+    .ds-form-bar {
+      position: static;
+      display: none;
+    }
+  }
+}
+
+/* The daisyUI .input box used as a picker wrapper: drop the inner field's own chrome. */
+@layer utilities {
+  .ds-color-picker__hex.input,
+  .ds-field .ds-color-picker__hex.input {
+    flex: 0 1 9.5rem;
+    width: 9.5rem;
+    min-width: 7.5rem;
+    padding-inline: var(--ds-space-3);
+  }
+
+  form[data-ds-mode="view"] .ds-field :is(.input, .select, .textarea) {
+    border-color: transparent;
+    background-color: transparent;
+    min-height: 0;
+    padding-inline: 0;
+  }
+}

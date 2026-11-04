@@ -1,0 +1,311 @@
+/* Prose: long-form content (Markdown, CMS and rich-text output) in the type roles, with vertical rhythm.
+   Owner: batch A12. Contract: docs/_contributing.md.
+   Usage: <article class="ds-prose">…</article>. Opt a block out with .ds-not-prose (a card, a form, a demo).
+   Rules sit in @scope (.ds-prose) to (.ds-not-prose) with element selectors (specificity 0,0,1), so any classed
+   component placed inside prose keeps its own look. Spacing uses em, so .is-sm and .is-lg scale everything. */
+
+@layer components {
+  .ds-prose {
+    max-inline-size: var(--ds-size-measure);
+    color: var(--color-base-content);
+    font-size: var(--ds-type-body-size);
+    line-height: 1.7;
+    overflow-wrap: break-word;
+  }
+
+  .ds-prose.is-sm {
+    font-size: var(--ds-type-callout-size);
+    line-height: 1.65;
+  }
+
+  .ds-prose.is-lg {
+    font-size: 1.125rem;
+    line-height: 1.75;
+  }
+
+  .ds-prose.is-full {
+    max-inline-size: none;
+  }
+
+  /* Lead paragraph: the first sentence a reader sees. */
+  .ds-prose .ds-prose__lead {
+    color: var(--ds-subtle);
+    font-size: 1.1875em;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+  }
+
+  /* The opt-out block is outside the scope, so it gets its rhythm here. */
+  .ds-prose > .ds-not-prose:not(:first-child) {
+    margin-block-start: 1.25em;
+  }
+
+  @scope (.ds-prose) to (.ds-not-prose) {
+    /* Rhythm: every block after another gets 1.25em; headings open sections with more air above, less below. */
+    :scope > * + *,
+    :is(li, blockquote, figure, details, dd, td) > :where(p, ul, ol, dl, pre, blockquote, figure, table, details, hr, div, h2, h3, h4, h5, h6) + :where(p, ul, ol, dl, pre, blockquote, figure, table, details, hr, div, h2, h3, h4, h5, h6) {
+      margin-block-start: 1.25em;
+    }
+
+    :scope > :first-child {
+      margin-block-start: 0;
+    }
+
+    :scope > :last-child {
+      margin-block-end: 0;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      scroll-margin-block-start: calc(var(--ds-sticky-top, 0px) + var(--ds-space-6));
+    }
+
+    h1 {
+      font-size: var(--ds-type-title-1-size);
+    }
+
+    h2 {
+      font-size: var(--ds-type-title-3-size);
+      font-weight: var(--ds-type-title-3-weight);
+      line-height: var(--ds-type-title-3-leading);
+      letter-spacing: var(--ds-type-title-3-tracking);
+    }
+
+    h3 {
+      font-size: var(--ds-type-headline-size);
+      font-weight: var(--ds-type-headline-weight);
+      line-height: var(--ds-type-headline-leading);
+      letter-spacing: var(--ds-type-headline-tracking);
+    }
+
+    h4 {
+      font-size: var(--ds-type-section-size);
+      font-weight: var(--ds-type-section-weight);
+      line-height: var(--ds-type-section-leading);
+      letter-spacing: var(--ds-type-section-tracking);
+    }
+
+    h5,
+    h6 {
+      font-size: 1em;
+      font-weight: var(--ds-type-label-weight);
+      line-height: var(--ds-type-label-leading);
+      letter-spacing: 0;
+    }
+
+    h6 {
+      color: var(--ds-subtle);
+    }
+
+    :scope > :is(h2, h3) {
+      margin-block-start: 2em;
+    }
+
+    :scope > :is(h4, h5, h6) {
+      margin-block-start: 1.75em;
+    }
+
+    :scope > :is(h1, h2, h3, h4, h5, h6) + * {
+      margin-block-start: 0.625em;
+    }
+
+    :scope > hr + :is(h2, h3) {
+      margin-block-start: 0;
+    }
+
+    /* Links: always underlined; visited links settle towards the text colour. */
+    a[href] {
+      border-radius: var(--ds-radius-xs);
+      color: var(--ds-link);
+      text-decoration-line: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: color-mix(in oklab, currentColor 55%, transparent);
+      text-underline-offset: 0.2em;
+      transition: color var(--ds-duration-fast) var(--ds-ease-standard), text-decoration-color var(--ds-duration-fast) var(--ds-ease-standard);
+    }
+
+    a[href]:visited {
+      color: color-mix(in oklab, var(--ds-link) 62%, var(--color-base-content));
+    }
+
+    @media (hover: hover) {
+      a[href]:hover {
+        text-decoration-color: currentColor;
+        text-decoration-thickness: 2px;
+      }
+    }
+
+    a[href]:active {
+      color: color-mix(in oklab, var(--ds-link) 78%, var(--color-base-content));
+    }
+
+    a[href]:focus-visible {
+      outline: var(--ds-border-focus) solid var(--ds-focus);
+      outline-offset: 2px;
+    }
+
+    /* Lists: Markdown output is unclassed, so bullets are always on here. */
+    ul,
+    ol {
+      padding-inline-start: 1.5em;
+    }
+
+    ul {
+      list-style-type: disc;
+    }
+
+    ul ul {
+      list-style-type: circle;
+    }
+
+    ol {
+      list-style-type: decimal;
+    }
+
+    ol ol {
+      list-style-type: lower-alpha;
+    }
+
+    li + li,
+    li > :is(ul, ol) {
+      margin-block-start: 0.5em;
+    }
+
+    li > p {
+      margin-block: 0;
+    }
+
+    li::marker {
+      color: var(--ds-subtle);
+    }
+
+    ol > li::marker {
+      font-variant-numeric: tabular-nums;
+      font-weight: var(--ds-weight-semibold);
+    }
+
+    /* Markdig / GitHub task lists. */
+    .contains-task-list,
+    ul:has(> li > input[type="checkbox"]:first-child) {
+      padding-inline-start: 0.25em;
+      list-style: none;
+    }
+
+    .task-list-item > input[type="checkbox"],
+    li > input[type="checkbox"]:first-child {
+      margin-inline-end: 0.5em;
+    }
+
+    blockquote {
+      padding-inline-start: 1em;
+      border-inline-start: var(--ds-border-accent) solid var(--color-base-300);
+      color: var(--ds-subtle);
+    }
+
+    blockquote > p:first-child::before,
+    blockquote > p:last-child::after {
+      content: none;
+    }
+
+    figure {
+      margin-block: 2em;
+    }
+
+    :is(img, video, picture, iframe) {
+      max-inline-size: 100%;
+      block-size: auto;
+      border-radius: var(--ds-radius-box);
+    }
+
+    :scope > :is(img, video, picture, iframe) {
+      margin-block: 2em;
+    }
+
+    figcaption {
+      margin-block-start: 0.75em;
+      color: var(--ds-subtle);
+      font-size: var(--ds-type-footnote-size);
+      line-height: var(--ds-type-footnote-leading);
+    }
+
+    hr {
+      margin-block: 2.5em;
+    }
+
+    /* Tables in running text: full width, quieter header, tabular numbers. Wide tables: wrap them in .ds-scroll-x. */
+    table {
+      inline-size: 100%;
+      font-size: 0.875em;
+      line-height: 1.55;
+    }
+
+    :scope > table {
+      margin-block: 2em;
+    }
+
+    th,
+    td {
+      overflow-wrap: anywhere;
+    }
+
+    pre {
+      margin-block: 1.75em;
+      font-size: 0.8125em;
+    }
+
+    :not(pre) > code {
+      font-size: 0.875em;
+    }
+
+    dl > dt + dd {
+      margin-block-start: 0.25em;
+    }
+
+    details {
+      margin-block: 1.5em;
+      padding-block: 0.25em;
+      border-block: var(--ds-border-hairline) solid var(--color-base-300);
+    }
+
+    details + details {
+      margin-block-start: -1.5em;
+      border-block-start: 0;
+    }
+
+    details > :not(summary) {
+      margin-block-end: 1em;
+    }
+
+    /* Footnotes (Markdig .footnotes, GitHub section[data-footnotes]). */
+    :is(.footnotes, section[data-footnotes]) {
+      margin-block-start: 3em;
+      color: var(--ds-subtle);
+      font-size: var(--ds-type-footnote-size);
+    }
+
+    :is(.footnote-ref, sup > a[href^="#"]) {
+      padding-inline: 0.125em;
+      text-decoration: none;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Heading anchors (Markdig auto-identifiers + permalink). */
+    :is(h2, h3, h4) > a[href^="#"]:only-child {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    @media print {
+      a[href^="http"]::after {
+        content: " (" attr(href) ")";
+        color: var(--ds-subtle);
+        font-size: 0.8em;
+        overflow-wrap: anywhere;
+      }
+    }
+  }
+}

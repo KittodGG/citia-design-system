@@ -1,0 +1,75 @@
+# Every push and pull request: regenerate tokens and CSS (and fail when committed outputs are stale), build with
+# warnings as errors, pack a CI version, and install it into a new app twice: from the package folder, and through
+# install-citia-ds.ps1 on a simulated machine without internet. The packages and bundles are kept as artifacts.
+# Releases are published by tools/release.ps1 (feed + GitHub release), not by this workflow.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Tokens and contrast check
+        run: dotnet run tools/tokens.cs
+
+      - name: CSS
+        shell: pwsh
+        run: ./tools/css.ps1 -Target all
+
+      - name: Generated files are up to date
+        run: |
+          if ! git diff --quiet; then
+            git --no-pager diff --stat
+            echo "::error::Regenerated tokens or CSS differ from the committed files. Run tools/tokens.cs and tools/css.ps1, then commit."
+            exit 1
+          fi
+
+      - name: Build
+        run: dotnet build Citia.DesignSystem.sln -c Release -warnaserror
+
+      - name: Pack and bundle
+        id: pack
+        shell: pwsh
+        run: |
+          $v = (dotnet msbuild src/Citia.DesignSystem/Citia.DesignSystem.csproj -getProperty:Version).Trim()
+          $ci = "$v-ci.${{ github.run_number }}"
+          dotnet pack src/Citia.DesignSystem -c Release -o artifacts/ci "-p:Version=$ci" -warnaserror
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./tools/bundle.ps1 -Nupkg "artifacts/ci/Citia.DesignSystem.$ci.nupkg"
+          "version=$ci" >> $env:GITHUB_OUTPUT
+
+      - name: Smoke test, package
+        shell: pwsh
+        run: ./tools/smoke-test.ps1 -PackageDir artifacts/ci -Version ${{ steps.pack.outputs.version }} -Port 5401
+
+      - name: Smoke test, offline installer without internet
+        shell: pwsh
+        run: ./tools/smoke-test.ps1 -InstallFrom artifacts/ci/citia-ds-offline-${{ steps.pack.outputs.version }}.zip -Offline -Version ${{ steps.pack.outputs.version }} -Port 5411
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: citia-ds-${{ steps.pack.outputs.version }}
+          path: artifacts/ci/*
+          retention-days: 14

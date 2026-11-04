@@ -1,0 +1,15 @@
+@model SortHeaderModel
+@*
+  Sortable column header. Server-side sort over the whole filtered result before paging; empty values last; id breaks ties.
+  Changing the order returns to page 1 and keeps search, filters and size.
+  Usage: <partial name="_DsSortHeader" model='new SortHeaderModel("Name", "name", Model.Rows.Sort)' />
+*@
+@{
+    var url = QueryUrl.With(Context.Request, ("page", null), ("sort", Model.Key), ("direction", Model.NextDirection));
+    var icon = Model.Active ? (Model.Current.Descending ? "arrow-down" : "arrow-up") : "chevrons-up-down";
+    var title = DsText.T(Model.NextDirection == "desc" ? "sort.desc" : "sort.asc");
+    var css = string.Join(' ', new[] { Model.Numeric ? "ds-num" : null, Model.Class }.Where(c => !string.IsNullOrEmpty(c)));
+}
+<th scope="col" class="@(css.Length > 0 ? css : null)" aria-sort="@Model.AriaSort">
+    <a class="ds-sort" href="@url" title="@title">@Model.Label @Icon.Svg(icon)</a>
+</th>

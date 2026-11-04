@@ -1,0 +1,720 @@
+/* Image, figure, aspect ratio, lightbox, carousel, skeleton, separator, spinner variants, delayed appearance.
+   Owner: batch A7 data-display-3. Contract: docs/_contributing.md. */
+
+@layer components {
+  /* ================================================================ Shared round media button (carousel, lightbox) */
+  .ds-media-btn {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: var(--ds-size-target-compact);
+    height: var(--ds-size-target-compact);
+    padding: 0;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-popover);
+    color: var(--color-base-content);
+    box-shadow: var(--ds-shadow-xs);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-instant) var(--ds-ease-out),
+      opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  /* 44px hit area around the 36px visual. */
+  .ds-media-btn::after {
+    content: "";
+    position: absolute;
+    inset: -0.25rem;
+  }
+
+  @media (hover: hover) {
+    .ds-media-btn:hover { background: var(--ds-popover-hover); }
+  }
+
+  .ds-media-btn:active { transform: scale(var(--ds-press-scale)); }
+
+  .ds-media-btn[aria-disabled="true"],
+  .ds-media-btn:disabled {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .ds-media-btn > .ds-icon { width: var(--ds-size-icon-lg); height: var(--ds-size-icon-lg); }
+
+  /* ================================================================ Aspect ratio */
+  .ds-aspect {
+    --ds-ratio: 16 / 9;
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: var(--ds-ratio);
+    background: var(--color-base-200);
+    border-radius: var(--ds-radius-box);
+  }
+
+  .ds-aspect.is-square { --ds-ratio: 1 / 1; }
+  .ds-aspect.is-4-3 { --ds-ratio: 4 / 3; }
+  .ds-aspect.is-3-2 { --ds-ratio: 3 / 2; }
+  .ds-aspect.is-16-9 { --ds-ratio: 16 / 9; }
+  .ds-aspect.is-21-9 { --ds-ratio: 21 / 9; }
+  .ds-aspect.is-3-4 { --ds-ratio: 3 / 4; }
+  .ds-aspect.is-9-16 { --ds-ratio: 9 / 16; }
+  .ds-aspect.is-flat { border-radius: 0; background: transparent; }
+  .ds-aspect.is-radius-none { border-radius: 0; }
+  .ds-aspect.is-radius-sm { border-radius: var(--ds-radius-sm); }
+  .ds-aspect.is-radius-lg { border-radius: var(--ds-radius-card); }
+  .ds-aspect.is-radius-xl { border-radius: var(--ds-radius-2xl); }
+  .ds-aspect.is-radius-full { border-radius: var(--ds-radius-full); }
+
+  .ds-aspect > :is(img, video, iframe, canvas, svg, picture, .ds-image-frame, .ds-aspect__fill) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .ds-aspect > :is(img, video) { object-fit: var(--ds-fit, cover); object-position: var(--ds-position, center); }
+
+  /* Centered placeholder content (icon, text) when nothing fills the box. */
+  .ds-aspect__fill {
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--color-base-300);
+    background: var(--color-base-100);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-callout-size);
+    text-align: center;
+  }
+
+  .ds-aspect > .ds-aspect__fill {
+    box-sizing: border-box;
+    border: 1px solid var(--color-base-300);
+    border-radius: inherit;
+  }
+
+  /* ================================================================ Image */
+  .ds-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-200);
+    object-fit: var(--ds-fit, cover);
+    object-position: var(--ds-position, center);
+  }
+
+  .ds-image.is-radius-none { border-radius: 0; }
+  .ds-image.is-radius-sm { border-radius: var(--ds-radius-sm); }
+  .ds-image.is-radius-lg { border-radius: var(--ds-radius-card); }
+  .ds-image.is-radius-xl { border-radius: var(--ds-radius-2xl); }
+  .ds-image.is-radius-full { border-radius: var(--ds-radius-full); }
+
+  .ds-image.is-cover, .ds-image-frame.is-cover { --ds-fit: cover; }
+  .ds-image.is-contain, .ds-image-frame.is-contain { --ds-fit: contain; }
+  .ds-image.is-fill, .ds-image-frame.is-fill { --ds-fit: fill; }
+  .ds-image.is-none, .ds-image-frame.is-none { --ds-fit: none; }
+  .ds-image.is-scale-down, .ds-image-frame.is-scale-down { --ds-fit: scale-down; }
+
+  /* Frame: owns the loading placeholder and the error fallback. The image stays visible without JavaScript. */
+  .ds-image-frame {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-200);
+    isolation: isolate;
+  }
+
+  .ds-image-frame.is-radius-none { border-radius: 0; }
+  .ds-image-frame.is-radius-sm { border-radius: var(--ds-radius-sm); }
+  .ds-image-frame.is-radius-lg { border-radius: var(--ds-radius-card); }
+  .ds-image-frame.is-radius-xl { border-radius: var(--ds-radius-2xl); }
+  .ds-image-frame.is-radius-full { border-radius: var(--ds-radius-full); }
+
+  .ds-image-frame > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    border-radius: 0;
+    object-fit: var(--ds-fit, cover);
+    object-position: var(--ds-position, center);
+    transition: opacity var(--ds-duration-quick) var(--ds-ease-standard);
+  }
+
+  /* Loading (set by JS while the file downloads): shimmer or blurred preview, image fades in on load. */
+  .ds-image-frame[data-state="loading"] > img { opacity: 0; }
+
+  .ds-image-frame[data-state="loading"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--color-base-content) 7%, transparent), transparent);
+    animation: ds-shimmer var(--ds-duration-shimmer) linear infinite;
+  }
+
+  .ds-image-frame[data-placeholder="blur"][data-state="loading"]::after { display: none; }
+
+  .ds-image-frame[data-placeholder="blur"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--ds-blur) center / cover no-repeat;
+    filter: blur(1.25rem);
+    transform: scale(1.15);
+    opacity: 1;
+    transition: opacity var(--ds-duration-quick) var(--ds-ease-standard);
+  }
+
+  .ds-image-frame[data-placeholder="blur"][data-state="loaded"]::before { opacity: 0; }
+
+  /* Error: icon + the alt text, same size as the image so the layout does not move. */
+  .ds-image-frame__fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 0.375rem;
+    padding: var(--ds-space-3);
+    background: var(--color-base-200);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-caption-size);
+    text-align: center;
+  }
+
+  .ds-image-frame__fallback > span {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .ds-image-frame[data-state="error"] > img { visibility: hidden; }
+
+  /* Figure + caption. */
+  .ds-figure {
+    display: grid;
+    gap: var(--ds-space-2);
+    margin: 0;
+    min-width: 0;
+  }
+
+  .ds-figure > figcaption {
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-caption-size);
+    line-height: var(--ds-type-caption-leading);
+  }
+
+  /* Zoom on click: a link to the large file; JS opens it in a lightbox dialog. */
+  .ds-image-zoom {
+    position: relative;
+    display: block;
+    border-radius: var(--ds-radius-box);
+    cursor: zoom-in;
+  }
+
+  .ds-image-zoom::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    opacity: 0;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+    pointer-events: none;
+  }
+
+  @media (hover: hover) {
+    .ds-image-zoom:hover::after { opacity: 1; }
+  }
+
+  .ds-image-zoom:focus-visible::after { opacity: 1; }
+
+  /* ================================================================ Lightbox (dialog) */
+  .ds-lightbox {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-base-content);
+    opacity: 0;
+    transition: opacity var(--ds-duration-base) var(--ds-ease-emphasized), display var(--ds-duration-base) allow-discrete,
+      overlay var(--ds-duration-base) allow-discrete;
+  }
+
+  .ds-lightbox[open] { opacity: 1; display: grid; }
+
+  @starting-style {
+    .ds-lightbox[open] { opacity: 0; }
+  }
+
+  .ds-lightbox::backdrop {
+    background: color-mix(in oklab, var(--color-base-200) 94%, transparent);
+  }
+
+  .ds-lightbox__figure {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: var(--ds-space-3);
+    height: 100dvh;
+    margin: 0;
+    padding: var(--ds-space-12) var(--ds-space-4) var(--ds-space-6);
+    box-sizing: border-box;
+    justify-items: center;
+    transform: scale(0.98);
+    transition: transform var(--ds-duration-base) var(--ds-ease-emphasized);
+  }
+
+  .ds-lightbox[open] .ds-lightbox__figure { transform: none; }
+
+  @starting-style {
+    .ds-lightbox[open] .ds-lightbox__figure { transform: scale(0.98); }
+  }
+
+  .ds-lightbox__figure > img {
+    max-width: 100%;
+    max-height: 100%;
+    min-height: 0;
+    border-radius: var(--ds-radius-lg);
+    object-fit: contain;
+    box-shadow: var(--ds-shadow-panel);
+  }
+
+  .ds-lightbox__figure > figcaption {
+    max-width: var(--ds-size-measure);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-callout-size);
+    text-align: center;
+  }
+
+  .ds-lightbox__close {
+    position: absolute;
+    inset-block-start: var(--ds-space-3);
+    inset-inline-end: var(--ds-space-3);
+  }
+
+  /* ================================================================ Carousel (scroll snap first, JavaScript enhances) */
+  .ds-carousel {
+    --ds-carousel-gap: var(--ds-space-4);
+    --ds-pv: min(var(--ds-per-view, 1), 4);
+    position: relative;
+    display: block;
+    container-type: inline-size;
+  }
+
+  @container (width < 40rem) {
+    .ds-carousel { --ds-pv: min(var(--ds-per-view, 1), 2); }
+  }
+
+  @container (width < 24rem) {
+    .ds-carousel { --ds-pv: 1; }
+  }
+
+  .ds-carousel__viewport {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    border-radius: var(--ds-radius-box);
+    touch-action: pan-x pan-y;
+  }
+
+  .ds-carousel__viewport::-webkit-scrollbar { display: none; }
+
+  .ds-carousel__viewport[data-ds-dragging],
+  .ds-carousel__viewport[data-ds-moving] { scroll-snap-type: none; }
+
+  .ds-carousel__viewport[data-ds-dragging] {
+    cursor: grabbing;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .ds-carousel__viewport[data-ds-draggable] { cursor: grab; }
+
+  .ds-carousel__viewport[data-ds-draggable] img { -webkit-user-drag: none; user-select: none; }
+
+  .ds-carousel__track {
+    display: flex;
+    gap: var(--ds-carousel-gap);
+    will-change: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-carousel__slide {
+    flex: 0 0 calc((100% - (var(--ds-pv) - 1) * var(--ds-carousel-gap)) / var(--ds-pv));
+    min-width: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .ds-carousel__slide :focus-visible { outline-offset: -2px; }
+
+  /* Slides outside the viewport are inert (set by JS); a slightly dimmer partial slide shows what comes next. */
+  .ds-carousel__slide[inert] { opacity: 0.6; }
+
+  .ds-carousel__slide { transition: opacity var(--ds-duration-quick) var(--ds-ease-standard); }
+
+  /* Previous / next sit on the slide edges, centered vertically. */
+  .ds-carousel__nav {
+    position: absolute;
+    inset-block-start: calc(50% - var(--ds-carousel-footer, 0px) / 2);
+    translate: 0 -50%;
+    z-index: 1;
+  }
+
+  .ds-carousel__nav.is-prev { inset-inline-start: var(--ds-space-2); }
+  .ds-carousel__nav.is-next { inset-inline-end: var(--ds-space-2); }
+  .ds-carousel__nav:dir(rtl) > .ds-icon { transform: scaleX(-1); }
+
+  .ds-carousel__footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-space-3);
+    margin-top: var(--ds-space-3);
+    min-height: var(--ds-size-target-compact);
+  }
+
+  .ds-carousel__footer > .ds-media-btn:first-child:not(:only-child) { margin-inline-end: auto; }
+
+  .ds-carousel__dots,
+  .ds-carousel__thumbs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ds-carousel__dot {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--ds-radius-full);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  @media (pointer: coarse) {
+    .ds-carousel__dot { width: var(--ds-size-target); height: var(--ds-size-target); }
+  }
+
+  .ds-carousel__dot::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-control-border);
+    transition: transform var(--ds-duration-base) var(--ds-ease-spring), background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (hover: hover) {
+    .ds-carousel__dot:hover::before { background: var(--color-base-content); }
+  }
+
+  .ds-carousel__dot[aria-current="true"]::before {
+    background: var(--color-primary);
+    transform: scale(1.5);
+  }
+
+  .ds-carousel__thumbs { gap: var(--ds-space-2); flex-wrap: wrap; }
+
+  .ds-carousel__thumb {
+    position: relative;
+    width: 3.5rem;
+    height: 2.5rem;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-md);
+    background: var(--color-base-200);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  .ds-carousel__thumb > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+  @media (hover: hover) {
+    .ds-carousel__thumb:hover { opacity: 1; }
+  }
+
+  .ds-carousel__thumb:active { transform: scale(var(--ds-press-scale)); }
+
+  .ds-carousel__thumb[aria-current="true"] {
+    opacity: 1;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary);
+  }
+
+  @media (pointer: coarse) {
+    .ds-carousel__thumb { width: 4rem; height: var(--ds-size-target); }
+  }
+
+  .ds-carousel__count {
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-footnote-size);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Live region for "Slide 2 of 5": visually hidden. */
+  .ds-carousel__status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* A slide that is a card with an image and a caption. */
+  .ds-carousel__caption {
+    margin: var(--ds-space-2) 0 0;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-caption-size);
+  }
+
+  /* ================================================================ Skeleton */
+  .ds-skeleton {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: var(--ds-radius-md);
+    background: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+  }
+
+  .ds-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--color-base-content) 8%, transparent), transparent);
+    animation: ds-shimmer var(--ds-duration-shimmer) linear infinite;
+  }
+
+  .ds-skeleton:dir(rtl)::after { animation-direction: reverse; }
+
+  .ds-skeleton.is-text { height: 0.75rem; border-radius: var(--ds-radius-full); }
+  .ds-skeleton.is-heading { width: 55%; height: 1.25rem; border-radius: var(--ds-radius-full); }
+  .ds-skeleton.is-avatar { width: var(--ds-size-avatar); height: var(--ds-size-avatar); border-radius: var(--ds-radius-full); flex: none; }
+  .ds-skeleton.is-avatar.is-lg { width: 3.5rem; height: 3.5rem; }
+  .ds-skeleton.is-rect { height: 6rem; }
+  .ds-skeleton.is-image { aspect-ratio: 16 / 9; border-radius: var(--ds-radius-box); }
+  .ds-skeleton.is-button { width: 6rem; height: var(--ds-size-target-compact); border-radius: var(--ds-radius-lg); }
+  .ds-skeleton.is-pill { width: 4.5rem; height: 1.5rem; border-radius: var(--ds-radius-full); }
+  .ds-skeleton.is-w-25 { width: 25%; }
+  .ds-skeleton.is-w-50 { width: 50%; }
+  .ds-skeleton.is-w-75 { width: 75%; }
+
+  .ds-skeleton-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  /* Paragraph: the last line is shorter, like real text. */
+  .ds-skeleton-lines > .is-text:last-child:not(:only-child) { width: 62%; }
+
+  .ds-skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-3);
+  }
+
+  .ds-skeleton-row > .ds-skeleton-stack { flex: 1; min-width: 0; }
+
+  .ds-skeleton-card {
+    display: grid;
+    gap: var(--ds-space-3);
+    padding: var(--ds-space-card-y) var(--ds-space-card-x);
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    background: var(--color-base-100);
+  }
+
+  .ds-skeleton-table {
+    display: grid;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+    overflow: hidden;
+  }
+
+  .ds-skeleton-table > .ds-skeleton-row {
+    display: grid;
+    grid-template-columns: var(--ds-skeleton-cols, 2fr 1fr 1fr 1fr);
+    padding: var(--ds-space-3) var(--ds-space-card-x);
+    border-bottom: 1px solid var(--color-base-300);
+  }
+
+  .ds-skeleton-table > .ds-skeleton-row:last-child { border-bottom: 0; }
+
+  /* ================================================================ Separator */
+  .ds-separator {
+    display: block;
+    flex: none;
+    width: auto;
+    height: 0;
+    margin: var(--ds-space-4) 0;
+    padding: 0;
+    border: 0;
+    border-block-start: 1px solid var(--color-base-300);
+    background: none;
+    color: var(--ds-subtle);
+    overflow: visible;
+  }
+
+  .ds-separator.is-strong { border-color: var(--ds-control-border); }
+  .ds-separator.is-dashed { border-block-start-style: dashed; }
+  .ds-separator.is-flush { margin: 0; }
+  .ds-separator.is-inset { margin-inline-start: var(--ds-separator-inset, var(--ds-space-4)); }
+  .ds-separator.is-inset-both { margin-inline: var(--ds-separator-inset, var(--ds-space-4)); }
+
+  .ds-separator.is-vertical {
+    display: inline-block;
+    align-self: stretch;
+    width: 0;
+    height: auto;
+    min-height: 1rem;
+    margin: 0 var(--ds-space-3);
+    border-block-start: 0;
+    border-inline-start: 1px solid var(--color-base-300);
+    vertical-align: middle;
+  }
+
+  .ds-separator.is-vertical.is-strong { border-inline-start-color: var(--ds-control-border); }
+
+  /* With a label ("or", "Today"): the lines are pseudo-elements, so the text stays in the reading order. */
+  .ds-separator.has-label {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-3);
+    height: auto;
+    border-block-start: 0;
+    font-size: var(--ds-type-caption-size);
+    font-weight: var(--ds-weight-semibold);
+    line-height: var(--ds-type-caption-leading);
+  }
+
+  .ds-separator.has-label::before,
+  .ds-separator.has-label::after {
+    content: "";
+    flex: 1;
+    border-block-start: 1px solid var(--color-base-300);
+  }
+
+  .ds-separator.has-label.is-strong::before,
+  .ds-separator.has-label.is-strong::after { border-color: var(--ds-control-border); }
+
+  .ds-separator.has-label.is-start::before { flex: 0 0 var(--ds-space-6); }
+  .ds-separator.has-label.is-end::after { flex: 0 0 var(--ds-space-6); }
+
+  /* ================================================================ Spinner variants (base rule lives in button.css) */
+  .ds-spinner {
+    --ds-spinner-size: 1em;
+    box-sizing: border-box;
+    display: inline-block;
+    flex: none;
+    width: var(--ds-spinner-size);
+    height: var(--ds-spinner-size);
+    border: 2px solid color-mix(in oklab, currentColor 22%, transparent);
+    border-block-start-color: currentColor;
+    color: var(--ds-tone, currentColor);
+    vertical-align: -0.125em;
+  }
+
+  .ds-spinner.is-xs { --ds-spinner-size: 0.75em; border-width: 1.5px; }
+  .ds-spinner.is-sm { --ds-spinner-size: 0.875em; }
+  .ds-spinner.is-lg { --ds-spinner-size: 1.5rem; border-width: 2.5px; }
+  .ds-spinner.is-xl { --ds-spinner-size: 2.5rem; border-width: 3px; }
+
+  /* Spinner with a label: the label is the state under reduced motion, when the ring is hidden. */
+  .ds-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-2);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-callout-size);
+  }
+
+  .ds-loading.is-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--ds-space-3);
+    padding: var(--ds-space-8) var(--ds-space-4);
+    text-align: center;
+  }
+
+  /* Busy region: the overlay appears after 300ms and blocks interaction while aria-busy is true. */
+  .ds-busy { position: relative; }
+
+  .ds-busy > .ds-loading-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: var(--ds-z-sticky);
+    display: none;
+    place-items: center;
+    border-radius: inherit;
+    background: color-mix(in oklab, var(--color-base-100) 72%, transparent);
+  }
+
+  .ds-busy[aria-busy="true"] > .ds-loading-overlay {
+    display: grid;
+    opacity: 0;
+    animation: ds-delayed-in var(--ds-duration-quick) var(--ds-ease-standard) var(--ds-delay, 300ms) forwards;
+  }
+
+  /* Appear after a delay so fast responses never flash: spinner, skeleton, any indicator. */
+  .ds-delayed,
+  .ds-skeleton.is-delayed {
+    opacity: 0;
+    animation: ds-delayed-in var(--ds-duration-quick) var(--ds-ease-standard) var(--ds-delay, 300ms) forwards;
+  }
+
+  @keyframes ds-delayed-in {
+    to { opacity: 1; }
+  }
+
+  /* ================================================================ Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .ds-skeleton::after,
+    .ds-image-frame[data-state="loading"]::after { display: none; animation: none; }
+    .ds-media-btn:active,
+    .ds-carousel__thumb:active { transform: none; }
+    .ds-carousel__dot::before { transition-property: background-color; }
+    .ds-carousel__dot[aria-current="true"]::before { transform: none; box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--color-primary); }
+    .ds-lightbox__figure,
+    .ds-lightbox[open] .ds-lightbox__figure { transform: none; transition: none; }
+  }
+
+  @media (forced-colors: active) {
+    .ds-separator,
+    .ds-separator.has-label::before,
+    .ds-separator.has-label::after { border-color: CanvasText; }
+    .ds-skeleton { border: 1px solid CanvasText; }
+    .ds-carousel__dot[aria-current="true"]::before { background: Highlight; }
+    .ds-carousel__thumb[aria-current="true"] { outline: 2px solid Highlight; }
+  }
+}

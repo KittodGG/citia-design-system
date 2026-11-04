@@ -1,0 +1,17 @@
+@*
+  Shared confirmation dialog used by ds.js for every [data-ds-confirm] trigger and by DS.confirm().
+  Destructive by default: red action, Cancel gets the initial focus. Render once per layout.
+  Trigger example:
+    <button type="submit" class="btn btn-ghost is-danger" formaction="/Warehouses/Delete/7"
+            data-ds-confirm="Delete warehouse W-01?" data-ds-confirm-text="Deleted data cannot be restored." data-ds-confirm-label="Delete">Delete</button>
+*@
+<dialog id="ds-confirm" class="modal" aria-labelledby="ds-confirm-title" aria-describedby="ds-confirm-text">
+    <div class="modal-box ds-dialog">
+        <h2 id="ds-confirm-title" class="ds-dialog-title" data-ds-confirm-title>@DsText.T("confirm.title")</h2>
+        <p id="ds-confirm-text" class="ds-dialog-desc" data-ds-confirm-text></p>
+        <div class="modal-action">
+            <button type="button" class="btn" data-ds-confirm-cancel>@DsText.T("confirm.cancel")</button>
+            <button type="button" class="btn btn-error" data-ds-confirm-accept>@DsText.T("confirm.accept")</button>
+        </div>
+    </div>
+</dialog>

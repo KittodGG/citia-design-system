@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!-- Razor Class Library: tag helpers, partial views, C# helpers and static web assets (served at /_content/Citia.DesignSystem/). -->
+  <PropertyGroup>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <RootNamespace>Citia.DesignSystem</RootNamespace>
+    <PackageId>Citia.DesignSystem</PackageId>
+    <!-- Single source of the package version. tools/release.ps1 publishes this version and refuses one that is already on the feed. -->
+    <Version>2.0.2</Version>
+    <Description>Citia Design System for ASP.NET Core: design tokens, CSS components (Tailwind CSS v4 + daisyUI 5), vanilla JavaScript behaviours, Razor tag helpers and partials, in English and Indonesian.</Description>
+    <PackageProjectUrl>https://design.citia-engineering.com</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>citia;design-system;aspnetcore;razor;tag-helpers;tailwindcss;daisyui</PackageTags>
+    <PackageReleaseNotes>https://design.citia-engineering.com/en/changelog</PackageReleaseNotes>
+    <Copyright>Citia Engineering Indonesia</Copyright>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CA2255: string tables register through [ModuleInitializer] on purpose (Localization/DsText.cs). -->
+    <NoWarn>$(NoWarn);CS1591;CA2255</NoWarn>
+    <TailwindCli>$(RepoRoot).tools\tailwindcss.exe</TailwindCli>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- CSS sources travel with the package so apps can @import them into their own Tailwind build. -->
+    <None Include="Styles\**\*.css" Pack="true" PackagePath="styles\" />
+    <Content Remove="Styles\**" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- Local builds regenerate wwwroot/css/ds.css when the pinned CSS tools are present (run tools/css.ps1 once).
+       Docker builds CSS in its own stage. -->
+  <Target Name="BuildDsCss" BeforeTargets="BeforeBuild" Condition="$([MSBuild]::IsOSPlatform('Windows')) And Exists('$(TailwindCli)')">
+    <Exec Command="&quot;$(TailwindCli)&quot; -i Styles\ds.bundle.css -o wwwroot\css\ds.css --minify" WorkingDirectory="$(MSBuildProjectDirectory)" StandardErrorImportance="low" />
+  </Target>
+</Project>

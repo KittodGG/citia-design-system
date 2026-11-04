@@ -1,0 +1,403 @@
+/* Command palette and inline command list (search input + grouped listbox, shortcuts, empty and loading states).
+   Owner: batch A9. Markup: .ds-command > __search (__input) + __list[role=listbox] (__group, __group-label, __item[role=option])
+   + __empty + __loading + __footer. In a palette it sits inside <dialog class="ds-command-dialog" data-ds-command>.
+   Highlight = aria-selected (the input keeps focus; aria-activedescendant points at the item).
+   Motion: palette enters like a dialog but from just above centre (opacity + scale 0.98, --ds-duration-base). */
+
+@layer components {
+  /* ---------------------------------------------------------------- palette dialog */
+  .ds-command-dialog {
+    width: min(40rem, calc(100vw - 2rem));
+    max-width: none;
+    max-height: min(32rem, calc(100dvh - 4rem));
+    margin: 12dvh auto auto;
+    padding: 0;
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-2xl);
+    background: var(--ds-popover);
+    color: var(--color-base-content);
+    box-shadow: var(--ds-shadow-overlay);
+    overflow: hidden;
+    opacity: 0;
+    scale: 0.98;
+    transform-origin: top center;
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      scale var(--ds-duration-exit) var(--ds-ease-exit),
+      overlay var(--ds-duration-exit) allow-discrete,
+      display var(--ds-duration-exit) allow-discrete;
+  }
+
+  .ds-command-dialog[open] {
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+    scale: 1;
+    transition:
+      opacity var(--ds-duration-base) var(--ds-ease-emphasized),
+      scale var(--ds-duration-base) var(--ds-ease-emphasized),
+      overlay 0s allow-discrete,
+      display 0s allow-discrete;
+  }
+
+  @starting-style {
+    .ds-command-dialog[open] {
+      opacity: 0;
+      scale: 0.98;
+    }
+  }
+
+  .ds-command-dialog::backdrop {
+    background: var(--ds-scrim);
+    opacity: 0;
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      overlay var(--ds-duration-exit) allow-discrete,
+      display var(--ds-duration-exit) allow-discrete;
+  }
+
+  .ds-command-dialog[open]::backdrop {
+    opacity: 1;
+    transition: opacity var(--ds-duration-base) var(--ds-ease-emphasized);
+  }
+
+  @starting-style {
+    .ds-command-dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  .ds-command-dialog > .ds-command {
+    flex: 1 1 auto;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  @media (max-width: 640px) {
+    .ds-command-dialog {
+      margin-top: var(--ds-space-4);
+      max-height: calc(100dvh - 2rem);
+    }
+  }
+
+  /* ---------------------------------------------------------------- command (inline or inside the palette) */
+  .ds-command {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border: var(--ds-border-hairline) solid var(--color-base-300);
+    border-radius: var(--ds-radius-xl);
+    background: var(--ds-popover);
+    color: var(--color-base-content);
+    font-size: var(--ds-type-callout-size);
+    overflow: hidden;
+  }
+
+  .ds-command.is-inline {
+    max-height: 24rem;
+  }
+
+  .ds-command__search {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--ds-space-2-5);
+    min-height: 3.25rem;
+    padding-inline: var(--ds-space-4);
+    border-block-end: var(--ds-border-hairline) solid var(--color-base-300);
+    color: var(--ds-subtle);
+  }
+
+  .ds-command__search > .ds-icon {
+    flex: none;
+    width: var(--ds-size-icon-md);
+    height: var(--ds-size-icon-md);
+  }
+
+  .ds-command__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 3.25rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-base-content);
+    font: inherit;
+    font-size: var(--ds-type-body-size);
+    outline: none;
+  }
+
+  .ds-command__input::placeholder {
+    color: var(--ds-subtle);
+  }
+
+  .ds-command__input::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  /* The field has no visible box: the focus ring goes on the search row instead (keyboard only). */
+  .ds-command__search:has(.ds-command__input:focus-visible) {
+    box-shadow: inset 0 calc(var(--ds-border-focus) * -1) 0 var(--ds-focus);
+  }
+
+  .ds-command-dialog .ds-command__search:has(.ds-command__input:focus-visible) {
+    box-shadow: none;
+  }
+
+  .ds-command__search .ds-kbd {
+    flex: none;
+  }
+
+  .ds-command__list {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: var(--ds-space-1-5);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-padding-block: var(--ds-space-8) var(--ds-space-1-5);
+  }
+
+  .ds-command__list[hidden],
+  .ds-command__group[hidden],
+  .ds-command__item[hidden],
+  .ds-command__separator[hidden] {
+    display: none;
+  }
+
+  .ds-command__group + .ds-command__group {
+    margin-block-start: var(--ds-space-1);
+    padding-block-start: var(--ds-space-1);
+    border-block-start: var(--ds-border-hairline) solid var(--color-base-300);
+  }
+
+  .ds-command__group-label {
+    padding: var(--ds-space-2) var(--ds-space-2-5) var(--ds-space-1);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-eyebrow-size);
+    font-weight: var(--ds-type-eyebrow-weight);
+    line-height: var(--ds-type-eyebrow-leading);
+    letter-spacing: var(--ds-type-eyebrow-tracking);
+    text-transform: uppercase;
+  }
+
+  .ds-command__separator {
+    height: var(--ds-border-hairline);
+    margin: var(--ds-space-1) calc(var(--ds-space-1-5) * -1);
+    background: var(--color-base-300);
+  }
+
+  .ds-command__item {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-2-5);
+    min-height: var(--ds-size-target-compact);
+    padding: var(--ds-space-1-5) var(--ds-space-2-5);
+    border-radius: var(--ds-radius-md);
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-command__item > .ds-icon {
+    flex: none;
+    width: var(--ds-size-icon-sm);
+    height: var(--ds-size-icon-sm);
+    color: var(--ds-subtle);
+  }
+
+  .ds-command__text {
+    display: grid;
+    flex: 1 1 auto;
+    gap: var(--ds-space-0-5);
+    min-width: 0;
+  }
+
+  .ds-command__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-command__description {
+    overflow: hidden;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-caption-size);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-command__item mark {
+    background: transparent;
+    color: inherit;
+    font-weight: var(--ds-weight-bold);
+  }
+
+  .ds-command__shortcut,
+  .ds-command__meta {
+    flex: none;
+    margin-inline-start: auto;
+    color: var(--ds-muted);
+    font-size: var(--ds-type-caption-size);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .ds-command__shortcut {
+    display: inline-flex;
+    gap: var(--ds-space-1);
+  }
+
+  @media (hover: hover) {
+    .ds-command__item:hover:not([aria-disabled="true"]) {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100% * 0.6), transparent);
+    }
+  }
+
+  .ds-command__item[aria-selected="true"] {
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    box-shadow: inset 2px 0 0 var(--color-primary);
+  }
+
+  /* Inline list without focus: the highlight would read as a selection, so it waits for focus. */
+  .ds-command.is-inline:not(:focus-within) .ds-command__item[aria-selected="true"] {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .ds-command.is-inline:not(:focus-within) .ds-command__item[aria-selected="true"] > .ds-icon {
+    color: var(--ds-subtle);
+  }
+
+  .ds-command__item[aria-selected="true"]:dir(rtl) {
+    box-shadow: inset -2px 0 0 var(--color-primary);
+  }
+
+  .ds-command__item[aria-selected="true"] > .ds-icon {
+    color: var(--ds-primary-text);
+  }
+
+  .ds-command__item:active:not([aria-disabled="true"]) {
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100% + 6%), transparent);
+  }
+
+  .ds-command__item[aria-disabled="true"] {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-command__item:is(.is-danger, .is-destructive) {
+    color: var(--ds-error-text);
+  }
+
+  .ds-command__item:is(.is-danger, .is-destructive) > .ds-icon {
+    color: currentColor;
+  }
+
+  @media (pointer: coarse) {
+    .ds-command__item {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  /* Empty and loading. */
+  .ds-command__empty,
+  .ds-command__loading {
+    display: grid;
+    flex: 1 1 auto;
+    justify-items: center;
+    gap: var(--ds-space-1);
+    padding: var(--ds-space-8) var(--ds-space-4);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-callout-size);
+    text-align: center;
+  }
+
+  .ds-command__empty strong {
+    color: var(--color-base-content);
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  .ds-command__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-space-2);
+  }
+
+  .ds-command__empty[hidden],
+  .ds-command__loading[hidden] {
+    display: none;
+  }
+
+  .ds-command[aria-busy="true"] .ds-command__list {
+    opacity: 0.6;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  /* Footer: keyboard hints. Hidden on touch screens, where they do not apply. */
+  .ds-command__footer {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ds-space-1) var(--ds-space-4);
+    padding: var(--ds-space-2) var(--ds-space-4);
+    border-block-start: var(--ds-border-hairline) solid var(--color-base-300);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-caption-size);
+  }
+
+  .ds-command__footer > span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-space-1-5);
+  }
+
+  @media (pointer: coarse) {
+    .ds-command__footer {
+      display: none;
+    }
+  }
+
+  /* Result count for screen readers (command.js). */
+  .ds-command__status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ds-command {
+    position: relative;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-command-dialog,
+    .ds-command-dialog[open] {
+      scale: 1;
+    }
+
+    @starting-style {
+      .ds-command-dialog[open] {
+        scale: 1;
+      }
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-command__item[aria-selected="true"] {
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+  }
+}

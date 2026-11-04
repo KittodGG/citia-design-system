@@ -1,0 +1,336 @@
+/* Data display atoms: avatar (presence, group), chip (filter, input, assist, suggestion), indicator, skeleton bones. Owner: batch A5.
+   Origin: TPS .pt-avatar, .pt-chip. */
+
+@layer components {
+
+  /* ------------------------------------------------------------------ avatar */
+  .ds-avatar {
+    --ds-avatar-hue: var(--color-primary);
+    position: relative;
+    display: inline-grid;
+    flex-shrink: 0;
+    place-items: center;
+    box-sizing: border-box;
+    width: var(--ds-size-avatar);
+    height: var(--ds-size-avatar);
+    border: 0;
+    border-radius: var(--ds-radius-box);
+    background: color-mix(in oklab, var(--ds-avatar-hue) 16%, var(--color-base-100));
+    color: color-mix(in oklab, var(--ds-avatar-hue) 72%, var(--color-base-content));
+    font-family: inherit;
+    font-size: max(0.5625rem, calc(var(--ds-size-avatar) * 0.36));
+    font-weight: 750;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-decoration: none;
+    user-select: none;
+    vertical-align: middle;
+  }
+
+  .ds-avatar.is-round, .ds-avatar.is-circle { border-radius: var(--ds-radius-full); }
+  .ds-avatar.is-square { border-radius: var(--ds-radius-box); }
+  .ds-avatar.is-solid { background: var(--ds-avatar-hue); color: #ffffff; }
+
+  .ds-avatar.is-xs { --ds-size-avatar: 1.25rem; }
+  .ds-avatar.is-sm { --ds-size-avatar: 1.75rem; }
+  .ds-avatar.is-md { --ds-size-avatar: 2.25rem; }
+  .ds-avatar.is-lg { --ds-size-avatar: 3rem; }
+  .ds-avatar.is-xl { --ds-size-avatar: 4rem; }
+  .ds-avatar.is-xs, .ds-avatar.is-sm { border-radius: var(--ds-radius-md); }
+  .ds-avatar.is-round.is-xs, .ds-avatar.is-round.is-sm, .ds-avatar.is-circle.is-xs, .ds-avatar.is-circle.is-sm { border-radius: var(--ds-radius-full); }
+
+  /* Eight categorical hues, picked by Avatar.ColorClass (sum of char codes % 8). */
+  .ds-avatar.c0 { --ds-avatar-hue: #00838f; }
+  .ds-avatar.c1 { --ds-avatar-hue: #2b5cc4; }
+  .ds-avatar.c2 { --ds-avatar-hue: #7c3aed; }
+  .ds-avatar.c3 { --ds-avatar-hue: #c2410c; }
+  .ds-avatar.c4 { --ds-avatar-hue: #047857; }
+  .ds-avatar.c5 { --ds-avatar-hue: #be185d; }
+  .ds-avatar.c6 { --ds-avatar-hue: #4d7c0f; }
+  .ds-avatar.c7 { --ds-avatar-hue: #0e7490; }
+  .ds-avatar.is-neutral { --ds-avatar-hue: var(--color-base-content); }
+
+  .ds-avatar__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+    background: var(--color-base-200);
+    opacity: 1;
+    transition: opacity var(--ds-duration-base) var(--ds-ease-standard);
+  }
+
+  /* Image still loading or failed: initials (behind) stay visible. */
+  .ds-avatar__img[hidden],
+  .ds-avatar[data-state="failed"] > .ds-avatar__img { display: none; }
+
+  .ds-avatar > .ds-icon { width: 50%; height: 50%; }
+
+  /* Interactive avatar (profile button). */
+  :is(a, button).ds-avatar { cursor: pointer; }
+  :is(a, button).ds-avatar:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+  :is(a, button).ds-avatar:active { filter: brightness(0.94); }
+  :is(button).ds-avatar:disabled, .ds-avatar[aria-disabled="true"] { opacity: var(--ds-opacity-disabled); cursor: not-allowed; }
+
+  @media (hover: hover) {
+    :is(a, button).ds-avatar:hover { box-shadow: 0 0 0 2px color-mix(in oklab, var(--ds-avatar-hue) 35%, transparent); }
+  }
+
+  /* Loading: bone with shimmer. */
+  .ds-avatar[aria-busy="true"] { overflow: hidden; background: var(--color-base-200); color: transparent; }
+  .ds-avatar[aria-busy="true"]::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--color-base-content) 8%, transparent), transparent); transform: translateX(-100%); animation: ds-shimmer var(--ds-duration-shimmer) linear infinite; }
+
+  /* Presence: dot with a 2px ring in the surface colour. Shape differs per state, so colour is never alone. */
+  .ds-avatar__presence {
+    position: absolute;
+    inset-block-end: -0.0625rem;
+    inset-inline-end: -0.0625rem;
+    box-sizing: border-box;
+    width: max(0.5rem, calc(var(--ds-size-avatar) * 0.28));
+    height: max(0.5rem, calc(var(--ds-size-avatar) * 0.28));
+    border-radius: var(--ds-radius-full);
+    background: var(--color-base-content);
+    box-shadow: 0 0 0 2px var(--color-base-100);
+  }
+
+  .ds-avatar__presence[data-presence="online"] { background: var(--color-success); }
+  .ds-avatar__presence[data-presence="away"] { background: var(--color-warning); }
+  .ds-avatar__presence[data-presence="away"]::after { content: ""; position: absolute; inset-block-start: 0; inset-inline-end: 0; width: 45%; height: 45%; border-radius: var(--ds-radius-full); background: var(--color-base-100); }
+  .ds-avatar__presence[data-presence="busy"] { background: var(--color-error); }
+  .ds-avatar__presence[data-presence="busy"]::after { content: ""; position: absolute; inset-block-start: calc(50% - 1px); inset-inline: 22%; height: 2px; border-radius: 1px; background: var(--color-base-100); }
+  .ds-avatar__presence[data-presence="offline"] { background: var(--color-base-100); box-shadow: 0 0 0 2px var(--color-base-100), inset 0 0 0 2px color-mix(in oklab, var(--color-base-content) 55%, transparent); }
+
+  /* Avatar with name and presence text. */
+  .ds-avatar-item { display: inline-flex; align-items: center; gap: 0.625rem; min-width: 0; }
+  .ds-avatar-item__text { display: grid; min-width: 0; line-height: 1.25; }
+  .ds-avatar-item__name { overflow: hidden; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+  .ds-avatar-item__meta { overflow: hidden; color: var(--ds-subtle); font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Group: overlapping stack with a surface-colour ring; hover/focus raises one avatar. */
+  .ds-avatar-group { display: inline-flex; align-items: center; isolation: isolate; }
+  .ds-avatar-group > .ds-avatar { box-shadow: 0 0 0 2px var(--color-base-100); }
+  .ds-avatar-group > .ds-avatar + .ds-avatar { margin-inline-start: calc(var(--ds-size-avatar) * -0.18); }
+  .ds-avatar-group > .ds-avatar:is(:hover, :focus-visible) { z-index: 1; }
+  .ds-avatar-group.is-spread > .ds-avatar + .ds-avatar { margin-inline-start: 0.25rem; }
+  .ds-avatar.is-more { --ds-avatar-hue: var(--color-base-content); font-weight: 700; }
+
+  @keyframes ds-shimmer { to { transform: translateX(100%); } }
+
+  /* ------------------------------------------------------------------ chip set and chip */
+  .ds-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .ds-chips.is-nowrap { flex-wrap: nowrap; padding-block: 0.25rem; overflow-x: auto; scrollbar-width: thin; }
+  .ds-chips.is-nowrap > .ds-chip { flex: none; }
+
+  .ds-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    max-inline-size: 100%;
+    min-height: 2rem;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--ds-control-border);
+    border-radius: var(--ds-radius-full);
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), border-color var(--ds-duration-fast) var(--ds-ease-standard), color var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  /* State layer on hover and press. */
+  .ds-chip::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-chip:active { transform: scale(var(--ds-press-scale)); }
+  .ds-chip:active::before { opacity: var(--ds-opacity-state-pressed); }
+  .ds-chip:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+
+  @media (hover: hover) {
+    .ds-chip:hover::before { opacity: var(--ds-opacity-state-hover); }
+  }
+
+  @media (pointer: coarse) {
+    .ds-chip { min-height: var(--ds-size-target); }
+  }
+
+  .ds-chip > * { position: relative; }
+  .ds-chip__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .ds-chip__icon { flex: none; margin-inline-end: 0.375rem; width: var(--ds-size-icon-sm); height: var(--ds-size-icon-sm); color: var(--ds-quiet); }
+
+  /* Check glyph slides in on selection: a grid track opens from 0fr to 1fr, the glyph fades in. */
+  .ds-chip__check {
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 0fr;
+    flex: none;
+    transition: grid-template-columns var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  .ds-chip__check > .ds-icon {
+    min-width: 0;
+    width: var(--ds-size-icon-sm);
+    height: var(--ds-size-icon-sm);
+    margin-inline-end: 0.375rem;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(-0.25rem);
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-quick) var(--ds-ease-emphasized);
+  }
+
+  .ds-chip[aria-pressed="true"] > .ds-chip__check { grid-template-columns: 1fr; }
+  .ds-chip[aria-pressed="true"] > .ds-chip__check > .ds-icon { opacity: 1; transform: none; }
+
+  .ds-chip__count {
+    min-width: 1.375rem;
+    margin-inline-start: 0.375rem;
+    padding: 0 0.375rem;
+    border-radius: var(--ds-radius-sm);
+    background: var(--color-base-200);
+    color: var(--color-base-content);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  /* Selected: tonal primary fill, primary text, glyph. */
+  .ds-chip:is([aria-current="true"], [aria-pressed="true"], [aria-selected="true"]) {
+    border-color: var(--color-primary);
+    background: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100));
+    color: var(--ds-quiet);
+  }
+
+  .ds-chip:is([aria-current="true"], [aria-pressed="true"]) .ds-chip__count { background: var(--color-base-100); }
+
+  /* Variants */
+  .ds-chip.is-assist { border-color: var(--color-base-300); }
+  .ds-chip.is-suggestion { border-style: dashed; border-color: var(--ds-control-border); background: transparent; }
+  .ds-chip.is-input { padding-inline-end: 0.25rem; cursor: default; border-color: var(--color-base-300); background: var(--color-base-200); }
+  .ds-chip.is-input:focus-visible, .ds-chip.is-input:focus-within { border-color: var(--color-primary); }
+  .ds-chip.is-error { border-color: var(--color-error); background: color-mix(in oklab, var(--color-error) 8%, var(--color-base-100)); color: var(--ds-error-text); }
+  .ds-chip.is-sm { min-height: 1.5rem; padding-block: 0; font-size: 0.75rem; }
+  .ds-chip.is-lg { min-height: 2.5rem; padding-inline: 1rem; font-size: 0.875rem; }
+  .ds-chip.is-more { border-style: dashed; color: var(--ds-subtle); }
+
+  /* Remove button inside an input chip: 24px hit area, 44px on touch; Backspace and Delete on the chip do the same. */
+  .ds-chip__remove {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-inline-start: 0.125rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--ds-radius-full);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-chip__remove::after { content: ""; position: absolute; inset: -0.25rem; }
+  .ds-chip__remove > .ds-icon { width: 0.875rem; height: 0.875rem; }
+  .ds-chip__remove:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 1px; }
+  .ds-chip__remove:active { background: color-mix(in oklab, currentColor 20%, transparent); }
+
+  @media (hover: hover) {
+    .ds-chip__remove:hover { background: color-mix(in oklab, currentColor 12%, transparent); }
+  }
+
+  @media (pointer: coarse) {
+    .ds-chip__remove { width: 2rem; height: 2rem; }
+  }
+
+  /* Availability */
+  .ds-chip:disabled { opacity: var(--ds-opacity-disabled); cursor: not-allowed; }
+  .ds-chip:disabled:active, .ds-chip[aria-disabled="true"]:active { transform: none; }
+  .ds-chip[aria-disabled="true"] { opacity: var(--ds-opacity-disabled); cursor: not-allowed; }
+  .ds-chip:disabled::before, .ds-chip[aria-disabled="true"]::before { display: none; }
+
+  .ds-dense .ds-chip { min-height: 2rem; }
+
+  /* Version 1 names stay. */
+  .ds-chip-count { min-width: 1.375rem; margin-inline-start: 0.375rem; padding: 0 0.375rem; border-radius: var(--ds-radius-sm); background: var(--color-base-200); color: var(--color-base-content); font-size: 0.75rem; font-variant-numeric: tabular-nums; text-align: center; }
+  .ds-chip:is([aria-current="true"], [aria-pressed="true"]) .ds-chip-count { background: var(--color-base-100); }
+
+  /* ------------------------------------------------------------------ indicator (badge or dot on a corner of any element) */
+  .ds-indicator { position: relative; display: inline-flex; vertical-align: middle; --ds-dir: 1; }
+  [dir="rtl"] .ds-indicator, .ds-indicator:dir(rtl) { --ds-dir: -1; }
+
+  .ds-indicator__item {
+    position: absolute;
+    z-index: 1;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    translate: calc(50% * var(--ds-dir)) -50%;
+    box-shadow: 0 0 0 2px var(--color-base-100);
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard), scale var(--ds-duration-quick) var(--ds-ease-emphasized), display var(--ds-duration-fast) allow-discrete;
+  }
+
+  .ds-indicator__item.is-start { inset-inline-start: 0; inset-inline-end: auto; translate: calc(-50% * var(--ds-dir)) -50%; }
+  .ds-indicator__item.is-center { inset-inline-start: 50%; inset-inline-end: auto; translate: calc(-50% * var(--ds-dir)) -50%; }
+  .ds-indicator__item.is-middle { inset-block-start: 50%; translate: calc(50% * var(--ds-dir)) -50%; }
+  .ds-indicator__item.is-middle.is-start { translate: calc(-50% * var(--ds-dir)) -50%; }
+  .ds-indicator__item.is-middle.is-center { translate: calc(-50% * var(--ds-dir)) -50%; }
+  .ds-indicator__item.is-bottom { inset-block-start: auto; inset-block-end: 0; translate: calc(50% * var(--ds-dir)) 50%; }
+  .ds-indicator__item.is-bottom.is-start { translate: calc(-50% * var(--ds-dir)) 50%; }
+  .ds-indicator__item.is-bottom.is-center { translate: calc(-50% * var(--ds-dir)) 50%; }
+
+  .ds-indicator__item[hidden] { display: none; opacity: 0; scale: 0.6; }
+
+  @starting-style {
+    .ds-indicator__item { opacity: 0; scale: 0.6; }
+  }
+
+  /* Corner of a circular host: pull the item inward so it overlaps the arc. */
+  .ds-indicator.is-round > .ds-indicator__item { inset-block-start: 14%; inset-inline-end: 14%; }
+  .ds-indicator.is-round > .ds-indicator__item.is-bottom { inset-block-start: auto; inset-block-end: 14%; }
+
+  /* daisyUI indicator compat: same ring. */
+  .indicator > .indicator-item.ds-badge { box-shadow: 0 0 0 2px var(--color-base-100); }
+
+  /* ------------------------------------------------------------------ bones (skeleton parts for cards and stats) */
+  .ds-bone { position: relative; display: block; overflow: hidden; height: 0.75rem; border-radius: var(--ds-radius-sm); background: color-mix(in oklab, var(--color-base-content) 9%, transparent); }
+  .ds-bone::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--color-base-content) 8%, transparent), transparent); transform: translateX(-100%); animation: ds-shimmer var(--ds-duration-shimmer) linear infinite; }
+  .ds-bone.is-title { height: 1.125rem; width: 55%; }
+  .ds-bone.is-value { height: 1.75rem; width: 40%; }
+  .ds-bone.is-short { width: 35%; }
+  .ds-bone.is-block { height: 7rem; }
+  .ds-bone.is-circle { width: 2.25rem; height: 2.25rem; border-radius: var(--ds-radius-full); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-bone::after, .ds-avatar[aria-busy="true"]::after { animation: none; display: none; }
+    .ds-chip:active { transform: none; }
+    .ds-chip__check, .ds-chip__check > .ds-icon { transition: opacity var(--ds-duration-fast) var(--ds-ease-standard); transform: none; }
+    .ds-indicator__item { transition: opacity var(--ds-duration-fast) var(--ds-ease-standard); }
+  }
+
+  @media (forced-colors: active) {
+    .ds-chip:is([aria-pressed="true"], [aria-current="true"], [aria-selected="true"]) { border-color: Highlight; border-width: 2px; forced-color-adjust: none; background: Canvas; color: CanvasText; }
+    .ds-avatar__presence { forced-color-adjust: none; background: CanvasText; }
+  }
+}

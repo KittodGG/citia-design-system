@@ -1,0 +1,857 @@
+/* Navbar (top app bar), bottom navigation, navigation menu with dropdown and mega panels.
+   Owner: batch A10 navigation. Contract: docs/_contributing.md.
+   Bars are translucent: opaque at the top of the page, blurred material plus a hairline once content scrolls under them
+   (data-scrolled, set by navigation-menu.js). Indicators slide through transforms set by tabs.js. */
+
+@layer components {
+  :is(.ds-navbar, .ds-bottom-nav, .ds-nav-menu) {
+    --ds-nav-hover: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    --ds-nav-press: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+    --ds-nav-selected: var(--ds-primary-soft);
+    --ds-dir: 1;
+  }
+
+  [dir="rtl"] :is(.ds-navbar, .ds-bottom-nav, .ds-nav-menu) {
+    --ds-dir: -1;
+  }
+
+  /* ------------------------------------------------------------------ Navbar */
+  .ds-navbar {
+    container-type: inline-size;
+    position: sticky;
+    top: 0;
+    z-index: var(--ds-z-sticky);
+    padding-top: env(safe-area-inset-top);
+    background: var(--color-base-100);
+    transition: background-color var(--ds-duration-base) var(--ds-ease-standard), transform var(--ds-duration-enter) var(--ds-ease-emphasized);
+  }
+
+  .ds-navbar.is-static {
+    position: relative;
+  }
+
+  /* Scroll edge: hairline that is absent at the top of the page and fades in once content passes under the bar. */
+  .ds-navbar::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--color-base-300);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--ds-duration-base) var(--ds-ease-standard);
+  }
+
+  .ds-navbar:is([data-scrolled], .is-bordered)::after {
+    opacity: 1;
+  }
+
+  .ds-navbar:not(.is-solid)[data-scrolled] {
+    background: color-mix(in oklab, var(--color-base-100) 78%, transparent);
+    backdrop-filter: blur(16px) saturate(1.5);
+  }
+
+  .ds-navbar[data-hidden] {
+    transform: translateY(-100%);
+  }
+
+  .ds-navbar__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-3);
+    min-height: 3.5rem;
+    margin-inline: auto;
+    padding-inline: max(var(--ds-space-4), env(safe-area-inset-left)) max(var(--ds-space-4), env(safe-area-inset-right));
+  }
+
+  .ds-navbar.is-contained .ds-navbar__inner {
+    max-width: 80rem;
+  }
+
+  .ds-navbar__brand {
+    display: inline-flex;
+    min-width: 0;
+    overflow: hidden;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 2.5rem;
+    padding-inline: 0.25rem;
+    border-radius: var(--ds-radius-lg);
+    color: inherit;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .ds-navbar__mark {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--ds-radius-lg);
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+  }
+
+  .ds-navbar__mark :is(img, svg) {
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .ds-navbar__nav {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.25rem;
+    margin-inline-start: var(--ds-space-3);
+  }
+
+  .ds-navbar__link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--ds-radius-lg);
+    color: var(--ds-subtle);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color var(--ds-duration-fast) var(--ds-ease-standard), background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-navbar__link:active {
+    background: var(--ds-nav-press);
+  }
+
+  @media (hover: hover) {
+    .ds-navbar__link:hover:not([aria-current="page"], [aria-disabled="true"]) {
+      background: var(--ds-nav-hover);
+      color: var(--color-base-content);
+    }
+  }
+
+  .ds-navbar__link[aria-current="page"] {
+    background: var(--ds-nav-selected);
+    color: var(--ds-quiet);
+  }
+
+  .ds-navbar__link[aria-disabled="true"] {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-navbar__search {
+    flex: 0 1 22rem;
+    min-width: 8rem;
+    margin-inline-start: auto;
+  }
+
+  .ds-navbar__actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.25rem;
+    margin-inline-start: auto;
+  }
+
+  .ds-navbar__search ~ .ds-navbar__actions {
+    margin-inline-start: var(--ds-space-2);
+  }
+
+  .ds-navbar__toggle {
+    display: none;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 0;
+    border-radius: var(--ds-radius-xl);
+    background: transparent;
+    color: var(--color-base-content);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-navbar__toggle:active {
+    background: var(--ds-nav-press);
+  }
+
+  @media (hover: hover) {
+    .ds-navbar__toggle:hover {
+      background: var(--ds-nav-hover);
+    }
+  }
+
+  .ds-navbar__toggle > svg {
+    grid-area: 1 / 1;
+    width: var(--ds-size-icon-lg);
+    height: var(--ds-size-icon-lg);
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-enter) var(--ds-ease-emphasized);
+  }
+
+  .ds-navbar__toggle > .is-close,
+  .ds-navbar__toggle[aria-expanded="true"] > .is-open {
+    opacity: 0;
+    transform: rotate(-45deg) scale(0.7);
+  }
+
+  .ds-navbar__toggle[aria-expanded="true"] > .is-close {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (pointer: coarse) {
+    .ds-navbar__toggle {
+      width: var(--ds-size-target);
+      height: var(--ds-size-target);
+    }
+
+    .ds-navbar__link {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  /* Compact bar (container narrower than 40rem): the links fold into a disclosure panel under the bar. */
+  @container (max-width: 39.99rem) {
+    .ds-navbar__toggle {
+      display: inline-grid;
+    }
+
+    .ds-navbar__search:not(.is-mobile) {
+      display: none;
+    }
+
+    .ds-navbar__search.is-mobile {
+      order: 5;
+      flex: 1 0 100%;
+      margin: 0 0 var(--ds-space-3);
+    }
+
+    .ds-navbar__inner:has(.ds-navbar__search.is-mobile) {
+      flex-wrap: wrap;
+    }
+
+    .ds-navbar__nav {
+      position: absolute;
+      inset-inline: 0;
+      top: 100%;
+      z-index: 1;
+      display: none;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.125rem;
+      margin: 0;
+      padding: var(--ds-space-2) var(--ds-space-4) var(--ds-space-4);
+      border-bottom: 1px solid var(--color-base-300);
+      background: var(--color-base-100);
+      box-shadow: var(--ds-shadow-menu);
+      opacity: 0;
+      transform: translateY(calc(var(--ds-enter-offset) * -1));
+      transition: opacity var(--ds-duration-exit) var(--ds-ease-exit), transform var(--ds-duration-exit) var(--ds-ease-exit), display var(--ds-duration-exit) allow-discrete;
+    }
+
+    .ds-navbar[data-open] .ds-navbar__nav {
+      display: flex;
+      opacity: 1;
+      transform: none;
+      transition: opacity var(--ds-duration-enter) var(--ds-ease-emphasized), transform var(--ds-duration-enter) var(--ds-ease-emphasized), display var(--ds-duration-enter) allow-discrete;
+    }
+
+    @starting-style {
+      .ds-navbar[data-open] .ds-navbar__nav {
+        opacity: 0;
+        transform: translateY(calc(var(--ds-enter-offset) * -1));
+      }
+    }
+
+    .ds-navbar__link {
+      min-height: var(--ds-size-target);
+    }
+
+    /* Without JavaScript the toggle cannot work: the links stay in a scrolling row below the brand. */
+    .ds-navbar:not([data-ds-ready]) .ds-navbar__toggle {
+      display: none;
+    }
+
+    .ds-navbar:not([data-ds-ready]) .ds-navbar__inner {
+      flex-wrap: wrap;
+    }
+
+    .ds-navbar:not([data-ds-ready]) .ds-navbar__nav {
+      position: static;
+      order: 6;
+      flex: 1 0 100%;
+      flex-direction: row;
+      display: flex;
+      margin: 0;
+      padding: 0 0 var(--ds-space-2);
+      overflow-x: auto;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ------------------------------------------------------------------ Bottom navigation */
+  /* 3 to 5 destinations on compact screens. Icon and label always together; the active destination gets a tonal pill
+     behind its icon that slides to the next one. */
+  .ds-bottom-nav {
+    --ds-bottom-nav-height: 4rem;
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: var(--ds-z-sticky);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    padding-block-end: env(safe-area-inset-bottom);
+    padding-inline: max(0px, env(safe-area-inset-left), calc((100% - 40rem) / 2)) max(0px, env(safe-area-inset-right), calc((100% - 40rem) / 2));
+    background: color-mix(in oklab, var(--color-base-100) 82%, transparent);
+    backdrop-filter: blur(16px) saturate(1.5);
+    transition: transform var(--ds-duration-enter) var(--ds-ease-emphasized);
+  }
+
+  .ds-bottom-nav.is-static {
+    position: relative;
+    inset-inline: auto;
+    bottom: auto;
+  }
+
+  .ds-bottom-nav::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: var(--color-base-300);
+    pointer-events: none;
+  }
+
+  .ds-bottom-nav[data-hidden] {
+    transform: translateY(100%);
+  }
+
+  .ds-bottom-nav.is-compact-only {
+    display: none;
+  }
+
+  @media (max-width: 47.99rem) {
+    .ds-bottom-nav.is-compact-only {
+      display: grid;
+    }
+  }
+
+  .ds-bottom-nav__item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 0;
+    min-height: var(--ds-bottom-nav-height);
+    padding: 0.5rem 0.25rem 0.625rem;
+    border: 0;
+    border-radius: var(--ds-radius-lg);
+    background: transparent;
+    color: var(--ds-subtle);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1rem;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-bottom-nav__item:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .ds-bottom-nav__icon {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 4rem;
+    height: 2rem;
+    border-radius: var(--ds-radius-full);
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-bottom-nav__icon > .ds-icon {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+
+  .ds-bottom-nav__label {
+    position: relative;
+    z-index: 1;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-bottom-nav__item:active:not([aria-disabled="true"]) .ds-bottom-nav__icon {
+    background: var(--ds-nav-press);
+  }
+
+  @media (hover: hover) {
+    .ds-bottom-nav__item:hover:not([aria-current="page"], [aria-disabled="true"]) {
+      color: var(--color-base-content);
+    }
+
+    .ds-bottom-nav__item:hover:not([aria-current="page"], [aria-disabled="true"]) .ds-bottom-nav__icon {
+      background: var(--ds-nav-hover);
+    }
+  }
+
+  .ds-bottom-nav__item[aria-current="page"] {
+    color: var(--ds-quiet);
+  }
+
+  .ds-bottom-nav__item[aria-current="page"] .ds-bottom-nav__icon {
+    background: var(--ds-nav-selected);
+  }
+
+  .ds-bottom-nav[data-ds-ready] .ds-bottom-nav__item[aria-current="page"] .ds-bottom-nav__icon {
+    background: transparent;
+  }
+
+  .ds-bottom-nav__item[aria-current="page"] .ds-bottom-nav__label {
+    font-weight: 700;
+  }
+
+  .ds-bottom-nav__item[aria-disabled="true"] {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-bottom-nav__indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-nav-selected);
+    opacity: 0;
+    pointer-events: none;
+    transform-origin: 0 0;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-bottom-nav__indicator[data-placed] {
+    opacity: 1;
+  }
+
+  /* Badge: a count (text) or a dot (.is-dot). The count is also in the accessible name through hidden text. */
+  .ds-bottom-nav__badge {
+    position: absolute;
+    top: -0.125rem;
+    inset-inline-start: calc(50% + 0.25rem);
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 0.25rem;
+    border-radius: var(--ds-radius-full);
+    background: var(--color-error);
+    color: var(--color-error-content);
+    box-shadow: 0 0 0 2px var(--color-base-100);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+  }
+
+  .ds-bottom-nav__badge.is-dot {
+    top: 0.125rem;
+    min-width: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    padding: 0;
+  }
+
+  /* Space for pages that use the fixed bar. */
+  .ds-bottom-nav-spacer {
+    height: calc(var(--ds-bottom-nav-height, 4rem) + env(safe-area-inset-bottom));
+  }
+
+  /* ------------------------------------------------------------------ Navigation menu */
+  /* Site navigation: top-level links and disclosure buttons that open a dropdown or mega panel. Buttons use
+     aria-expanded (WAI-ARIA disclosure navigation), not role="menu". */
+  .ds-nav-menu {
+    container-type: inline-size;
+    position: relative;
+    min-width: 0;
+  }
+
+  .ds-nav-menu__list {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-nav-menu__item {
+    position: relative;
+  }
+
+  .ds-nav-menu__trigger {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2.5rem;
+    padding: 0.375rem 0.75rem;
+    border: 0;
+    border-radius: var(--ds-radius-lg);
+    background: transparent;
+    color: var(--ds-subtle);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color var(--ds-duration-fast) var(--ds-ease-standard), background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-nav-menu__trigger:active:not([aria-disabled="true"]) {
+    background: var(--ds-nav-press);
+  }
+
+  @media (hover: hover) {
+    .ds-nav-menu__trigger:hover:not([aria-disabled="true"]) {
+      color: var(--color-base-content);
+    }
+
+    .ds-nav-menu__list:not([data-ds-ready]) .ds-nav-menu__trigger:hover:not([aria-disabled="true"]) {
+      background: var(--ds-nav-hover);
+    }
+  }
+
+  .ds-nav-menu__trigger[aria-expanded="true"] {
+    color: var(--color-base-content);
+  }
+
+  .ds-nav-menu__trigger[aria-current="page"],
+  .ds-nav-menu__trigger[aria-current="true"] {
+    color: var(--color-base-content);
+  }
+
+  /* Current section: a 2px mark under the label, so it never relies on colour. */
+  .ds-nav-menu__trigger:is([aria-current="page"], [aria-current="true"])::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0.75rem;
+    bottom: 0.25rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--color-primary);
+  }
+
+  .ds-nav-menu__trigger[aria-disabled="true"] {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-nav-menu__trigger > .ds-icon:last-child {
+    transition: transform var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-nav-menu__trigger[aria-expanded="true"] > .ds-icon:last-child {
+    transform: rotate(180deg);
+  }
+
+  .ds-nav-menu__indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    border-radius: var(--ds-radius-lg);
+    background: var(--ds-nav-hover);
+    opacity: 0;
+    pointer-events: none;
+    transform-origin: 0 0;
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-nav-menu__indicator[data-active] {
+    opacity: 1;
+  }
+
+  /* Panel: closed state is the base rule; [hidden] is removed to open. Display is transitioned discretely so the exit plays. */
+  .ds-nav-menu__panel {
+    --ds-panel-shift: 0px;
+    position: absolute;
+    inset-block-start: calc(100% + 0.5rem);
+    inset-inline-start: 0;
+    z-index: var(--ds-z-menu);
+    display: none;
+    width: max-content;
+    min-width: 16rem;
+    max-width: min(40rem, calc(100vw - 1rem));
+    padding: 0.5rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-card);
+    background: var(--ds-popover);
+    box-shadow: var(--ds-shadow-panel);
+    opacity: 0;
+    transform: translateY(calc(var(--ds-enter-offset) * -1));
+    translate: var(--ds-panel-shift) 0;
+    transition: opacity var(--ds-duration-exit) var(--ds-ease-exit), transform var(--ds-duration-exit) var(--ds-ease-exit), display var(--ds-duration-exit) allow-discrete;
+  }
+
+  /* Bridge over the 0.5rem gap so the pointer can travel from the trigger to the panel without closing it. */
+  .ds-nav-menu__panel::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: -0.5rem;
+    height: 0.5rem;
+  }
+
+  .ds-nav-menu__panel:not([hidden]) {
+    display: block;
+    opacity: 1;
+    transform: none;
+    transition: opacity var(--ds-duration-enter) var(--ds-ease-emphasized), transform var(--ds-duration-enter) var(--ds-ease-emphasized), display var(--ds-duration-enter) allow-discrete;
+  }
+
+  @starting-style {
+    .ds-nav-menu__panel:not([hidden]) {
+      opacity: 0;
+      transform: translateY(calc(var(--ds-enter-offset) * -1));
+    }
+
+    .ds-nav-menu__panel:not([hidden])[data-motion="from-start"] {
+      transform: translateX(calc(var(--ds-dir) * -1.5rem));
+    }
+
+    .ds-nav-menu__panel:not([hidden])[data-motion="from-end"] {
+      transform: translateX(calc(var(--ds-dir) * 1.5rem));
+    }
+  }
+
+  .ds-nav-menu__panel.is-wide {
+    width: 40rem;
+  }
+
+  .ds-nav-menu__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 0.25rem 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-nav-menu__group {
+    display: grid;
+    align-content: start;
+    gap: 0.125rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-nav-menu__heading {
+    padding: 0.5rem 0.75rem 0.25rem;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-eyebrow-size);
+    font-weight: var(--ds-type-eyebrow-weight);
+    letter-spacing: var(--ds-type-eyebrow-tracking);
+    line-height: var(--ds-type-eyebrow-leading);
+    text-transform: uppercase;
+  }
+
+  .ds-nav-menu__entry {
+    display: grid;
+    gap: 0.125rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--ds-radius-lg);
+    color: var(--color-base-content);
+    text-decoration: none;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-nav-menu__entry:active:not([aria-disabled="true"]) {
+    background: var(--ds-nav-press);
+  }
+
+  @media (hover: hover) {
+    .ds-nav-menu__entry:hover:not([aria-disabled="true"]) {
+      background: var(--ds-nav-hover);
+    }
+  }
+
+  .ds-nav-menu__entry:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .ds-nav-menu__entry[aria-current="page"] {
+    background: var(--ds-nav-selected);
+  }
+
+  .ds-nav-menu__entry[aria-current="page"] .ds-nav-menu__title {
+    color: var(--ds-quiet);
+  }
+
+  .ds-nav-menu__entry[aria-disabled="true"] {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  .ds-nav-menu__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 650;
+    line-height: 1.3;
+  }
+
+  .ds-nav-menu__desc {
+    color: var(--ds-subtle);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+
+  /* Featured block at the start of a mega panel. */
+  .ds-nav-menu__feature {
+    display: grid;
+    align-content: end;
+    gap: 0.25rem;
+    min-height: 8rem;
+    padding: var(--ds-space-4);
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-200);
+    color: var(--color-base-content);
+    text-decoration: none;
+  }
+
+  @media (hover: hover) {
+    .ds-nav-menu__feature:hover {
+      background: color-mix(in oklab, var(--color-base-content) 6%, var(--color-base-200));
+    }
+  }
+
+  /* Narrow (container under 40rem): the list stacks and panels open inline under their trigger. */
+  @container (max-width: 39.99rem) {
+    .ds-nav-menu__list {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.125rem;
+    }
+
+    .ds-nav-menu__trigger {
+      justify-content: space-between;
+      width: 100%;
+      min-height: var(--ds-size-target);
+    }
+
+    .ds-nav-menu__indicator {
+      display: none;
+    }
+
+    .ds-nav-menu__panel,
+    .ds-nav-menu__panel.is-wide {
+      position: static;
+      width: auto;
+      min-width: 0;
+      max-width: none;
+      margin-block: 0.125rem 0.375rem;
+      border-width: 0;
+      border-inline-start-width: 2px;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      translate: none;
+    }
+
+    .ds-nav-menu__panel::before {
+      display: none;
+    }
+
+    .ds-nav-menu__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (pointer: coarse) {
+    .ds-nav-menu__trigger {
+      min-height: var(--ds-size-target);
+    }
+
+    .ds-nav-menu__entry {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  /* ------------------------------------------------------------------ Environment */
+  @media (prefers-reduced-transparency: reduce) {
+    .ds-navbar:not(.is-solid)[data-scrolled] {
+      background: var(--color-base-100);
+      backdrop-filter: none;
+    }
+
+    .ds-bottom-nav {
+      background: var(--color-base-100);
+      backdrop-filter: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-navbar[data-hidden],
+    .ds-bottom-nav[data-hidden] {
+      transform: none;
+    }
+
+    .ds-navbar__toggle > .is-close,
+    .ds-navbar__toggle[aria-expanded="true"] > .is-open {
+      transform: none;
+    }
+
+    @starting-style {
+      .ds-nav-menu__panel:not([hidden]),
+      .ds-nav-menu__panel:not([hidden])[data-motion] {
+        transform: none;
+      }
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-navbar__link[aria-current="page"],
+    .ds-nav-menu__trigger[aria-current="page"],
+    .ds-bottom-nav__item[aria-current="page"] {
+      border: 2px solid Highlight;
+    }
+
+    .ds-bottom-nav__indicator {
+      forced-color-adjust: none;
+      background: Highlight;
+      opacity: 0.35;
+    }
+
+    .ds-navbar::after,
+    .ds-bottom-nav::before {
+      background: CanvasText;
+    }
+  }
+}

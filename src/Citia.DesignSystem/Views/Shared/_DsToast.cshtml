@@ -1,0 +1,26 @@
+@*
+  Toast region (bottom-right by default, polite live region) + the toast queued with this.Toast(...) before a redirect.
+  Toasts stack (3 visible, the rest behind), pause while hovered, focused or when the window loses focus, and swipe away on touch.
+  Errors stay until closed; others hide after 6 s (8 s for long text). Move the region with data-position:
+  bottom-end (default), bottom-center, bottom-start, top-end, top-center, top-start.
+  Client side: DS.toast({ tone, title, text, action, position }), DS.toast.promise(promise, { loading, success, error }).
+*@
+@{
+    var toast = TempData.TakeToast();
+}
+<div class="ds-toast-region" data-ds-toast-region data-position="bottom-end" role="region" aria-label="@DsText.T("toast.region")" aria-live="polite" aria-relevant="additions text">
+    @if (toast is not null)
+    {
+        <div class="ds-toast @toast.Tone.Css()" role="@(toast.Tone == Tone.Error ? "alert" : "status")" data-ds-toast="@toast.Tone.ToastName()" tabindex="-1">
+            @Icon.Svg(toast.Tone.IconName(), "ds-icon ds-toast__icon")
+            <div class="ds-toast__body">
+                <p class="ds-toast__title">@toast.Title</p>
+                @if (!string.IsNullOrWhiteSpace(toast.Text))
+                {
+                    <p class="ds-toast__text">@toast.Text</p>
+                }
+            </div>
+            <button type="button" class="ds-toast__close" data-ds-toast-close aria-label="@DsText.T("toast.close")">@Icon.Svg("x")</button>
+        </div>
+    }
+</div>

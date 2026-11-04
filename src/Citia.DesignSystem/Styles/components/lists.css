@@ -1,0 +1,840 @@
+/* List, timeline, tree view. kbd and code live in code.css.
+   Owner: batch A6. Contract: docs/_contributing.md.
+   List:     .ds-list > .ds-list__item (lead, body, meta, trail); interactive, selectable (listbox / checkbox), dense, boxed, loading, empty.
+   Timeline: .ds-timeline > .ds-timeline__item (marker, head, text, time); day groups, compact, tones, pending.
+   Tree:     .ds-tree[role=tree] > li[role=treeitem] > .ds-tree__row + ul.ds-tree__group; behaviour in tree-view.js. */
+
+@layer components {
+  /* =====================================================================
+     List
+     ===================================================================== */
+  .ds-list {
+    --ds-list-pad-y: 0.75rem;
+    --ds-list-pad-x: 1rem;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-list.is-dense {
+    --ds-list-pad-y: 0.375rem;
+    --ds-list-pad-x: 0.75rem;
+  }
+
+  .ds-list.is-boxed {
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--ds-radius-box);
+    background: var(--color-base-100);
+    overflow: clip;
+  }
+
+  .ds-list__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "lead body meta trail";
+    align-items: center;
+    min-height: var(--ds-size-target);
+    padding: var(--ds-list-pad-y) var(--ds-list-pad-x);
+    color: inherit;
+    text-align: start;
+    background: transparent;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  /* Hairline between rows (default); .is-plain removes it. */
+  .ds-list > .ds-list__item + .ds-list__item,
+  .ds-list > li + li {
+    border-top: 1px solid color-mix(in oklab, var(--color-base-300) 70%, transparent);
+  }
+
+  .ds-list.is-plain > .ds-list__item + .ds-list__item,
+  .ds-list.is-plain > li + li {
+    border-top: 0;
+  }
+
+  /* An item without a leading element or meta keeps its columns collapsed. */
+  .ds-list__item:not(:has(.ds-list__lead)) {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "body meta trail";
+  }
+
+  .ds-list__lead {
+    grid-area: lead;
+    display: grid;
+    place-items: center;
+    align-self: start;
+    margin-inline-end: 0.75rem;
+    color: var(--ds-subtle);
+  }
+
+  .ds-list__item.is-centered .ds-list__lead,
+  .ds-list__item:not(:has(.ds-list__text)) .ds-list__lead {
+    align-self: center;
+  }
+
+  .ds-list__body {
+    grid-area: body;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .ds-list__title {
+    color: var(--color-base-content);
+    font-size: var(--ds-type-callout-size);
+    font-weight: 650;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-list__text {
+    margin-top: 0.125rem;
+    color: var(--ds-subtle);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-list__text.is-clamp {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .ds-list__meta {
+    grid-area: meta;
+    align-self: start;
+    margin-inline-start: 0.75rem;
+    color: var(--ds-subtle);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+    white-space: nowrap;
+  }
+
+  .ds-list__trail {
+    grid-area: trail;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-inline: 0.5rem calc(var(--ds-list-pad-x) * -0.5);
+    color: var(--ds-subtle);
+  }
+
+  /* Tonal square behind a leading icon, round thumbnail for images. */
+  .ds-list__icon {
+    display: grid;
+    place-items: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border-radius: var(--ds-radius-box);
+    background: color-mix(in oklab, var(--color-primary) 10%, var(--color-base-100));
+    color: var(--ds-quiet);
+  }
+
+  .ds-list__icon .ds-icon {
+    width: var(--ds-size-icon-md);
+    height: var(--ds-size-icon-md);
+  }
+
+  .ds-list__thumb {
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border-radius: var(--ds-radius-md);
+    background: var(--color-base-200);
+    object-fit: cover;
+  }
+
+  .ds-list__chevron {
+    color: var(--ds-muted);
+    transition: transform var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  [dir="rtl"] .ds-list__chevron {
+    transform: scaleX(-1);
+  }
+
+  /* Section heading inside a list. */
+  .ds-list__heading {
+    padding: 0.75rem var(--ds-list-pad-x) 0.375rem;
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-eyebrow-size);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .ds-list > .ds-list__heading + .ds-list__item {
+    border-top: 0;
+  }
+
+  /* ---------- Interactive rows: a link/button row, or an item with a stretched link so trailing actions stay clickable ---------- */
+  :is(a, button).ds-list__item {
+    inline-size: 100%;
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ds-list__link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .ds-list__link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .ds-list__item:has(> .ds-list__link) {
+    cursor: pointer;
+  }
+
+  .ds-list__item :is(.ds-list__trail, .ds-list__meta) :is(button, a, input, label, summary, details) {
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (hover: hover) {
+    :is(a, button).ds-list__item:hover,
+    .ds-list__item:has(> .ds-list__link):hover,
+    .ds-list__item.is-interactive:hover,
+    [role="option"].ds-list__item:hover,
+    label.ds-list__item:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+
+    :is(a, button).ds-list__item:hover .ds-list__chevron,
+    .ds-list__item:has(> .ds-list__link):hover .ds-list__chevron {
+      transform: translateX(2px);
+    }
+
+    [dir="rtl"] :is(a, button).ds-list__item:hover .ds-list__chevron {
+      transform: scaleX(-1) translateX(2px);
+    }
+  }
+
+  :is(a, button).ds-list__item:active,
+  .ds-list__item:has(> .ds-list__link:active),
+  [role="option"].ds-list__item:active,
+  label.ds-list__item:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  :is(a, button, [role="option"]).ds-list__item:focus-visible,
+  .ds-list__item:has(> .ds-list__link:focus-visible),
+  label.ds-list__item:has(input:focus-visible) {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: -2px;
+    z-index: 1;
+  }
+
+  .ds-list__link:focus-visible {
+    outline: none;
+  }
+
+  /* Current page / selected row: tonal fill, accent edge and a bolder title, never colour alone. */
+  .ds-list__item:is([aria-current]:not([aria-current="false"]), [aria-selected="true"], .is-selected),
+  label.ds-list__item:has(input:checked) {
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    box-shadow: inset var(--ds-border-accent) 0 0 var(--color-primary);
+  }
+
+  .ds-list__item:is([aria-current]:not([aria-current="false"]), [aria-selected="true"], .is-selected) .ds-list__title,
+  label.ds-list__item:has(input:checked) .ds-list__title {
+    color: var(--ds-quiet);
+  }
+
+  /* Option rows: a check glyph on the trailing side marks the chosen one in single and multiple lists. */
+  [role="option"].ds-list__item .ds-list__tick {
+    grid-area: trail;
+    opacity: 0;
+    transform: scale(0.85);
+    color: var(--ds-quiet);
+    transition: opacity var(--ds-duration-fast) var(--ds-ease-standard), transform var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  [role="option"].ds-list__item[aria-selected="true"] .ds-list__tick {
+    opacity: 1;
+    transform: none;
+  }
+
+  label.ds-list__item {
+    cursor: pointer;
+  }
+
+  label.ds-list__item > .ds-list__lead:has(> input) {
+    inline-size: var(--ds-size-target);
+    margin-inline: calc(var(--ds-list-pad-x) * -0.5) -0.25rem;
+  }
+
+  /* Disabled: dimmed, no hover, not clickable. aria-disabled keeps the row focusable so its reason can be read. */
+  .ds-list__item:is([aria-disabled="true"], :disabled),
+  label.ds-list__item:has(input:disabled) {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+    background: transparent;
+  }
+
+  .ds-list__item[aria-disabled="true"] .ds-list__link::after {
+    pointer-events: none;
+  }
+
+  /* Loading rows and empty list. */
+  .ds-list__item.is-skeleton {
+    pointer-events: none;
+  }
+
+  .ds-list__empty {
+    padding: 2rem 1rem;
+    color: var(--ds-subtle);
+    font-size: 0.875rem;
+    text-align: center;
+  }
+
+  /* Long titles in narrow containers: meta wraps under the body. */
+  @container (max-width: 22rem) {
+    .ds-list__item {
+      grid-template-areas:
+        "lead body trail"
+        ". meta meta";
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      row-gap: 0.25rem;
+    }
+
+    .ds-list__meta {
+      margin-inline-start: 0;
+    }
+
+    .ds-list__item:not(:has(.ds-list__lead)) {
+      grid-template-areas:
+        "body trail"
+        "meta meta";
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .ds-list__meta {
+      text-align: start;
+    }
+  }
+
+  .ds-list-container {
+    container-type: inline-size;
+  }
+
+  @media (pointer: coarse) {
+    .ds-list__item {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  /* =====================================================================
+     Timeline
+     ===================================================================== */
+  .ds-timeline,
+  .ds-timeline__list {
+    --ds-timeline-marker: 1.75rem;
+    --ds-timeline-gap: 0.875rem;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-timeline.is-compact,
+  .ds-timeline.is-compact .ds-timeline__list {
+    --ds-timeline-marker: 1.125rem;
+    --ds-timeline-gap: 0.625rem;
+  }
+
+  .ds-timeline__item {
+    --ds-timeline-tone: var(--color-base-content);
+    --ds-timeline-ink: var(--ds-subtle);
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--ds-timeline-marker) minmax(0, 1fr);
+    column-gap: var(--ds-timeline-gap);
+    padding-block-end: 1.25rem;
+  }
+
+  .ds-timeline.is-compact .ds-timeline__item {
+    padding-block-end: 0.75rem;
+  }
+
+  .ds-timeline__item { --ds-timeline-soft: var(--ds-neutral-soft); }
+  .ds-timeline__item.is-primary { --ds-timeline-tone: var(--color-primary); --ds-timeline-ink: var(--ds-primary-text); --ds-timeline-soft: var(--ds-primary-soft); }
+  .ds-timeline__item.is-info { --ds-timeline-tone: var(--color-info); --ds-timeline-ink: var(--ds-info-text); --ds-timeline-soft: var(--ds-info-soft); }
+  .ds-timeline__item.is-success { --ds-timeline-tone: var(--color-success); --ds-timeline-ink: var(--ds-success-text); --ds-timeline-soft: var(--ds-success-soft); }
+  .ds-timeline__item.is-warning { --ds-timeline-tone: var(--color-warning); --ds-timeline-ink: var(--ds-warning-text); --ds-timeline-soft: var(--ds-warning-soft); }
+  .ds-timeline__item.is-error { --ds-timeline-tone: var(--color-error); --ds-timeline-ink: var(--ds-error-text); --ds-timeline-soft: var(--ds-error-soft); }
+
+  /* The connector: a hairline from under this marker to the top of the next one. */
+  .ds-timeline__item::before {
+    content: "";
+    position: absolute;
+    inset-block: calc(var(--ds-timeline-marker) + 0.25rem) 0.25rem;
+    inset-inline-start: calc(var(--ds-timeline-marker) / 2 - 0.5px);
+    inline-size: 1px;
+    background: var(--color-base-300);
+  }
+
+  .ds-timeline__item:last-child::before {
+    display: none;
+  }
+
+  .ds-timeline__marker {
+    display: grid;
+    place-items: center;
+    inline-size: var(--ds-timeline-marker);
+    block-size: var(--ds-timeline-marker);
+    border: 1px solid color-mix(in oklab, var(--ds-timeline-tone) 30%, var(--color-base-300));
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-timeline-soft);
+    color: var(--ds-timeline-ink);
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), border-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-timeline__marker .ds-icon {
+    inline-size: 0.875rem;
+    block-size: 0.875rem;
+  }
+
+  /* Compact: a dot, no icon. */
+  .ds-timeline.is-compact .ds-timeline__marker {
+    border: 0;
+    background: transparent;
+  }
+
+  .ds-timeline.is-compact .ds-timeline__marker::before {
+    content: "";
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: var(--ds-radius-full);
+    background: var(--ds-timeline-ink);
+    box-shadow: 0 0 0 0.1875rem color-mix(in oklab, var(--ds-timeline-tone) 16%, transparent);
+  }
+
+  .ds-timeline.is-compact .ds-timeline__marker > * {
+    display: none;
+  }
+
+  .ds-timeline__body {
+    min-width: 0;
+    padding-block-start: 0.125rem;
+  }
+
+  .ds-timeline__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.125rem 0.75rem;
+  }
+
+  .ds-timeline__title {
+    color: var(--color-base-content);
+    font-size: var(--ds-type-callout-size);
+    font-weight: 650;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-timeline__title a {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+    text-underline-offset: 3px;
+    border-radius: var(--ds-radius-xs);
+  }
+
+  .ds-timeline__time {
+    color: var(--ds-subtle);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .ds-timeline__text {
+    margin-top: 0.125rem;
+    color: var(--ds-subtle);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .ds-timeline__extra {
+    margin-top: 0.5rem;
+  }
+
+  /* Latest event: ring around the marker and a heavier title. */
+  .ds-timeline__item[aria-current]:not([aria-current="false"]) .ds-timeline__marker {
+    border-color: var(--ds-timeline-ink);
+    box-shadow: 0 0 0 0.1875rem color-mix(in oklab, var(--ds-timeline-tone) 18%, transparent);
+  }
+
+  .ds-timeline__item[aria-current]:not([aria-current="false"]) .ds-timeline__title {
+    font-weight: 750;
+  }
+
+  /* Pending (not happened yet): dashed outline, quiet text. */
+  .ds-timeline__item.is-pending .ds-timeline__marker {
+    border-style: dashed;
+    background: transparent;
+    color: var(--ds-muted);
+  }
+
+  .ds-timeline__item.is-pending :is(.ds-timeline__title, .ds-timeline__text, .ds-timeline__time) {
+    color: var(--ds-subtle);
+    font-weight: 500;
+  }
+
+  .ds-timeline__item.is-pending::before {
+    background: none;
+    border-inline-start: 1px dashed var(--color-base-300);
+    inline-size: 0;
+  }
+
+  /* Day groups: sticky-free heading, then the events. */
+  .ds-timeline__group {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-timeline__group + .ds-timeline__group {
+    margin-block-start: 0.5rem;
+  }
+
+  .ds-timeline__day {
+    margin: 0 0 0.75rem;
+    padding-block-end: 0.375rem;
+    border-bottom: 1px solid color-mix(in oklab, var(--color-base-300) 70%, transparent);
+    color: var(--ds-subtle);
+    font-size: var(--ds-type-eyebrow-size);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .ds-timeline__more {
+    margin-block-start: 0.25rem;
+    margin-inline-start: calc(var(--ds-timeline-marker) + var(--ds-timeline-gap));
+  }
+
+  /* Loading placeholder rows. */
+  .ds-timeline__item.is-skeleton .ds-timeline__marker {
+    border-color: transparent;
+    background: color-mix(in oklab, var(--color-base-content) 9%, var(--color-base-100));
+  }
+
+  /* =====================================================================
+     Tree view
+     ===================================================================== */
+  .ds-tree {
+    --ds-tree-indent: 1.25rem;
+    --ds-tree-row: 2.25rem;
+    interpolate-size: allow-keywords;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--ds-type-callout-size);
+  }
+
+  .ds-tree.is-dense {
+    --ds-tree-row: 1.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .ds-tree__group {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-tree__item {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* One row = the hit area. Level comes from how many groups it sits in (pure CSS, up to 8 levels). */
+  .ds-tree__row {
+    --_l: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: var(--ds-tree-row);
+    padding-block: 0.125rem;
+    padding-inline: calc(0.375rem + (var(--_l) - 1) * var(--ds-tree-indent)) 0.5rem;
+    border-radius: var(--ds-radius-md);
+    color: var(--color-base-content);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-tree__group .ds-tree__row { --_l: 2; }
+  .ds-tree__group .ds-tree__group .ds-tree__row { --_l: 3; }
+  .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__row { --_l: 4; }
+  .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__row { --_l: 5; }
+  .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__row { --_l: 6; }
+  .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__row { --_l: 7; }
+  .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__group .ds-tree__row { --_l: 8; }
+
+  .ds-tree__toggle {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    color: var(--ds-subtle);
+  }
+
+  .ds-tree__toggle > svg {
+    inline-size: 0.875rem;
+    block-size: 0.875rem;
+    transition: transform var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  [dir="rtl"] .ds-tree__toggle > svg {
+    transform: scaleX(-1);
+  }
+
+  .ds-tree__item[aria-expanded="true"] > .ds-tree__row > .ds-tree__toggle > svg {
+    transform: rotate(90deg);
+  }
+
+  /* Leaf: keep the column so labels align. */
+  .ds-tree__item:not([aria-expanded]) > .ds-tree__row > .ds-tree__toggle > svg {
+    display: none;
+  }
+
+  .ds-tree__icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    color: var(--ds-subtle);
+  }
+
+  .ds-tree__icon > .ds-icon.is-open {
+    display: none;
+  }
+
+  .ds-tree__item[aria-expanded="true"] > .ds-tree__row .ds-tree__icon > .ds-icon.is-open {
+    display: block;
+  }
+
+  .ds-tree__item[aria-expanded="true"] > .ds-tree__row .ds-tree__icon > .ds-icon.is-closed {
+    display: none;
+  }
+
+  .ds-tree__label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ds-tree__meta {
+    flex-shrink: 0;
+    color: var(--ds-subtle);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Checkbox of a checkable tree: aria-checked true | mixed | false on the treeitem, drawn here. */
+  .ds-tree__check {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+    border: 1.5px solid var(--ds-control-border);
+    border-radius: var(--ds-radius-sm);
+    background: var(--color-base-100);
+    color: var(--color-primary-content);
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), border-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  .ds-tree__check > svg {
+    inline-size: 0.75rem;
+    block-size: 0.75rem;
+    stroke-width: 3;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity var(--ds-duration-instant) var(--ds-ease-out), transform var(--ds-duration-instant) var(--ds-ease-out);
+  }
+
+  .ds-tree__check > .is-mixed {
+    display: none;
+  }
+
+  [aria-checked="true"] > .ds-tree__row .ds-tree__check,
+  [aria-checked="mixed"] > .ds-tree__row .ds-tree__check {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+  }
+
+  [aria-checked="true"] > .ds-tree__row .ds-tree__check > .is-checked,
+  [aria-checked="mixed"] > .ds-tree__row .ds-tree__check > .is-mixed {
+    opacity: 1;
+    transform: none;
+  }
+
+  [aria-checked="mixed"] > .ds-tree__row .ds-tree__check > .is-checked {
+    display: none;
+  }
+
+  [aria-checked="mixed"] > .ds-tree__row .ds-tree__check > .is-mixed {
+    display: block;
+  }
+
+  [aria-disabled="true"] > .ds-tree__row {
+    opacity: var(--ds-opacity-disabled);
+    cursor: not-allowed;
+  }
+
+  /* States on the row: hover, pressed, selected, current, focus. The treeitem owns focus; the ring is drawn on its row only. */
+  @media (hover: hover) {
+    .ds-tree__item:not([aria-disabled="true"]) > .ds-tree__row:hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  .ds-tree__item:not([aria-disabled="true"]) > .ds-tree__row:active {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-tree__item[aria-selected="true"] > .ds-tree__row {
+    background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-selected) * 100%), transparent);
+    box-shadow: inset var(--ds-border-accent) 0 0 var(--color-primary);
+    font-weight: 650;
+  }
+
+  .ds-tree__item[aria-selected="true"] > .ds-tree__row :is(.ds-tree__label, .ds-tree__icon) {
+    color: var(--ds-quiet);
+  }
+
+  .ds-tree__item:focus {
+    outline: none;
+  }
+
+  .ds-tree__item:focus-visible > .ds-tree__row {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: -2px;
+  }
+
+  .ds-tree__row a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Lazy loading and failure. */
+  .ds-tree__item[aria-busy="true"] > .ds-tree__row > .ds-tree__toggle > svg {
+    display: none;
+  }
+
+  .ds-tree__item[aria-busy="true"] > .ds-tree__row > .ds-tree__toggle::before {
+    content: "";
+    inline-size: 0.875rem;
+    block-size: 0.875rem;
+    border: 2px solid color-mix(in oklab, var(--color-base-content) 20%, transparent);
+    border-block-start-color: var(--color-primary);
+    border-radius: var(--ds-radius-full);
+    animation: ds-spin 0.8s linear infinite;
+  }
+
+  .ds-tree__item[data-state="error"] > .ds-tree__row .ds-tree__meta {
+    color: var(--ds-error-text);
+    font-weight: 650;
+  }
+
+  /* Animated reveal of children: height auto ↔ 0 (interpolate-size), opacity, and the group leaves the tab order while closed. */
+  .ds-tree__item[aria-expanded] > .ds-tree__group {
+    block-size: 0;
+    overflow: clip;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      block-size var(--ds-duration-layout) var(--ds-ease-emphasized),
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      visibility 0s linear var(--ds-duration-layout);
+  }
+
+  .ds-tree__item[aria-expanded="true"] > .ds-tree__group {
+    block-size: auto;
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+    transition-duration: var(--ds-duration-layout), var(--ds-duration-quick), 0s;
+    transition-timing-function: var(--ds-ease-emphasized), var(--ds-ease-standard), linear;
+  }
+
+  /* Empty folder and load error lines inside a group. */
+  .ds-tree__note {
+    padding: 0.375rem 0.5rem;
+    padding-inline-start: calc(0.375rem + var(--ds-tree-indent) + 1.625rem);
+    color: var(--ds-subtle);
+    font-size: 0.8125rem;
+  }
+
+  @media (pointer: coarse) {
+    .ds-tree {
+      --ds-tree-row: var(--ds-size-target);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ds-tree__item[aria-selected="true"] > .ds-tree__row {
+      box-shadow: none;
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+
+    .ds-list__item:is([aria-current]:not([aria-current="false"]), [aria-selected="true"], .is-selected) {
+      box-shadow: none;
+      border-inline-start: var(--ds-border-accent) solid Highlight;
+    }
+
+    .ds-tree__check {
+      border-color: ButtonText;
+    }
+
+    [aria-checked="true"] > .ds-tree__row .ds-tree__check,
+    [aria-checked="mixed"] > .ds-tree__row .ds-tree__check {
+      background: Highlight;
+      border-color: Highlight;
+      color: HighlightText;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds-tree__item[aria-expanded] > .ds-tree__group {
+      transition-property: opacity, visibility;
+    }
+
+    .ds-tree__toggle > svg,
+    .ds-list__chevron {
+      transition: none;
+    }
+
+    .ds-tree__item[aria-busy="true"] > .ds-tree__row > .ds-tree__toggle::before {
+      animation: none;
+      border-color: var(--color-primary);
+    }
+
+    :is(a, button).ds-list__item:hover .ds-list__chevron {
+      transform: none;
+    }
+  }
+}

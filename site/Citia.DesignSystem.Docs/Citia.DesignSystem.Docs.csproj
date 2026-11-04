@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- Documentation site: ASP.NET Core Razor Pages that dogfoods Citia.DesignSystem (partials, tag helpers, ds.js, tokens).
+       Content = ../../docs/*.md (Markdown with live HTML previews). Run: dotnet run (from this folder). -->
+  <PropertyGroup>
+    <RootNamespace>Citia.DesignSystem.Docs</RootNamespace>
+    <UserSecretsId>citia-design-system-docs</UserSecretsId>
+    <TailwindCli>$(RepoRoot).tools\tailwindcss.exe</TailwindCli>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Citia.DesignSystem\Citia.DesignSystem.csproj" />
+    <PackageReference Include="Markdig" Version="1.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Published copy of the Markdown content; in development the site reads ../../docs directly. -->
+    <Content Include="..\..\docs\**\*.md" Link="content\docs\%(RecursiveDir)%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" CopyToOutputDirectory="Never" />
+    <!-- Served at /install.ps1: irm https://design.citia-engineering.com/install.ps1 | iex -->
+    <Content Include="..\..\tools\install-citia-ds.ps1" Link="install\install-citia-ds.ps1" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Remove="Styles\**" />
+    <None Include="Styles\**" />
+  </ItemGroup>
+
+  <!-- Local builds regenerate wwwroot/css/docs.css when the pinned CSS tools are present (tools/css.ps1). Docker builds it in a stage. -->
+  <Target Name="BuildDocsCss" BeforeTargets="BeforeBuild" Condition="$([MSBuild]::IsOSPlatform('Windows')) And Exists('$(TailwindCli)')">
+    <Exec Command="&quot;$(TailwindCli)&quot; -i Styles\docs.css -o wwwroot\css\docs.css --minify" WorkingDirectory="$(MSBuildProjectDirectory)" StandardErrorImportance="low" />
+  </Target>
+</Project>

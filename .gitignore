@@ -1,0 +1,22 @@
+# Build output
+bin/
+obj/
+*.user
+.vs/
+.idea/
+TestResults/
+
+# Pinned CSS tools (downloaded and SHA-256 verified by tools/css.ps1)
+.tools/
+
+# Generated CSS bundles (rebuilt by tools/css.ps1 or the MSBuild targets; Docker builds them in a stage)
+site/Citia.DesignSystem.Docs/wwwroot/css/docs.css
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+
+# Note: src/Citia.DesignSystem/wwwroot/css/ds.css, Styles/generated/*, wwwroot/tokens/* and Icons/IconSet.g.cs ARE committed,
+# so apps can consume the library without running the tools.
+artifacts/

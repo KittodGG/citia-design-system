@@ -1,0 +1,1013 @@
+{
+  "generatedFrom": "tools/tokens.cs",
+  "results": [
+    {
+      "theme": "light",
+      "id": "base-content",
+      "role": {
+        "en": "Body text on surfaces",
+        "id": "Teks utama di permukaan"
+      },
+      "fg": "#0f172a",
+      "bg": "#f9f9f6",
+      "ratio": 16.93,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "base-content / base-200",
+      "role": {
+        "en": "Body text on the page background",
+        "id": "Teks utama di latar halaman"
+      },
+      "fg": "#0f172a",
+      "bg": "#f1f2ee",
+      "ratio": 15.88,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "subtle",
+      "role": {
+        "en": "Secondary text (field help)",
+        "id": "Teks sekunder (bantuan field)"
+      },
+      "fg": "#404858",
+      "bg": "#f9f9f6",
+      "ratio": 8.7,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "subtle / base-200",
+      "role": {
+        "en": "Secondary text on the background",
+        "id": "Teks sekunder di latar"
+      },
+      "fg": "#404858",
+      "bg": "#f1f2ee",
+      "ratio": 8.16,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "muted",
+      "role": {
+        "en": "Muted text on surfaces",
+        "id": "Teks redup di permukaan"
+      },
+      "fg": "#5a5f6b",
+      "bg": "#f9f9f6",
+      "ratio": 6.04,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "muted / base-200",
+      "role": {
+        "en": "Muted text on the background",
+        "id": "Teks redup di latar"
+      },
+      "fg": "#575d69",
+      "bg": "#f1f2ee",
+      "ratio": 5.87,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "primary-content",
+      "role": {
+        "en": "Primary button label",
+        "id": "Label tombol utama"
+      },
+      "fg": "#ffffff",
+      "bg": "#00838f",
+      "ratio": 4.52,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "secondary-content",
+      "role": {
+        "en": "Sidebar item",
+        "id": "Item sidebar"
+      },
+      "fg": "#ffffff",
+      "bg": "#00767f",
+      "ratio": 5.39,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "sidebar active",
+      "role": {
+        "en": "Active sidebar item",
+        "id": "Item sidebar aktif"
+      },
+      "fg": "#ffffff",
+      "bg": "#005056",
+      "ratio": 9.24,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "sidebar group",
+      "role": {
+        "en": "Sidebar group header (11 px)",
+        "id": "Kepala grup sidebar 11 px"
+      },
+      "fg": "#e6f1f2",
+      "bg": "#00767f",
+      "ratio": 4.68,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "accent-content",
+      "role": {
+        "en": "Text on accent",
+        "id": "Teks di atas accent"
+      },
+      "fg": "#0f172a",
+      "bg": "#00a4b2",
+      "ratio": 5.91,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "info-content",
+      "role": {
+        "en": "Filled info alert or badge",
+        "id": "Alert/badge info terisi"
+      },
+      "fg": "#ffffff",
+      "bg": "#3b6fd4",
+      "ratio": 4.76,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "success-content",
+      "role": {
+        "en": "Filled success badge",
+        "id": "Badge sukses terisi"
+      },
+      "fg": "#ffffff",
+      "bg": "#047857",
+      "ratio": 5.48,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "warning-content",
+      "role": {
+        "en": "Filled warning badge",
+        "id": "Badge peringatan terisi"
+      },
+      "fg": "#ffffff",
+      "bg": "#c2410c",
+      "ratio": 5.18,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "error-content",
+      "role": {
+        "en": "Destructive button",
+        "id": "Tombol destruktif"
+      },
+      "fg": "#ffffff",
+      "bg": "#dc2626",
+      "ratio": 4.83,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "link",
+      "role": {
+        "en": "Link on surfaces",
+        "id": "Tautan di permukaan"
+      },
+      "fg": "#2b5cc4",
+      "bg": "#f9f9f6",
+      "ratio": 5.8,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "link / base-200",
+      "role": {
+        "en": "Link on the background",
+        "id": "Tautan di latar"
+      },
+      "fg": "#2b5cc4",
+      "bg": "#f1f2ee",
+      "ratio": 5.44,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "link / row hover",
+      "role": {
+        "en": "Link in a hovered table row",
+        "id": "Tautan di baris yang di-hover"
+      },
+      "fg": "#2b5cc4",
+      "bg": "#eeefed",
+      "ratio": 5.3,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "quiet",
+      "role": {
+        "en": "Ghost button label",
+        "id": "Label tombol ghost"
+      },
+      "fg": "#006a73",
+      "bg": "#f9f9f6",
+      "ratio": 6.02,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "quiet / ghost hover",
+      "role": {
+        "en": "Ghost button on hover",
+        "id": "Tombol ghost saat hover"
+      },
+      "fg": "#006a73",
+      "bg": "#dae4e3",
+      "ratio": 4.89,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "error-text",
+      "role": {
+        "en": "Error message, soft error badge",
+        "id": "Pesan galat, badge galat soft"
+      },
+      "fg": "#b91c1c",
+      "bg": "#f9f9f6",
+      "ratio": 6.13,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "warning-text",
+      "role": {
+        "en": "Soft warning badge or alert",
+        "id": "Badge/alert peringatan soft"
+      },
+      "fg": "#9a3412",
+      "bg": "#f9f9f6",
+      "ratio": 6.93,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "success text",
+      "role": {
+        "en": "Active status (text on tint)",
+        "id": "Status Aktif (teks di tint)"
+      },
+      "fg": "#047857",
+      "bg": "#e8eee8",
+      "ratio": 4.66,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "error text (raw)",
+      "role": {
+        "en": "Validation message using --color-error",
+        "id": "Pesan validasi memakai --color-error"
+      },
+      "fg": "#dc2626",
+      "bg": "#f9f9f6",
+      "ratio": 4.58,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "popover text",
+      "role": {
+        "en": "Text on floating layers",
+        "id": "Teks di lapisan melayang"
+      },
+      "fg": "#0f172a",
+      "bg": "#f9f9f6",
+      "ratio": 16.93,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "excel",
+      "role": {
+        "en": "Excel button",
+        "id": "Tombol Excel"
+      },
+      "fg": "#ffffff",
+      "bg": "#1d6f42",
+      "ratio": 6.17,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "pdf",
+      "role": {
+        "en": "PDF button",
+        "id": "Tombol PDF"
+      },
+      "fg": "#ffffff",
+      "bg": "#b30b00",
+      "ratio": 7.08,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "control-border",
+      "role": {
+        "en": "Input / secondary button border (non-text)",
+        "id": "Border input/tombol sekunder (non-teks)"
+      },
+      "fg": "#7b8a94",
+      "bg": "#f9f9f6",
+      "ratio": 3.37,
+      "min": 3,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "focus ring",
+      "role": {
+        "en": "Focus ring (non-text)",
+        "id": "Cincin fokus (non-teks)"
+      },
+      "fg": "#00838f",
+      "bg": "#f9f9f6",
+      "ratio": 4.29,
+      "min": 3,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "focus ring / base-200",
+      "role": {
+        "en": "Focus ring on the background",
+        "id": "Cincin fokus di latar"
+      },
+      "fg": "#00838f",
+      "bg": "#f1f2ee",
+      "ratio": 4.02,
+      "min": 3,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "light",
+      "id": "accent ring (v1)",
+      "role": {
+        "en": "Version 1 focus ring — informational",
+        "id": "Cincin fokus versi 1 — informasi"
+      },
+      "fg": "#00a4b2",
+      "bg": "#f9f9f6",
+      "ratio": 2.86,
+      "min": 3,
+      "pass": false,
+      "informational": true
+    },
+    {
+      "theme": "light",
+      "id": "primary edge",
+      "role": {
+        "en": "Edge of active controls (chips, segments)",
+        "id": "Batas kontrol aktif (chip/segmen)"
+      },
+      "fg": "#00838f",
+      "bg": "#f9f9f6",
+      "ratio": 4.29,
+      "min": 3,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "*",
+      "id": "avatar-c0",
+      "role": {
+        "en": "White initials on an avatar",
+        "id": "Inisial putih di avatar"
+      },
+      "fg": "#ffffff",
+      "bg": "#00838f",
+      "ratio": 4.52,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "*",
+      "id": "avatar-c1",
+      "role": {
+        "en": "White initials on an avatar",
+        "id": "Inisial putih di avatar"
+      },
+      "fg": "#ffffff",
+      "bg": "#2b5cc4",
+      "ratio": 6.12,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "*",
+      "id": "avatar-c2",
+      "role": {
+        "en": "White initials on an avatar",
+        "id": "Inisial putih di avatar"
+      },
+      "fg": "#ffffff",
+      "bg": "#7c3aed",
+      "ratio": 5.7,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "*",
+      "id": "avatar-c3",
+      "role": {
+        "en": "White initials on an avatar",
+        "id": "Inisial putih di avatar"
+      },
+      "fg": "#ffffff",
+      "bg": "#c2410c",
+      "ratio": 5.18,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "*",
+      "id": "avatar-c4",
+      "role": {
+        "en": "White initials on an avatar",
+        "id": "Inisial putih di avatar"
+      },
+      "fg": "#ffffff",
+      "bg": "#047857",
+      "ratio": 5.48,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "*",
+      "id": "avatar-c5",
+      "role": {
+        "en": "White initials on an avatar",
+        "id": "Inisial putih di avatar"
+      },
+      "fg": "#ffffff",
+      "bg": "#be185d",
+      "ratio": 6.04,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "*",
+      "id": "avatar-c6",
+      "role": {
+        "en": "White initials on an avatar",
+        "id": "Inisial putih di avatar"
+      },
+      "fg": "#ffffff",
+      "bg": "#4d7c0f",
+      "ratio": 4.99,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "*",
+      "id": "avatar-c7",
+      "role": {
+        "en": "White initials on an avatar",
+        "id": "Inisial putih di avatar"
+      },
+      "fg": "#ffffff",
+      "bg": "#0e7490",
+      "ratio": 5.36,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "base-content",
+      "role": {
+        "en": "Body text on surfaces",
+        "id": "Teks utama di permukaan"
+      },
+      "fg": "#e6edf3",
+      "bg": "#151c25",
+      "ratio": 14.51,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "base-content / base-200",
+      "role": {
+        "en": "Body text on the page background",
+        "id": "Teks utama di latar halaman"
+      },
+      "fg": "#e6edf3",
+      "bg": "#0e141b",
+      "ratio": 15.66,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "subtle",
+      "role": {
+        "en": "Secondary text (field help)",
+        "id": "Teks sekunder (bantuan field)"
+      },
+      "fg": "#acb3ba",
+      "bg": "#151c25",
+      "ratio": 8.08,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "subtle / base-200",
+      "role": {
+        "en": "Secondary text on the background",
+        "id": "Teks sekunder di latar"
+      },
+      "fg": "#acb3ba",
+      "bg": "#0e141b",
+      "ratio": 8.72,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "muted",
+      "role": {
+        "en": "Muted text on surfaces",
+        "id": "Teks redup di permukaan"
+      },
+      "fg": "#a3aab1",
+      "bg": "#151c25",
+      "ratio": 7.31,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "muted / base-200",
+      "role": {
+        "en": "Muted text on the background",
+        "id": "Teks redup di latar"
+      },
+      "fg": "#a1a8ae",
+      "bg": "#0e141b",
+      "ratio": 7.66,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "primary-content",
+      "role": {
+        "en": "Primary button label",
+        "id": "Label tombol utama"
+      },
+      "fg": "#0e141b",
+      "bg": "#00a4b2",
+      "ratio": 6.13,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "secondary-content",
+      "role": {
+        "en": "Sidebar item",
+        "id": "Item sidebar"
+      },
+      "fg": "#ffffff",
+      "bg": "#05666f",
+      "ratio": 6.7,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "sidebar active",
+      "role": {
+        "en": "Active sidebar item",
+        "id": "Item sidebar aktif"
+      },
+      "fg": "#ffffff",
+      "bg": "#02444b",
+      "ratio": 10.84,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "sidebar group",
+      "role": {
+        "en": "Sidebar group header (11 px)",
+        "id": "Kepala grup sidebar 11 px"
+      },
+      "fg": "#e6f0f1",
+      "bg": "#05666f",
+      "ratio": 5.76,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "accent-content",
+      "role": {
+        "en": "Text on accent",
+        "id": "Teks di atas accent"
+      },
+      "fg": "#0e141b",
+      "bg": "#00d4df",
+      "ratio": 10.12,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "info-content",
+      "role": {
+        "en": "Filled info alert or badge",
+        "id": "Alert/badge info terisi"
+      },
+      "fg": "#0e141b",
+      "bg": "#7aa2f7",
+      "ratio": 7.35,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "success-content",
+      "role": {
+        "en": "Filled success badge",
+        "id": "Badge sukses terisi"
+      },
+      "fg": "#0e141b",
+      "bg": "#34d399",
+      "ratio": 9.63,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "warning-content",
+      "role": {
+        "en": "Filled warning badge",
+        "id": "Badge peringatan terisi"
+      },
+      "fg": "#0e141b",
+      "bg": "#f59e0b",
+      "ratio": 8.62,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "error-content",
+      "role": {
+        "en": "Destructive button",
+        "id": "Tombol destruktif"
+      },
+      "fg": "#0e141b",
+      "bg": "#f87171",
+      "ratio": 6.69,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "link",
+      "role": {
+        "en": "Link on surfaces",
+        "id": "Tautan di permukaan"
+      },
+      "fg": "#7aa2f7",
+      "bg": "#151c25",
+      "ratio": 6.81,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "link / base-200",
+      "role": {
+        "en": "Link on the background",
+        "id": "Tautan di latar"
+      },
+      "fg": "#7aa2f7",
+      "bg": "#0e141b",
+      "ratio": 7.35,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "link / row hover",
+      "role": {
+        "en": "Link in a hovered table row",
+        "id": "Tautan di baris yang di-hover"
+      },
+      "fg": "#7aa2f7",
+      "bg": "#1c232c",
+      "ratio": 6.3,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "quiet",
+      "role": {
+        "en": "Ghost button label",
+        "id": "Label tombol ghost"
+      },
+      "fg": "#00a4b2",
+      "bg": "#151c25",
+      "ratio": 5.68,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "quiet / ghost hover",
+      "role": {
+        "en": "Ghost button on hover",
+        "id": "Tombol ghost saat hover"
+      },
+      "fg": "#00a4b2",
+      "bg": "#1a2d36",
+      "ratio": 4.74,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "error-text",
+      "role": {
+        "en": "Error message, soft error badge",
+        "id": "Pesan galat, badge galat soft"
+      },
+      "fg": "#f87171",
+      "bg": "#151c25",
+      "ratio": 6.2,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "warning-text",
+      "role": {
+        "en": "Soft warning badge or alert",
+        "id": "Badge/alert peringatan soft"
+      },
+      "fg": "#f59e0b",
+      "bg": "#151c25",
+      "ratio": 7.98,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "success text",
+      "role": {
+        "en": "Active status (text on tint)",
+        "id": "Status Aktif (teks di tint)"
+      },
+      "fg": "#34d399",
+      "bg": "#1a282e",
+      "ratio": 7.85,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "error text (raw)",
+      "role": {
+        "en": "Validation message using --color-error",
+        "id": "Pesan validasi memakai --color-error"
+      },
+      "fg": "#f87171",
+      "bg": "#151c25",
+      "ratio": 6.2,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "popover text",
+      "role": {
+        "en": "Text on floating layers",
+        "id": "Teks di lapisan melayang"
+      },
+      "fg": "#e6edf3",
+      "bg": "#202730",
+      "ratio": 12.73,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "excel",
+      "role": {
+        "en": "Excel button",
+        "id": "Tombol Excel"
+      },
+      "fg": "#ffffff",
+      "bg": "#1d6f42",
+      "ratio": 6.17,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "pdf",
+      "role": {
+        "en": "PDF button",
+        "id": "Tombol PDF"
+      },
+      "fg": "#ffffff",
+      "bg": "#b30b00",
+      "ratio": 7.08,
+      "min": 4.5,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "control-border",
+      "role": {
+        "en": "Input / secondary button border (non-text)",
+        "id": "Border input/tombol sekunder (non-teks)"
+      },
+      "fg": "#74848f",
+      "bg": "#151c25",
+      "ratio": 4.44,
+      "min": 3,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "focus ring",
+      "role": {
+        "en": "Focus ring (non-text)",
+        "id": "Cincin fokus (non-teks)"
+      },
+      "fg": "#00d4df",
+      "bg": "#151c25",
+      "ratio": 9.38,
+      "min": 3,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "focus ring / base-200",
+      "role": {
+        "en": "Focus ring on the background",
+        "id": "Cincin fokus di latar"
+      },
+      "fg": "#00d4df",
+      "bg": "#0e141b",
+      "ratio": 10.12,
+      "min": 3,
+      "pass": true,
+      "informational": false
+    },
+    {
+      "theme": "dark",
+      "id": "accent ring (v1)",
+      "role": {
+        "en": "Version 1 focus ring — informational",
+        "id": "Cincin fokus versi 1 — informasi"
+      },
+      "fg": "#00d4df",
+      "bg": "#151c25",
+      "ratio": 9.38,
+      "min": 3,
+      "pass": true,
+      "informational": true
+    },
+    {
+      "theme": "dark",
+      "id": "primary edge",
+      "role": {
+        "en": "Edge of active controls (chips, segments)",
+        "id": "Batas kontrol aktif (chip/segmen)"
+      },
+      "fg": "#00a4b2",
+      "bg": "#151c25",
+      "ratio": 5.68,
+      "min": 3,
+      "pass": true,
+      "informational": false
+    }
+  ]
+}

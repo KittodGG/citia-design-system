@@ -1,0 +1,15 @@
+@model int
+@*
+  Rows per page inside the list's GET filter form. ds.js submits the form on change (data-ds-autosubmit).
+  Usage (inside <form method="get">): <partial name="_DsPageSize" model="Model.Rows.PageSize" />
+*@
+<label class="ds-page-size">
+    <span>@DsText.T("pageSize.show")</span>
+    <select name="size" class="select select-sm" aria-label="@DsText.T("pageSize.label")" data-ds-autosubmit>
+        @foreach (var size in PageSizes.All)
+        {
+            <option value="@size" selected="@(size == Model)">@size</option>
+        }
+    </select>
+    <span>@DsText.T("pageSize.perPage")</span>
+</label>

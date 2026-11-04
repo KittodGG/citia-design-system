@@ -1,0 +1,453 @@
+/* Combobox and multi-select popup. Origin: TPS .cb-* (app.css L3147–3241). Owner: batch A3.
+   Field chips (.ds-token) and the multi-select field live in choices.css. Floating layer recipe shared with popover.css. */
+
+@layer components {
+  :root {
+    --ds-mask-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    --ds-mask-plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E");
+  }
+
+  /* Never stretched by a grid or flex parent: the popup and buttons are placed from the field's own height. */
+  .ds-combobox {
+    position: relative;
+    align-self: start;
+    width: 100%;
+    height: fit-content;
+    min-width: 0;
+  }
+
+  /* Trailing buttons inside the field: clear (when filled) and the chevron. */
+  .ds-combobox__buttons {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: var(--ds-space-1);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    pointer-events: none;
+  }
+
+  :is(.ds-combobox__clear, .ds-combobox__toggle) {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--ds-radius-md);
+    color: var(--ds-subtle);
+    cursor: pointer;
+    pointer-events: auto;
+    transition:
+      background-color var(--ds-duration-fast) var(--ds-ease-standard),
+      color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  :is(.ds-combobox__clear, .ds-combobox__toggle)::before {
+    content: "";
+    width: 1rem;
+    height: 1rem;
+    background-color: currentColor;
+    mask: var(--ds-mask-chevron) center / contain no-repeat;
+    transition: rotate var(--ds-duration-base) var(--ds-ease-emphasized);
+  }
+
+  .ds-combobox__clear::before {
+    width: 0.875rem;
+    height: 0.875rem;
+    mask-image: var(--ds-mask-x);
+  }
+
+  .ds-combobox[data-open] .ds-combobox__toggle::before {
+    rotate: 180deg;
+  }
+
+  .ds-combobox:not([data-filled]) .ds-combobox__clear {
+    display: none;
+  }
+
+  @media (hover: hover) {
+    :is(.ds-combobox__clear, .ds-combobox__toggle):not(:disabled):hover {
+      background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+      color: var(--color-base-content);
+    }
+  }
+
+  :is(.ds-combobox__clear, .ds-combobox__toggle):active:not(:disabled) {
+    background: color-mix(in oklab, var(--color-base-content) calc(var(--ds-opacity-state-pressed) * 100%), transparent);
+  }
+
+  .ds-combobox__clear:focus-visible {
+    outline: var(--ds-border-focus) solid var(--ds-focus);
+    outline-offset: 0;
+  }
+
+  :is(.ds-combobox__clear, .ds-combobox__toggle):disabled {
+    cursor: not-allowed;
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  @media (pointer: coarse) {
+    :is(.ds-combobox__clear, .ds-combobox__toggle)::after {
+      content: "";
+      position: absolute;
+      inset: -0.375rem;
+    }
+  }
+
+  /* Popup: opacity + 4 px from the field on enter, faster exit; flips above when there is no room below. */
+  .ds-combobox-popup {
+    position: absolute;
+    inset-inline: 0;
+    top: calc(100% + var(--ds-space-1));
+    z-index: var(--ds-z-combobox);
+    max-height: 18rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--ds-popover-border);
+    border-radius: var(--ds-radius-lg);
+    background: var(--ds-popover);
+    color: var(--color-base-content);
+    box-shadow: var(--ds-shadow-popover);
+    transform-origin: top center;
+    opacity: 1;
+    translate: 0 0;
+    transition:
+      opacity var(--ds-duration-quick) var(--ds-ease-emphasized),
+      translate var(--ds-duration-quick) var(--ds-ease-emphasized),
+      display var(--ds-duration-quick) allow-discrete;
+  }
+
+  @starting-style {
+    .ds-combobox-popup:not([hidden]) {
+      opacity: 0;
+      translate: 0 calc(var(--ds-enter-offset) * -1);
+    }
+  }
+
+  .ds-combobox-popup[hidden] {
+    display: none;
+    opacity: 0;
+    translate: 0 calc(var(--ds-enter-offset) * -1);
+    transition:
+      opacity var(--ds-duration-exit) var(--ds-ease-exit),
+      translate var(--ds-duration-exit) var(--ds-ease-exit),
+      display var(--ds-duration-exit) allow-discrete;
+  }
+
+  .ds-combobox-popup[data-side="top"] {
+    top: auto;
+    bottom: calc(100% + var(--ds-space-1));
+    transform-origin: bottom center;
+  }
+
+  .ds-combobox-popup[data-side="top"][hidden] {
+    translate: 0 var(--ds-enter-offset);
+  }
+
+  @starting-style {
+    .ds-combobox-popup[data-side="top"]:not([hidden]) {
+      translate: 0 var(--ds-enter-offset);
+    }
+  }
+
+  :is(.ds-combobox-list, .ds-combobox-empty, .ds-combobox-actions)[hidden] {
+    display: none;
+  }
+
+  .ds-combobox-list {
+    margin: 0;
+    padding: var(--ds-space-1);
+    list-style: none;
+  }
+
+  .ds-combobox-list ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ds-combobox-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-2-5);
+    min-height: var(--ds-size-target-compact);
+    padding: var(--ds-space-1-5) var(--ds-space-3);
+    border-radius: var(--ds-radius-md);
+    font-size: 0.9375rem;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    scroll-margin-block: var(--ds-space-1);
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (pointer: coarse) {
+    .ds-combobox-option {
+      min-height: var(--ds-size-target);
+    }
+  }
+
+  .ds-combobox-option__text {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .ds-combobox-option small {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--ds-subtle);
+  }
+
+  .ds-combobox-match {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  /* The option under the keyboard cursor or the pointer (aria-activedescendant). */
+  .ds-combobox-option[data-active] {
+    background: var(--ds-primary-soft);
+  }
+
+  /* Single choice: the value already chosen carries weight and a check at the end. */
+  .ds-combobox-option[data-current] {
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  .ds-combobox-option[data-current]::after {
+    content: "";
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    background-color: var(--ds-quiet);
+    mask: var(--ds-mask-check) center / contain no-repeat;
+  }
+
+  /* Multiple choice: a checkbox square at the start. */
+  [aria-multiselectable="true"] .ds-combobox-option::before {
+    content: "";
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid var(--ds-control-border);
+    border-radius: var(--ds-radius-xs);
+    background: var(--color-base-100);
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard), border-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  [aria-multiselectable="true"] .ds-combobox-option[aria-selected="true"]::before {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+  }
+
+  [aria-multiselectable="true"] .ds-combobox-option::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    inset-inline-start: var(--ds-space-3);
+    width: 1rem;
+    height: 1rem;
+    translate: 0 -50%;
+    background-color: var(--color-primary-content);
+    mask: var(--ds-mask-check) center / 75% no-repeat;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path var(--ds-duration-base) var(--ds-ease-out);
+  }
+
+  [aria-multiselectable="true"] .ds-combobox-option[aria-selected="true"]::after {
+    clip-path: inset(0);
+  }
+
+  [aria-multiselectable="true"] :is(.ds-combobox-add, .ds-combobox-create)::before,
+  [aria-multiselectable="true"] :is(.ds-combobox-add, .ds-combobox-create)::after {
+    content: none;
+  }
+
+  .ds-combobox-option[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: var(--ds-opacity-disabled);
+  }
+
+  .ds-combobox-option[aria-disabled="true"][data-active] {
+    background: transparent;
+  }
+
+  /* Group heading (from <optgroup label>). */
+  .ds-combobox-group + .ds-combobox-group {
+    margin-top: var(--ds-space-1);
+    padding-top: var(--ds-space-1);
+    border-top: 1px solid var(--color-base-300);
+  }
+
+  .ds-combobox-group-label {
+    padding: var(--ds-space-2) var(--ds-space-3) var(--ds-space-1);
+    font-size: var(--ds-type-eyebrow-size);
+    font-weight: var(--ds-type-eyebrow-weight);
+    line-height: var(--ds-type-eyebrow-leading);
+    letter-spacing: var(--ds-type-eyebrow-tracking);
+    color: var(--ds-subtle);
+  }
+
+  /* 'Add "x" to Target' and 'Create "x"': create the missing record in place. */
+  :is(.ds-combobox-add, .ds-combobox-create) {
+    margin-top: var(--ds-space-1);
+    border-top: 1px solid var(--color-base-300);
+    border-radius: 0 0 var(--ds-radius-md) var(--ds-radius-md);
+    color: var(--ds-quiet);
+    font-weight: var(--ds-weight-semibold);
+  }
+
+  :is(.ds-combobox-add, .ds-combobox-create):first-child {
+    margin-top: 0;
+    border-top: 0;
+    border-radius: var(--ds-radius-md);
+  }
+
+  .ds-combobox-list :is(.ds-combobox-add, .ds-combobox-create) .ds-combobox-option__text::before {
+    content: "";
+    display: inline-block;
+    width: 0.875rem;
+    height: 0.875rem;
+    margin-inline-end: var(--ds-space-2);
+    vertical-align: -0.0625rem;
+    background-color: currentColor;
+    mask: var(--ds-mask-plus) center / contain no-repeat;
+  }
+
+  .ds-combobox-add + .ds-combobox-add,
+  .ds-combobox-create + .ds-combobox-add {
+    margin-top: 0;
+    border-top: 0;
+  }
+
+  /* Empty, no results, loading, error, "type more". */
+  .ds-combobox-empty {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-space-2);
+    margin: 0;
+    padding: var(--ds-space-3) var(--ds-space-4);
+    font-size: 0.875rem;
+    color: var(--ds-subtle);
+  }
+
+  .ds-combobox-empty[data-state="error"] {
+    color: var(--ds-error-text);
+  }
+
+  .ds-combobox-empty .ds-spinner {
+    flex-shrink: 0;
+    opacity: 0;
+    animation:
+      ds-spin 0.7s linear infinite,
+      ds-choice-appear var(--ds-duration-fast) var(--ds-ease-standard) 300ms forwards;
+  }
+
+  /* Multi-select: Select all / Clear above the list. */
+  .ds-combobox-actions {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    gap: var(--ds-space-2);
+    padding: var(--ds-space-1);
+    border-bottom: 1px solid var(--color-base-300);
+    background: var(--ds-popover);
+  }
+
+  .ds-combobox-actions > button {
+    min-height: 1.75rem;
+    padding-inline: var(--ds-space-2);
+    border-radius: var(--ds-radius-sm);
+    font-size: var(--ds-type-footnote-size);
+    font-weight: var(--ds-weight-semibold);
+    color: var(--ds-quiet);
+    cursor: pointer;
+    transition: background-color var(--ds-duration-fast) var(--ds-ease-standard);
+  }
+
+  @media (hover: hover) {
+    .ds-combobox-actions > button:hover {
+      background: color-mix(in oklab, var(--color-primary) calc(var(--ds-opacity-state-hover) * 100%), transparent);
+    }
+  }
+
+  /* Multi-select chips beyond data-ds-multiselect-visible fold into "+N more" until the field takes focus. */
+  .ds-multi-select:not(:focus-within) .ds-token[data-overflow],
+  .ds-multi-select:focus-within .ds-token.is-more {
+    display: none;
+  }
+
+  .ds-multi-select .ds-combobox__buttons {
+    inset-block: 0;
+  }
+}
+
+@layer utilities {
+  .ds-combobox > :is(.input, .select) {
+    width: 100%;
+    cursor: text;
+    padding-inline-end: 2.75rem;
+  }
+
+  .ds-combobox.is-clearable > .input {
+    padding-inline-end: 4.75rem;
+  }
+
+  .ds-combobox > .input:is(:user-invalid, [aria-invalid="true"]) {
+    border-color: var(--color-error);
+  }
+
+  .ds-combobox > .input:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-combobox-popup,
+  .ds-combobox-popup[hidden],
+  .ds-combobox-popup[data-side="top"][hidden] {
+    translate: none;
+  }
+
+  [aria-multiselectable="true"] .ds-combobox-option::after {
+    transition: none;
+  }
+
+  .ds-combobox-empty .ds-spinner {
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .ds-combobox-option[data-active] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  :is(.ds-combobox__clear, .ds-combobox__toggle)::before,
+  .ds-combobox-option::after {
+    forced-color-adjust: none;
+    background-color: ButtonText;
+  }
+
+  [aria-multiselectable="true"] .ds-combobox-option::before {
+    forced-color-adjust: none;
+    border-color: ButtonText;
+    background: Canvas;
+  }
+
+  [aria-multiselectable="true"] .ds-combobox-option[aria-selected="true"]::before {
+    background: Highlight;
+    border-color: Highlight;
+  }
+
+  [aria-multiselectable="true"] .ds-combobox-option::after {
+    background-color: HighlightText;
+  }
+}
